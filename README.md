@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/lifebox-logo.jpg" alt="LifeBox" width="220" />
+</p>
+
 # LifeBox
 
 **Sistema Inteligente de Monitoramento para Transporte de Órgãos**
