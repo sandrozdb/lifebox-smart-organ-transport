@@ -1,313 +1,228 @@
-<p align="center"><img src="assets/cover.svg" alt="LifeBox - monitoramento inteligente para transporte de órgãos" width="100%"></p>
+<p align="center">
+  <img src="assets/cover.svg" alt="LifeBox — monitoramento inteligente para transporte de órgãos" width="100%">
+</p>
 
-# LifeBox — Transporte Inteligente de Órgãos
+# LifeBox — Smart Organ Transport
 
-Solução acadêmica de IoT para monitorar as condições de uma caixa térmica durante o transporte de órgãos, reunindo sensores, rastreabilidade e acompanhamento remoto em um único fluxo.
+Plataforma acadêmica de IoT para monitoramento e rastreabilidade do transporte de órgãos. O MVP integra telemetria simulada, alertas, otimização de rota, fundamentos físicos, eletrônica digital, arquitetura de software e dashboard web.
 
-## Problema
+> Aviso acadêmico: sensores, rotas, instituições e limites são simulados ou didáticos. A LifeBox não é um dispositivo médico certificado e não deve ser interpretada como validação clínica ou de preservação de órgãos.
 
-O transporte de órgãos exige controle rigoroso das condições ao longo do trajeto. Alterações de temperatura, impactos, atrasos ou perda de rastreabilidade podem aumentar o risco operacional e dificultar a tomada de decisão pelas equipes responsáveis.
+## Visão geral
 
-## Solução
+O dashboard acompanha temperatura, umidade, impacto/movimento, bateria, sinal, localização, velocidade, progresso e tempo de transporte. O sistema também registra alertas e eventos, compara rotas candidatas, apresenta cálculos físicos e produz um resumo final da operação.
 
-A LifeBox propõe uma caixa térmica inteligente equipada com sensores e conectividade para acompanhar temperatura, umidade, movimentação, localização e tempo de transporte. Os dados são enviados para uma aplicação de monitoramento, permitindo histórico, indicadores e alertas quando algum parâmetro sair dos limites definidos.
+    Simulador de sensores → API REST → Services → Repositories → MySQL
+                                                                ↓
+                                          Dashboard + mapa + alertas + timeline
 
-```mermaid
-flowchart TD
-    A[Temperatura e umidade] --> E[ESP32]
-    B[Impacto e movimentação] --> E
-    C[GPS / localização] --> E
-    D[Tempo de transporte] --> E
-    E --> F[API REST]
-    F --> G[MySQL]
-    G --> H[Dashboard]
-    H --> I{Parâmetro fora do limite?}
-    I -->|Sim| J[Alerta para equipe responsável]
-    I -->|Não| K[Acompanhamento normal]
-```
+## Status atual
 
-## Monitoramento previsto
-
-| Dado | Objetivo |
+| Frente | Status |
 |---|---|
-| Temperatura | Identificar variações térmicas durante o trajeto |
-| Umidade | Acompanhar as condições internas da caixa |
-| Impactos e movimentação | Registrar quedas ou movimentos bruscos |
-| Localização | Permitir rastreabilidade do transporte |
-| Tempo de transporte | Acompanhar a duração e possíveis atrasos |
+| MVP web | Concluído |
+| API REST | Concluído |
+| Dashboard | Concluído |
+| Simulador | Concluído |
+| MySQL | Implementado para execução local |
+| Pesquisa Operacional | Concluído |
+| Física aplicada | Concluído |
+| Eletrônica Digital / Logisim | Concluído e validado no Logisim Evolution 4.1.0 |
+| Testes automatizados | 26 aprovados |
+| GitHub Actions CI | Configurado |
+| Evidências visuais | Concluídas localmente |
+| Wokwi / ESP32 | Planejado |
+| Deploy cloud real | Planejado |
 
-## Arquitetura planejada
+## Arquitetura
 
-`Sensores → ESP32 → API REST → MySQL → Dashboard → Alertas`
+    Frontend HTML/CSS/JavaScript
+                ↓
+    API REST Node.js / Express
+                ↓
+    Services: telemetria, alertas, simulação, Física e otimização
+                ↓
+    Repositories
+                ↓
+    MySQL
 
-A implementação será incremental. O software poderá ser validado inicialmente com dados simulados antes da integração completa com os componentes físicos.
+- Strategy Pattern: estratégia de pontuação ponderada para as rotas.
+- Observer Pattern: observadores para alertas e eventos da timeline.
+- SOLID: separação entre rotas, serviços, repositórios e regras especializadas.
+- C4 e arquitetura: [documentação de arquitetura](docs/architecture.md).
 
-## Tecnologias planejadas
+Documentos técnicos: [API](docs/api.md), [banco de dados](docs/database.md), [simulação](docs/simulation.md) e [testes](docs/testing.md).
 
-### Hardware
-- ESP32
-- DHT22 ou sensor equivalente de temperatura e umidade
-- MPU6050 para aceleração, inclinação e movimentação
-- GPS NEO-6M para latitude e longitude
-- Wi-Fi para conectividade no MVP
+## Pesquisa Operacional
 
-### Software
-- Node.js
-- Express
-- MySQL
-- HTML
-- CSS
-- JavaScript
-- API REST
+O sistema compara três rotas candidatas. Cada alternativa usa dados demonstrativos de distância, tempo estimado, risco, custo, trânsito, sinal/confiabilidade e viabilidade. Os valores são normalizados por min-max e avaliados pela função objetivo:
 
-## Diferenciais
+    Min Z = wt × T + wr × R + wd × D + wc × C
 
-- aplicação de IoT em um processo crítico da área da saúde;
-- monitoramento de múltiplas condições em uma única solução;
-- histórico das leituras para rastreabilidade;
-- arquitetura separando sensores, API, banco e visualização;
-- possibilidade de alertas baseados em parâmetros definidos;
-- evolução futura para conectividade móvel e acompanhamento em trânsito.
+| Critério | Peso |
+|---|---:|
+| Tempo | 40% |
+| Risco | 30% |
+| Distância | 20% |
+| Custo | 10% |
 
-## Indicadores para um piloto
+As condições operacionais são renovadas entre execuções. Portanto, a rota recomendada pode mudar como consequência do score e das restrições, não por escolha aleatória. Veja [Pesquisa Operacional](docs/operations-research.md).
 
-| Indicador | Decisão apoiada |
+## Física aplicada
+
+A seção de Física calcula, a partir da telemetria simulada:
+
+- variação térmica: ΔT = T_atual − T_inicial;
+- taxa térmica e calor didático: Q = m × c × ΔT;
+- aceleração resultante e pico de impacto;
+- potência: P = V × I;
+- energia consumida, energia restante e autonomia estimada.
+
+São cálculos acadêmicos/didáticos, não medições médicas certificadas ou especificações de hardware real. Detalhes em [Física aplicada](docs/physics.md).
+
+## Eletrônica Digital
+
+A lógica de alerta implementada no software e no circuito Logisim é:
+
+    ALERTA = TRANSPORTE_ATIVO AND
+             (TEMPERATURA_CRITICA OR IMPACTO_CRITICO)
+
+A porta OR identifica temperatura ou impacto crítico. A porta AND exige também que o transporte esteja ativo. A saída ALERTA aciona os sinais LED e BUZZER.
+
+- Circuito: [electronics/lifebox-alert-logic.circ](electronics/lifebox-alert-logic.circ)
+- Evidências e tabela verdade: [Eletrônica Digital](docs/electronics-evidence.md)
+
+![Temperatura crítica no Logisim](docs/evidencias/eletronica/02-temperatura-critica.png)
+
+## Dashboard
+
+O dashboard reúne cards de telemetria, Pesquisa Operacional e ranking de rotas, mapa/rastreabilidade, cenários de demonstração, alertas, atuadores virtuais, timeline, análise física e resumo final.
+
+![Dashboard inicial da LifeBox](docs/evidencias/dashboard/01-dashboard-inicial.png)
+
+As 11 capturas reais do dashboard estão em [Evidências visuais do dashboard](docs/evidencias/dashboard/README.md).
+
+## Evidências
+
+Foram produzidas evidências reais do sistema em execução:
+
+- 11 evidências do dashboard: [visualizar galeria](docs/evidencias/dashboard/README.md);
+- 4 evidências do Logisim: [visualizar Eletrônica Digital](docs/electronics-evidence.md).
+
+Não foram usados mockups para essas evidências.
+
+## API
+
+| Área | Endpoints |
 |---|---|
-| Leituras fora dos limites | Identificar ocorrências críticas |
-| Tempo total de transporte | Acompanhar duração do trajeto |
-| Quantidade de impactos registrados | Avaliar condições de manuseio |
-| Intervalo entre atualizações | Verificar regularidade do monitoramento |
-| Disponibilidade do sistema | Medir continuidade do acompanhamento |
+| Saúde | GET /api/health |
+| Transportes | GET/POST /api/transportes; POST /api/transportes/:id/iniciar; POST /api/transportes/:id/finalizar |
+| Telemetria | POST /api/telemetria |
+| Alertas | PATCH /api/alertas/:id/resolver |
+| Simulação | GET /api/simulacao/status e POST para start, stop, reset e cenario |
+| Otimização | rotas candidatas, consulta e cálculo por transporte |
+| Física | GET /api/fisica/:transporteId |
 
-> Os indicadores estão definidos como parte do projeto, mas resultados numéricos só serão apresentados após testes e coleta de dados.
+Consulte o [contrato de telemetria](docs/telemetry-contract.md) e a [documentação da API](docs/api.md).
 
-## Estrutura atual
+## Banco de dados
 
-```text
-├── assets/
-│   ├── cover.svg
-│   └── lifebox-logo.svg
-├── docs/
-│   ├── architecture.md
-│   ├── database.md
-│   └── hardware.md
-├── .gitignore
-└── README.md
-```
+O schema MySQL contém, principalmente:
 
-## Status do projeto
+- transportes;
+- leituras;
+- alertas;
+- eventos_rastreabilidade;
+- otimizacoes_rota.
 
-🚧 **Em desenvolvimento**
+Consulte [database/schema.sql](database/schema.sql) e [documentação do banco](docs/database.md).
 
-O projeto está na fase inicial de definição da arquitetura e do MVP. As próximas implementações serão adicionadas ao repositório conforme o avanço do trabalho acadêmico.
+## Como executar localmente
+
+Pré-requisitos: Node.js 18+ e MySQL 8 para persistência local.
+
+    npm install
+    Copy-Item .env.example .env
+
+Configure as credenciais locais no arquivo .env. Nunca versione esse arquivo e não use senhas reais na documentação.
+
+    PORT=3000
+    DB_DRIVER=mysql
+    DB_HOST=localhost
+    DB_PORT=3306
+    DB_USER=root
+    DB_PASSWORD=sua_senha_local
+    DB_NAME=lifebox_db
+
+Aplique o schema e inicie:
+
+    npm run setup-db
+    npm start
+
+Abra [http://localhost:3000](http://localhost:3000).
+
+Para desenvolvimento:
+
+    npm run dev
+
+Também há suporte a Docker:
+
+    docker compose up --build
+
+## Testes
+
+    npm run check
+    npm test
+
+Estado atual: 26 testes automatizados aprovados.
+
+## CI
+
+O workflow do GitHub Actions executa CI em push e pull request:
+
+1. checkout;
+2. Node.js 20;
+3. npm ci;
+4. npm run check;
+5. npm test.
+
+Isso é CI. Deploy automático (CD) e cloud pública real ainda não foram implementados.
+
+## Estrutura do projeto
+
+    electronics/         circuito Logisim e documentação do alerta digital
+    firmware/            exemplo/proposta futura de ESP32
+    public/              dashboard HTML, CSS e JavaScript
+    simulator/           rota, sensores, cenários e produtor externo
+    src/                 API, serviços, regras, otimização e persistência
+    database/            schema e seed MySQL
+    tests/               testes automatizados
+    docs/                documentação técnica e evidências visuais
+    .github/workflows/   GitHub Actions CI
 
 ## Próximos passos
 
-- definir os limites e regras de alerta do protótipo;
-- criar a API REST;
-- modelar e implementar o banco MySQL;
-- desenvolver um simulador de leituras;
-- construir o dashboard de monitoramento;
-- integrar ESP32 e sensores;
-- validar o GPS em ambiente externo;
-- registrar testes e evidências visuais do protótipo.
+- simulação ESP32/Wokwi;
+- integração da telemetria do ESP32 com a API;
+- deploy real do backend em cloud pública;
+- banco MySQL gerenciado;
+- CI/CD completo;
+- evolução para protótipo físico.
 
-## Documentação
+## Tecnologias
 
-- [Arquitetura](docs/architecture.md)
-- [Hardware planejado](docs/hardware.md)
-- [Modelo inicial de dados](docs/database.md)
+- Node.js e Express;
+- MySQL;
+- HTML, CSS e JavaScript;
+- Leaflet / OpenStreetMap;
+- Logisim Evolution 4.1.0;
+- GitHub Actions;
+- Docker;
+- Node.js test runner;
+- ESP32 como proposta futura de integração física.
 
 ## Autor
 
 **Sandro Ferreira** — estudante de Engenharia da Computação e de Inteligência Artificial e Automação Digital.
 
 [LinkedIn](https://linkedin.com/in/sandrozdb) · [GitHub](https://github.com/sandrozdb)
-
----
-
-## MVP funcional atual
-
-<div align="center">
-
-# LIFEBOX
-
-### Transporte Inteligente de Órgãos · MVP acadêmico
-
-**Telemetria simulada · Alertas · Rastreabilidade · Dashboard local**
-
-</div>
-
-> **Aviso:** o MVP atual utiliza sensores, rota e instituições simulados. A arquitetura foi preparada para que a fonte simulada seja posteriormente substituída por um ESP32 e sensores físicos. Os limites são demonstrativos e deverão ser definidos com base em protocolo médico e requisitos regulatórios. Este projeto não é um dispositivo médico certificado e não confirma preservação clínica.
-
-## Visão do produto
-
-A LifeBox demonstra uma arquitetura de monitoramento de condições e rastreabilidade durante um transporte crítico. O protótipo permite observar temperatura, umidade, movimento, impacto, localização, velocidade, bateria e sinal durante uma viagem fictícia.
-
-## Problema e solução proposta
-
-Transportes críticos exigem visibilidade operacional e registro cronológico. Este MVP prova o fluxo técnico de coleta, persistência, regras, alertas e visualização sem inventar resultados físicos ou clínicos.
-
-```text
-Simulador de sensores → API REST → MySQL → motor de regras
-                                           ↓
-                             dashboard + mapa + timeline
-```
-
-## Funcionalidades
-
-- dashboard responsivo com atualização automática a cada 2 segundos;
-- mapa Leaflet/OpenStreetMap com origem, destino, rota, posição e trajeto;
-- fallback offline com coordenadas e progresso;
-- gráficos de temperatura, umidade, impacto e bateria;
-- alertas persistidos com severidade, valor, cooldown e resolução;
-- timeline vinda do banco;
-- resumo ao concluir transporte;
-- simulador interno controlado pela interface;
-- simulador Node.js externo usando o mesmo contrato do futuro ESP32;
-- oito cenários de demonstração;
-- API validada e queries parametrizadas;
-- testes sem dependência de MySQL no CI.
-
-## Cenários
-
-Normal, temperatura crítica progressiva, impacto, umidade alta, bateria baixa progressiva, perda/restabelecimento de sinal, atraso e transporte concluído.
-
-## Integração com as disciplinas
-
-| Disciplina | Aplicação na LifeBox |
-|---|---|
-| Eletrônica Digital e Analógica | Sensores, interfaces, alimentação e lógica AND/OR para alerta, LED e buzzer futuros |
-| Física para Sistemas Computacionais | ΔT, aceleração, potência, energia e autonomia de bateria didática |
-| Software Architecture & Design Patterns | Strategy para score de rota e Observer para eventos de alertas |
-| Cloud Computing for Software Development | Configuração por ambiente, containers, health check e arquitetura cloud-ready |
-| Operations Research | Normalização, restrições e função multiobjetivo para escolha da rota |
-| Software Testing & Quality Assurance | Testes automatizados de API, regras, otimização e cálculos físicos |
-
-## Requisitos
-
-- Windows 10/11 com Node.js 18 ou superior;
-- MySQL 8;
-- VS Code recomendado;
-- internet somente para os blocos visuais do mapa OpenStreetMap. O restante funciona localmente.
-
-## Instalação no Windows
-
-```powershell
-npm install
-Copy-Item .env.example .env
-```
-
-Edite `.env` com suas credenciais locais. Nunca envie esse arquivo ao GitHub.
-
-```env
-PORT=3000
-DB_DRIVER=mysql
-DB_HOST=localhost
-DB_PORT=3306
-DB_USER=root
-DB_PASSWORD=sua_senha_local
-DB_NAME=lifebox_db
-```
-
-Crie e popule o banco:
-
-```powershell
-npm run setup-db
-```
-
-Inicie o sistema:
-
-```powershell
-npm start
-```
-
-Acesse [http://localhost:3000](http://localhost:3000).
-
-Alternativa com Docker:
-
-```powershell
-docker compose up --build
-```
-
-O modo tradicional sem Docker continua suportado.
-
-Durante desenvolvimento:
-
-```powershell
-npm run dev
-```
-
-## Simulador externo
-
-Com a API ativa em outro terminal:
-
-```powershell
-npm run simulator
-npm run simulator -- impacto
-```
-
-O dashboard já possui seu próprio simulador controlável; o processo externo existe para comprovar a separação entre produtor e backend.
-
-## Banco
-
-- `database/schema.sql`: tabelas e índices.
-- `database/seed.sql`: transporte demonstrativo na região de São Paulo.
-- Nenhum paciente ou hospital parceiro real é usado.
-
-Consulte [docs/database.md](docs/database.md).
-
-## API e contrato
-
-O produtor envia JSON para `POST /api/telemetria`. Consulte:
-
-- [API REST](docs/api.md)
-- [Contrato de telemetria](docs/telemetry-contract.md)
-- [Payload de exemplo](firmware/example-payload.json)
-
-## Estrutura
-
-```text
-src/           API, serviços, otimização, Física, regras e persistência
-simulator/     rota, sensores, cenários e produtor externo
-public/        dashboard HTML/CSS/JavaScript
-database/      schema e seed MySQL
-firmware/      exemplo futuro de ESP32 (não testado em hardware)
-tests/         testes principais com repositório em memória
-docs/          arquitetura, PO, Física, eletrônica, cloud, QA e apresentação
-.github/       workflow de validação
-```
-
-## Testes
-
-```powershell
-npm run check
-npm test
-```
-
-São validados: health, transporte, telemetria, alertas, progresso, resumo, normalização, pesos, inviabilidade, empate e fórmulas físicas.
-
-## Modo demonstração
-
-O roteiro completo está em [docs/demo-guide.md](docs/demo-guide.md). Nenhuma edição de código é necessária durante a apresentação.
-
-## Limitações
-
-- sensores e GPS são simulados;
-- rota e instituições são fictícias;
-- mapa-base depende de internet, embora a rastreabilidade continue sem ele;
-- não há autenticação no MVP local;
-- limites ainda não foram definidos por especialistas;
-- não há certificação, validação clínica ou ensaio físico.
-
-## Próximos passos físicos
-
-1. montar ESP32;
-2. integrar sensor térmico/DHT22, MPU6050 e NEO-6M;
-3. adaptar o exemplo de firmware;
-4. calibrar sensores;
-5. definir limites com orientação técnica/médica;
-6. adicionar autenticação do dispositivo e HTTPS;
-7. testar fisicamente na caixa térmica.
-
-Documentação complementar: [arquitetura](docs/architecture.md), [hardware](docs/hardware.md) e [simulação](docs/simulation.md).
