@@ -7,3 +7,8 @@
 .presentation-alert-card{width:100%;padding:22px 48px 22px 24px;text-align:left;box-shadow:0 14px 42px #000a,0 0 28px #ff536755;pointer-events:auto}
 .presentation-alert-card h2{margin:8px 0 5px;font-size:24px}.presentation-alert-card span{display:block;line-height:1.45}.presentation-alert-close{pointer-events:auto}
 @media(max-width:800px){.presentation-alert{inset:84px 14px auto 14px;width:auto}.presentation-alert-card{padding:18px 44px 18px 18px}.presentation-alert-card h2{font-size:20px}}
+/* Faixa compacta: permanece abaixo do cabeçalho sem sobrepor métricas ou Pesquisa Operacional. */
+.presentation-alert{inset:84px 24px auto auto;width:min(420px,calc(100vw - 48px))}
+.presentation-alert-card{padding:10px 42px 10px 16px;border-radius:12px}
+.presentation-alert-card p{font-size:9px;letter-spacing:1px}.presentation-alert-card h2{margin:4px 0;font-size:18px;line-height:1.1}.presentation-alert-card span{font-size:12px;line-height:1.25}.presentation-alert-close{top:6px;right:6px;font-size:22px}
+@media(max-width:800px){.presentation-alert{inset:84px 12px auto 12px;width:auto}.presentation-alert-card{padding:10px 38px 10px 14px}}
