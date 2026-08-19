@@ -1,0 +1,20 @@
+{
+  "name": "lifebox-smart-organ-transport",
+  "version": "1.0.0",
+  "description": "MVP acadêmico local de monitoramento e rastreabilidade LifeBox",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "simulator": "node simulator/simulator.js",
+    "test": "node --test --test-concurrency=1",
+    "check": "node scripts/check-syntax.js",
+    "setup-db": "node scripts/setup-db.js"
+  },
+  "engines": { "node": ">=18" },
+  "dependencies": {
+    "dotenv": "^17.2.1",
+    "express": "^5.1.0",
+    "mysql2": "^3.14.3"
+  }
+}

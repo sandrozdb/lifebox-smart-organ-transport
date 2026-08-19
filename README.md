@@ -123,3 +123,191 @@ O projeto está na fase inicial de definição da arquitetura e do MVP. As próx
 **Sandro Ferreira** — estudante de Engenharia da Computação e de Inteligência Artificial e Automação Digital.
 
 [LinkedIn](https://linkedin.com/in/sandrozdb) · [GitHub](https://github.com/sandrozdb)
+
+---
+
+## MVP funcional atual
+
+<div align="center">
+
+# LIFEBOX
+
+### Transporte Inteligente de Órgãos · MVP acadêmico
+
+**Telemetria simulada · Alertas · Rastreabilidade · Dashboard local**
+
+</div>
+
+> **Aviso:** o MVP atual utiliza sensores, rota e instituições simulados. A arquitetura foi preparada para que a fonte simulada seja posteriormente substituída por um ESP32 e sensores físicos. Os limites são demonstrativos e deverão ser definidos com base em protocolo médico e requisitos regulatórios. Este projeto não é um dispositivo médico certificado e não confirma preservação clínica.
+
+## Visão do produto
+
+A LifeBox demonstra uma arquitetura de monitoramento de condições e rastreabilidade durante um transporte crítico. O protótipo permite observar temperatura, umidade, movimento, impacto, localização, velocidade, bateria e sinal durante uma viagem fictícia.
+
+## Problema e solução proposta
+
+Transportes críticos exigem visibilidade operacional e registro cronológico. Este MVP prova o fluxo técnico de coleta, persistência, regras, alertas e visualização sem inventar resultados físicos ou clínicos.
+
+```text
+Simulador de sensores → API REST → MySQL → motor de regras
+                                           ↓
+                             dashboard + mapa + timeline
+```
+
+## Funcionalidades
+
+- dashboard responsivo com atualização automática a cada 2 segundos;
+- mapa Leaflet/OpenStreetMap com origem, destino, rota, posição e trajeto;
+- fallback offline com coordenadas e progresso;
+- gráficos de temperatura, umidade, impacto e bateria;
+- alertas persistidos com severidade, valor, cooldown e resolução;
+- timeline vinda do banco;
+- resumo ao concluir transporte;
+- simulador interno controlado pela interface;
+- simulador Node.js externo usando o mesmo contrato do futuro ESP32;
+- oito cenários de demonstração;
+- API validada e queries parametrizadas;
+- testes sem dependência de MySQL no CI.
+
+## Cenários
+
+Normal, temperatura crítica progressiva, impacto, umidade alta, bateria baixa progressiva, perda/restabelecimento de sinal, atraso e transporte concluído.
+
+## Integração com as disciplinas
+
+| Disciplina | Aplicação na LifeBox |
+|---|---|
+| Eletrônica Digital e Analógica | Sensores, interfaces, alimentação e lógica AND/OR para alerta, LED e buzzer futuros |
+| Física para Sistemas Computacionais | ΔT, aceleração, potência, energia e autonomia de bateria didática |
+| Software Architecture & Design Patterns | Strategy para score de rota e Observer para eventos de alertas |
+| Cloud Computing for Software Development | Configuração por ambiente, containers, health check e arquitetura cloud-ready |
+| Operations Research | Normalização, restrições e função multiobjetivo para escolha da rota |
+| Software Testing & Quality Assurance | Testes automatizados de API, regras, otimização e cálculos físicos |
+
+## Requisitos
+
+- Windows 10/11 com Node.js 18 ou superior;
+- MySQL 8;
+- VS Code recomendado;
+- internet somente para os blocos visuais do mapa OpenStreetMap. O restante funciona localmente.
+
+## Instalação no Windows
+
+```powershell
+npm install
+Copy-Item .env.example .env
+```
+
+Edite `.env` com suas credenciais locais. Nunca envie esse arquivo ao GitHub.
+
+```env
+PORT=3000
+DB_DRIVER=mysql
+DB_HOST=localhost
+DB_PORT=3306
+DB_USER=root
+DB_PASSWORD=sua_senha_local
+DB_NAME=lifebox_db
+```
+
+Crie e popule o banco:
+
+```powershell
+npm run setup-db
+```
+
+Inicie o sistema:
+
+```powershell
+npm start
+```
+
+Acesse [http://localhost:3000](http://localhost:3000).
+
+Alternativa com Docker:
+
+```powershell
+docker compose up --build
+```
+
+O modo tradicional sem Docker continua suportado.
+
+Durante desenvolvimento:
+
+```powershell
+npm run dev
+```
+
+## Simulador externo
+
+Com a API ativa em outro terminal:
+
+```powershell
+npm run simulator
+npm run simulator -- impacto
+```
+
+O dashboard já possui seu próprio simulador controlável; o processo externo existe para comprovar a separação entre produtor e backend.
+
+## Banco
+
+- `database/schema.sql`: tabelas e índices.
+- `database/seed.sql`: transporte demonstrativo na região de São Paulo.
+- Nenhum paciente ou hospital parceiro real é usado.
+
+Consulte [docs/database.md](docs/database.md).
+
+## API e contrato
+
+O produtor envia JSON para `POST /api/telemetria`. Consulte:
+
+- [API REST](docs/api.md)
+- [Contrato de telemetria](docs/telemetry-contract.md)
+- [Payload de exemplo](firmware/example-payload.json)
+
+## Estrutura
+
+```text
+src/           API, serviços, otimização, Física, regras e persistência
+simulator/     rota, sensores, cenários e produtor externo
+public/        dashboard HTML/CSS/JavaScript
+database/      schema e seed MySQL
+firmware/      exemplo futuro de ESP32 (não testado em hardware)
+tests/         testes principais com repositório em memória
+docs/          arquitetura, PO, Física, eletrônica, cloud, QA e apresentação
+.github/       workflow de validação
+```
+
+## Testes
+
+```powershell
+npm run check
+npm test
+```
+
+São validados: health, transporte, telemetria, alertas, progresso, resumo, normalização, pesos, inviabilidade, empate e fórmulas físicas.
+
+## Modo demonstração
+
+O roteiro completo está em [docs/demo-guide.md](docs/demo-guide.md). Nenhuma edição de código é necessária durante a apresentação.
+
+## Limitações
+
+- sensores e GPS são simulados;
+- rota e instituições são fictícias;
+- mapa-base depende de internet, embora a rastreabilidade continue sem ele;
+- não há autenticação no MVP local;
+- limites ainda não foram definidos por especialistas;
+- não há certificação, validação clínica ou ensaio físico.
+
+## Próximos passos físicos
+
+1. montar ESP32;
+2. integrar sensor térmico/DHT22, MPU6050 e NEO-6M;
+3. adaptar o exemplo de firmware;
+4. calibrar sensores;
+5. definir limites com orientação técnica/médica;
+6. adicionar autenticação do dispositivo e HTTPS;
+7. testar fisicamente na caixa térmica.
+
+Documentação complementar: [arquitetura](docs/architecture.md), [hardware](docs/hardware.md) e [simulação](docs/simulation.md).

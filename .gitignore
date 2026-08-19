@@ -4,3 +4,6 @@ node_modules/
 *.log
 coverage/
 dist/
+npm-debug.log*
+work/
+Thumbs.db

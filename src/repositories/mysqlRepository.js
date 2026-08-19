@@ -1,0 +1,36 @@
+const { pool } = require('../database/mysql');
+
+const mapTransport = row => row && ({ ...row, latitude_origem:Number(row.latitude_origem), longitude_origem:Number(row.longitude_origem), latitude_destino:Number(row.latitude_destino), longitude_destino:Number(row.longitude_destino) });
+
+module.exports = {
+  async listTransportes() { const [rows] = await pool.query('SELECT * FROM transportes ORDER BY criado_em DESC'); return rows.map(mapTransport); },
+  async getTransporte(id) { const [rows] = await pool.execute('SELECT * FROM transportes WHERE id=?', [id]); return mapTransport(rows[0]); },
+  async createTransporte(data) {
+    const [result] = await pool.execute(`INSERT INTO transportes
+      (codigo_transporte,identificador_caixa,tipo_orgao,hospital_origem,hospital_destino,latitude_origem,longitude_origem,latitude_destino,longitude_destino,status)
+      VALUES (?,?,?,?,?,?,?,?,?,'PREPARADO')`, [data.codigo_transporte,data.identificador_caixa,data.tipo_orgao,data.hospital_origem,data.hospital_destino,data.latitude_origem,data.longitude_origem,data.latitude_destino,data.longitude_destino]);
+    return this.getTransporte(result.insertId);
+  },
+  async updateTransporte(id, fields) {
+    const allowed = ['status','inicio_transporte','fim_transporte']; const keys = Object.keys(fields).filter(key => allowed.includes(key));
+    if (!keys.length) return this.getTransporte(id);
+    await pool.execute(`UPDATE transportes SET ${keys.map(key => `${key}=?`).join(',')} WHERE id=?`, [...keys.map(key=>fields[key]),id]); return this.getTransporte(id);
+  },
+  async createLeitura(data) {
+    const timestamp = String(data.timestamp || new Date().toISOString()).replace('T', ' ').replace('Z', '').slice(0, 19);
+    const [result] = await pool.execute(`INSERT INTO leituras
+      (transporte_id,temperatura,umidade,aceleracao,aceleracao_x,aceleracao_y,aceleracao_z,impacto,latitude,longitude,velocidade,bateria,sinal,device_id,registrado_em)
+      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`, [data.transporteId,data.temperatura,data.umidade,data.aceleracao,data.aceleracaoX??data.aceleracao,data.aceleracaoY??0,data.aceleracaoZ??0,data.impacto,data.latitude,data.longitude,data.velocidade,data.bateria,data.sinal,data.deviceId,timestamp]);
+    const [rows] = await pool.execute('SELECT * FROM leituras WHERE id=?',[result.insertId]); return rows[0];
+  },
+  async getLeituras(id, limit=100) { const [rows] = await pool.query('SELECT * FROM leituras WHERE transporte_id=? ORDER BY registrado_em DESC,id DESC LIMIT ?', [id,Number(limit)]); return rows; },
+  async createAlerta(data) { const [r]=await pool.execute('INSERT INTO alertas (transporte_id,leitura_id,tipo,severidade,mensagem,valor) VALUES (?,?,?,?,?,?)',[data.transporteId,data.leituraId,data.tipo,data.severidade,data.mensagem,data.valor ?? null]); const [rows]=await pool.execute('SELECT * FROM alertas WHERE id=?',[r.insertId]); return rows[0]; },
+  async getAlertas(id) { const [rows]=await pool.execute('SELECT * FROM alertas WHERE transporte_id=? ORDER BY criado_em DESC,id DESC',[id]); return rows; },
+  async getRecentAlerta(id,tipo,since) { const [rows]=await pool.execute('SELECT * FROM alertas WHERE transporte_id=? AND tipo=? AND criado_em>=? ORDER BY criado_em DESC LIMIT 1',[id,tipo,since]); return rows[0]; },
+  async resolveAlerta(id) { await pool.execute('UPDATE alertas SET resolvido=TRUE WHERE id=?',[id]); const [rows]=await pool.execute('SELECT * FROM alertas WHERE id=?',[id]); return rows[0]; },
+  async createEvento(data) { const [r]=await pool.execute('INSERT INTO eventos_rastreabilidade (transporte_id,tipo_evento,descricao,latitude,longitude,registrado_em) VALUES (?,?,?,?,?,?)',[data.transporteId,data.tipoEvento,data.descricao,data.latitude??null,data.longitude??null,data.registradoEm||new Date()]); const [rows]=await pool.execute('SELECT * FROM eventos_rastreabilidade WHERE id=?',[r.insertId]); return rows[0]; },
+  async getEventos(id) { const [rows]=await pool.execute('SELECT * FROM eventos_rastreabilidade WHERE transporte_id=? ORDER BY registrado_em DESC,id DESC',[id]); return rows; },
+  async saveOptimization(transporteId,result) { const connection=await pool.getConnection();try{await connection.beginTransaction();const stamp=new Date();for(const route of result.routes)await connection.execute(`INSERT INTO otimizacoes_rota (transporte_id,rota,nome_rota,distancia,tempo_estimado,risco,custo,score,viavel,selecionada,pesos_utilizados,restricoes_aplicadas,detalhes_calculo,criado_em) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,[transporteId,route.id,route.nome,route.distancia,route.tempoEstimado,route.risco,route.custo,route.score,route.viavel,route.selecionada,JSON.stringify(result.weights),JSON.stringify(result.constraints),JSON.stringify({normalized:route.normalized,partials:route.partials,violations:route.violations}),stamp]);await connection.commit();return result}catch(error){await connection.rollback();throw error}finally{connection.release()} },
+  async getLatestOptimization(id) { const [stampRows]=await pool.execute('SELECT MAX(criado_em) criado_em FROM otimizacoes_rota WHERE transporte_id=?',[id]);if(!stampRows[0]?.criado_em)return null;const [rows]=await pool.execute('SELECT * FROM otimizacoes_rota WHERE transporte_id=? AND criado_em=? ORDER BY id',[id,stampRows[0].criado_em]);for(const row of rows){for(const key of ['pesos_utilizados','restricoes_aplicadas','detalhes_calculo'])if(typeof row[key]==='string')row[key]=JSON.parse(row[key])}return{routes:rows,selectedRouteId:rows.find(x=>x.selecionada)?.rota,weights:rows[0]?.pesos_utilizados,constraints:rows[0]?.restricoes_aplicadas} },
+  async summary(id) { const [rows]=await pool.execute(`SELECT COUNT(*) total_leituras,MIN(temperatura) temperatura_min,MAX(temperatura) temperatura_max,AVG(temperatura) temperatura_media,MIN(umidade) umidade_min,MAX(umidade) umidade_max,SUM(impacto>=1.8) impactos,AVG((temperatura BETWEEN 2 AND 8)*100) percentual_tempo_limites,(SELECT bateria FROM leituras WHERE transporte_id=? ORDER BY registrado_em DESC,id DESC LIMIT 1) bateria_final FROM leituras WHERE transporte_id=?`,[id,id]); return rows[0]; }
+};

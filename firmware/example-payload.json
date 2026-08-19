@@ -1,0 +1,17 @@
+{
+  "transporteId": 1,
+  "deviceId": "LIFEBOX-001",
+  "temperatura": 4.2,
+  "umidade": 65,
+  "aceleracao": 0.12,
+  "aceleracaoX": 0.12,
+  "aceleracaoY": 0.03,
+  "aceleracaoZ": 0.98,
+  "impacto": 0,
+  "latitude": -23.5505,
+  "longitude": -46.6333,
+  "velocidade": 42,
+  "bateria": 87,
+  "sinal": 92,
+  "timestamp": "2026-01-01T12:00:00.000Z"
+}
