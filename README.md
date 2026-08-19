@@ -31,7 +31,7 @@ O dashboard acompanha temperatura, umidade, impacto/movimento, bateria, sinal, l
 | Testes automatizados | 26 aprovados |
 | GitHub Actions CI | Configurado |
 | Evidências visuais | Concluídas localmente |
-| Wokwi / ESP32 | Planejado |
+| Wokwi / ESP32 / sensores / geolocalização | Planejado |
 | Deploy cloud real | Planejado |
 
 ## Arquitetura
@@ -200,26 +200,59 @@ Isso é CI. Deploy automático (CD) e cloud pública real ainda não foram imple
     docs/                documentação técnica e evidências visuais
     .github/workflows/   GitHub Actions CI
 
+## Arquitetura IoT planejada
+
+A próxima etapa de integração embarcada será simulada no Wokwi antes de qualquer decisão sobre protótipo físico. A composição planejada é:
+
+- ESP32 como controlador embarcado simulado;
+- sensor de temperatura e umidade;
+- sensor de impacto/movimento, como o MPU6050 ou equivalente compatível com a simulação;
+- GPS NEO-6M ou simulação equivalente de geolocalização via UART, caso o módulo específico não esteja disponível diretamente no ambiente;
+- LED e buzzer como atuadores de alerta;
+- Wi-Fi para envio da telemetria à API LifeBox.
+
+Fluxo previsto:
+
+    Sensores + GPS → ESP32 (Wokwi) → Wi-Fi → API LifeBox → MySQL → Dashboard / mapa
+
+O ESP32 físico permanece opcional. O uso do ESP32 na arquitetura pode ocorrer inicialmente apenas no ambiente simulado do Wokwi, preservando o mesmo contrato de telemetria da aplicação.
+
 ## Próximos passos
 
-- simulação ESP32/Wokwi;
-- integração da telemetria do ESP32 com a API;
+- simulação do ESP32 no Wokwi com sensores, GPS/geolocalização, LED e buzzer;
+- integração da telemetria do ESP32 simulado com a API;
+- atualização da posição no mapa a partir da geolocalização recebida;
 - deploy real do backend em cloud pública;
 - banco MySQL gerenciado;
 - CI/CD completo;
-- evolução para protótipo físico.
+- possível evolução para protótipo físico com ESP32 e módulos reais.
 
 ## Tecnologias
+
+### Implementadas atualmente
 
 - Node.js e Express;
 - MySQL;
 - HTML, CSS e JavaScript;
+- REST API;
 - Leaflet / OpenStreetMap;
 - Logisim Evolution 4.1.0;
 - GitHub Actions;
 - Docker;
 - Node.js test runner;
-- ESP32 como proposta futura de integração física.
+- C4 Model, Strategy Pattern, Observer Pattern e princípios SOLID.
+
+### Planejadas para a integração IoT e cloud
+
+- ESP32;
+- Wokwi;
+- GPS NEO-6M ou simulação equivalente de geolocalização;
+- sensor de temperatura e umidade;
+- sensor de impacto/movimento;
+- LED e buzzer;
+- cloud pública;
+- MySQL gerenciado;
+- CI/CD completo.
 
 ## Autor
 
