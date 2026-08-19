@@ -54,3 +54,9 @@ SEED_DEMO_DATA=false
 - capturar evidências reais de deploy, URL pública, health check e banco conectado.
 
 Nenhum deploy, conta cloud, banco gerenciado ou recurso pago foi criado por este projeto.
+## Guias desta preparação
+
+- [Variáveis e segredos](cloud-secrets.md)
+- [Checklist do MySQL gerenciado](managed-database-checklist.md)
+- [CI/CD](ci-cd.md)
+- [Checklist de deploy](deployment-checklist.md)

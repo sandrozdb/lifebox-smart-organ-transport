@@ -118,3 +118,20 @@ C4Container
   Rel(web, api, "HTTP")
   Rel(api, db, "SQL parametrizado")
 ```
+## Arquitetura alvo de cloud (planejada)
+
+A execução local atual permanece a referência do MVP. Quando a implantação em nuvem for escolhida, o fluxo planejado será:
+
+```mermaid
+flowchart LR
+  device[Wokwi ou ESP32 futuro] -->|HTTPS / JSON| api[Node.js + Express em cloud]
+  api -->|TLS / SQL| db[MySQL gerenciado]
+  dashboard[Dashboard HTML/CSS/JS] -->|HTTPS| api
+```
+
+- **Wokwi ou ESP32 futuro:** enviará telemetria HTTP/JSON; ainda não existe integração física ou simulada em nuvem.
+- **Backend Node.js/Express:** continuará concentrando API, regras de negócio, dashboard estático, health check e logs.
+- **MySQL gerenciado:** substituirá somente a instância local por meio das variáveis DB_HOST, DB_PORT, DB_USER, DB_PASSWORD e DB_NAME.
+- **Dashboard:** continuará servido pelo próprio Express, evitando uma dependência adicional de hospedagem frontend neste MVP.
+
+Todos esses elementos de cloud são planejados. Nenhum deploy, URL pública, banco gerenciado ou integração Wokwi/ESP32 foi realizado nesta documentação.

@@ -30,6 +30,9 @@ O dashboard acompanha temperatura, umidade, impacto/movimento, bateria, sinal, l
 | Eletrônica Digital / Logisim | Concluído e validado no Logisim Evolution 4.1.0 |
 | Testes automatizados | 26 aprovados |
 | GitHub Actions CI | Configurado |
+| CD | Template preparado; pendente de provedor e deploy real |
+| MySQL gerenciado | Pendente |
+| Secrets reais | Pendentes |
 | Evidências visuais | Concluídas localmente |
 | Wokwi / ESP32 / sensores / geolocalização | Planejado |
 | Deploy cloud real | Planejado |

@@ -1,0 +1,23 @@
+name: CD Template (disabled)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy-template:
+    name: Placeholder de deploy
+    if: false
+    runs-on: ubuntu-latest
+    steps:
+      - name: Orientação
+        run: |
+          echo "Template de CD desabilitado."
+          echo "Escolha um provedor cloud antes de habilitar este job."
+          echo "Secrets futuros podem incluir DEPLOY_TOKEN e DEPLOY_WEBHOOK_URL."
+
+      # Fluxo previsto:
+      # 1. Executar CI aprovada.
+      # 2. Construir a imagem ou aplicação.
+      # 3. Autenticar com secrets do GitHub e do provedor.
+      # 4. Fazer o deploy.
+      # 5. Consultar GET /api/health na URL HTTPS pública.
