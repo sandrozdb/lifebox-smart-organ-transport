@@ -1,40 +1,55 @@
-<p align="center">
-  <img src="assets/lifebox-logo.jpg" alt="LifeBox" width="220" />
-</p>
+<p align="center"><img src="assets/lifebox-logo.jpg" alt="LifeBox - monitoramento inteligente para transporte de órgãos" width="280"></p>
 
-# LifeBox
+# LifeBox — Transporte Inteligente de Órgãos
 
-**Sistema Inteligente de Monitoramento para Transporte de Órgãos**
+Solução acadêmica de IoT para monitorar as condições de uma caixa térmica durante o transporte de órgãos, reunindo sensores, rastreabilidade e acompanhamento remoto em um único fluxo.
 
-A LifeBox é uma solução inteligente desenvolvida para aumentar a segurança e a rastreabilidade no transporte de órgãos destinados a transplantes. O sistema utiliza sensores integrados a um microcontrolador para monitorar continuamente as condições da caixa térmica durante o trajeto.
+## Problema
 
-## Objetivo
+O transporte de órgãos exige controle rigoroso das condições ao longo do trajeto. Alterações de temperatura, impactos, atrasos ou perda de rastreabilidade podem aumentar o risco operacional e dificultar a tomada de decisão pelas equipes responsáveis.
 
-Permitir que hospitais e equipes responsáveis acompanhem remotamente as condições do transporte, aumentando o controle, a rastreabilidade e a capacidade de resposta diante de alterações críticas.
+## Solução
+
+A LifeBox propõe uma caixa térmica inteligente equipada com sensores e conectividade para acompanhar temperatura, umidade, movimentação, localização e tempo de transporte. Os dados são enviados para uma aplicação de monitoramento, permitindo histórico, indicadores e alertas quando algum parâmetro sair dos limites definidos.
+
+```mermaid
+flowchart TD
+    A[Temperatura e umidade] --> E[ESP32]
+    B[Impacto e movimentação] --> E
+    C[GPS / localização] --> E
+    D[Tempo de transporte] --> E
+    E --> F[API REST]
+    F --> G[MySQL]
+    G --> H[Dashboard]
+    H --> I{Parâmetro fora do limite?}
+    I -->|Sim| J[Alerta para equipe responsável]
+    I -->|Não| K[Acompanhamento normal]
+```
 
 ## Monitoramento previsto
 
-- Temperatura
-- Umidade
-- Impactos e movimentações excessivas
-- Localização
-- Tempo de transporte
+| Dado | Objetivo |
+|---|---|
+| Temperatura | Identificar variações térmicas durante o trajeto |
+| Umidade | Acompanhar as condições internas da caixa |
+| Impactos e movimentação | Registrar quedas ou movimentos bruscos |
+| Localização | Permitir rastreabilidade do transporte |
+| Tempo de transporte | Acompanhar a duração e possíveis atrasos |
 
-## Funcionamento
+## Arquitetura planejada
 
-Os sensores coletam os dados da caixa térmica e os enviam para o sistema de monitoramento. A plataforma apresenta as informações em um dashboard e poderá emitir alertas quando algum parâmetro ultrapassar os limites definidos.
+`Sensores → ESP32 → API REST → MySQL → Dashboard → Alertas`
 
-Fluxo conceitual:
+A implementação será incremental. O software poderá ser validado inicialmente com dados simulados antes da integração completa com os componentes físicos.
 
-`Sensores → ESP32 → API → Banco de Dados → Dashboard → Alertas`
-
-## Stack planejada
+## Tecnologias planejadas
 
 ### Hardware
 - ESP32
 - DHT22 ou sensor equivalente de temperatura e umidade
-- MPU6050 para detecção de impactos e movimentação
-- GPS NEO-6M para localização
+- MPU6050 para aceleração, inclinação e movimentação
+- GPS NEO-6M para latitude e longitude
+- Wi-Fi para conectividade no MVP
 
 ### Software
 - Node.js
@@ -45,10 +60,65 @@ Fluxo conceitual:
 - JavaScript
 - API REST
 
-## Status
+## Diferenciais
 
-Projeto acadêmico em desenvolvimento. O MVP inicial será construído de forma incremental, começando pela API, banco de dados, simulador de dados e dashboard. A integração com os sensores físicos será adicionada nas etapas seguintes do projeto.
+- aplicação de IoT em um processo crítico da área da saúde;
+- monitoramento de múltiplas condições em uma única solução;
+- histórico das leituras para rastreabilidade;
+- arquitetura separando sensores, API, banco e visualização;
+- possibilidade de alertas baseados em parâmetros definidos;
+- evolução futura para conectividade móvel e acompanhamento em trânsito.
 
-## Aplicação
+## Indicadores para um piloto
 
-A proposta da LifeBox é unir IoT, monitoramento remoto e análise de dados para contribuir com um processo mais seguro, rastreável e controlado no transporte de órgãos.
+| Indicador | Decisão apoiada |
+|---|---|
+| Leituras fora dos limites | Identificar ocorrências críticas |
+| Tempo total de transporte | Acompanhar duração do trajeto |
+| Quantidade de impactos registrados | Avaliar condições de manuseio |
+| Intervalo entre atualizações | Verificar regularidade do monitoramento |
+| Disponibilidade do sistema | Medir continuidade do acompanhamento |
+
+> Os indicadores estão definidos como parte do projeto, mas resultados numéricos só serão apresentados após testes e coleta de dados.
+
+## Estrutura atual
+
+```text
+├── assets/
+│   └── lifebox-logo.jpg
+├── docs/
+│   ├── architecture.md
+│   ├── database.md
+│   └── hardware.md
+├── .gitignore
+└── README.md
+```
+
+## Status do projeto
+
+🚧 **Em desenvolvimento**
+
+O projeto está na fase inicial de definição da arquitetura e do MVP. As próximas implementações serão adicionadas ao repositório conforme o avanço do trabalho acadêmico.
+
+## Próximos passos
+
+- definir os limites e regras de alerta do protótipo;
+- criar a API REST;
+- modelar e implementar o banco MySQL;
+- desenvolver um simulador de leituras;
+- construir o dashboard de monitoramento;
+- integrar ESP32 e sensores;
+- validar o GPS em ambiente externo;
+- registrar testes e evidências visuais do protótipo.
+
+## Documentação
+
+- [Arquitetura](docs/architecture.md)
+- [Hardware planejado](docs/hardware.md)
+- [Modelo inicial de dados](docs/database.md)
+
+## Autor
+
+**Sandro Ferreira** — estudante de Engenharia da Computação e de Inteligência Artificial e Automação Digital.
+
+[LinkedIn](https://linkedin.com/in/sandrozdb) · [GitHub](https://github.com/sandrozdb)
