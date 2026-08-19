@@ -1,0 +1,63 @@
+<svg width="1280" height="360" viewBox="0 0 1280 360" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="60" y1="30" x2="1240" y2="330" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#052244"/>
+      <stop offset="0.55" stop-color="#0B4C5F"/>
+      <stop offset="1" stop-color="#11635F"/>
+    </linearGradient>
+    <linearGradient id="redGrad" x1="850" y1="98" x2="1105" y2="258" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FF4B4B"/>
+      <stop offset="1" stop-color="#B30000"/>
+    </linearGradient>
+    <linearGradient id="chip1" x1="0" y1="0" x2="90" y2="40" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#13D88A"/>
+      <stop offset="1" stop-color="#0BB86E"/>
+    </linearGradient>
+    <linearGradient id="chip2" x1="0" y1="0" x2="90" y2="40" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FF9B2A"/>
+      <stop offset="1" stop-color="#FF6A00"/>
+    </linearGradient>
+    <linearGradient id="chip3" x1="0" y1="0" x2="90" y2="40" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#1EA1FF"/>
+      <stop offset="1" stop-color="#0072E8"/>
+    </linearGradient>
+    <filter id="shadow" x="770" y="70" width="390" height="220" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="10" stdDeviation="12" flood-color="#021522" flood-opacity="0.25"/>
+    </filter>
+  </defs>
+
+  <rect x="20" y="20" width="1240" height="320" rx="28" fill="url(#bg)"/>
+  <circle cx="1110" cy="85" r="150" fill="#46D4BF" opacity="0.12"/>
+  <circle cx="1030" cy="280" r="145" fill="#4ED9FF" opacity="0.10"/>
+  <circle cx="1270" cy="245" r="135" fill="#48F6B7" opacity="0.08"/>
+
+  <text x="88" y="118" fill="#59F3D2" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="700">SAÚDE • IOT • RASTREABILIDADE</text>
+  <text x="88" y="188" fill="#FFFFFF" font-family="Arial, Helvetica, sans-serif" font-size="44" font-weight="700">LifeBox</text>
+  <text x="88" y="240" fill="#F4F7FB" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="400">Monitoramento inteligente para transporte de órgãos</text>
+
+  <g>
+    <rect x="88" y="274" width="102" height="40" rx="20" fill="url(#chip1)"/>
+    <text x="139" y="300" text-anchor="middle" fill="#FFFFFF" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700">ESP32</text>
+    <rect x="202" y="274" width="92" height="40" rx="20" fill="url(#chip2)"/>
+    <text x="248" y="300" text-anchor="middle" fill="#FFFFFF" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700">GPS</text>
+    <rect x="306" y="274" width="106" height="40" rx="20" fill="url(#chip3)"/>
+    <text x="359" y="300" text-anchor="middle" fill="#FFFFFF" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700">DASHBOARD</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="805" y="106" width="230" height="150" rx="32" fill="url(#redGrad)"/>
+    <rect x="805" y="86" width="230" height="68" rx="32" fill="#F4F4F4"/>
+    <rect x="862" y="76" width="116" height="26" rx="13" fill="#C81818"/>
+    <rect x="889" y="147" width="62" height="34" rx="14" fill="#CC1F1F" opacity="0.75"/>
+    <path d="M920 177C946.51 177 968 198.49 968 225C968 251.51 946.51 273 920 273C893.49 273 872 251.51 872 225C872 198.49 893.49 177 920 177Z" fill="#FFFFFF"/>
+    <path d="M877 225H901L913 203L927 243L939 225H963" stroke="#B30000" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <path d="M785 236C844 286 933 294 1014 269C1072 251 1120 214 1138 171" stroke="#FF5757" stroke-width="10" stroke-linecap="round" fill="none" opacity="0.95"/>
+  <circle cx="1026" cy="266" r="16" fill="#FFFFFF"/>
+  <circle cx="1026" cy="266" r="9" fill="#FF3D3D"/>
+  <path d="M1048 138C1048 116 1066 98 1088 98C1110 98 1128 116 1128 138C1128 161 1109 177 1088 204C1067 177 1048 161 1048 138Z" fill="#E50E0E"/>
+  <circle cx="1088" cy="138" r="12" fill="#FFFFFF"/>
+  <path d="M1108 86C1130 93 1147 110 1153 132" stroke="#FF2424" stroke-width="8" stroke-linecap="round"/>
+  <path d="M1124 70C1156 80 1179 105 1186 138" stroke="#FF2424" stroke-width="8" stroke-linecap="round"/>
+</svg>
