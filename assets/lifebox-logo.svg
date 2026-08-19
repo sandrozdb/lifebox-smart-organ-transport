@@ -1,0 +1,58 @@
+<svg width="1200" height="1200" viewBox="0 0 1200 1200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="red" x1="250" y1="260" x2="900" y2="880" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FF2A2F"/>
+      <stop offset="0.55" stop-color="#E20C16"/>
+      <stop offset="1" stop-color="#A70009"/>
+    </linearGradient>
+    <linearGradient id="deep" x1="245" y1="900" x2="950" y2="1010" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#6E0007"/>
+      <stop offset="0.42" stop-color="#9D000A"/>
+      <stop offset="0.43" stop-color="#F3161E"/>
+      <stop offset="1" stop-color="#D60812"/>
+    </linearGradient>
+    <linearGradient id="lid" x1="330" y1="355" x2="865" y2="545" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#DDE4E9"/>
+    </linearGradient>
+    <filter id="shadow" x="120" y="180" width="970" height="720" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="24" stdDeviation="24" flood-color="#620007" flood-opacity="0.20"/>
+    </filter>
+  </defs>
+
+  <g filter="url(#shadow)">
+    <!-- handle -->
+    <path d="M425 350V308C425 250 472 203 530 203H672C730 203 777 250 777 308V350" stroke="url(#red)" stroke-width="54" stroke-linecap="round"/>
+    <path d="M445 338V310C445 264 481 228 527 228H675C721 228 757 264 757 310V338" stroke="#FF5A5F" stroke-width="10" stroke-linecap="round" opacity="0.7"/>
+
+    <!-- cooler body -->
+    <rect x="245" y="382" width="710" height="430" rx="74" fill="url(#red)"/>
+    <path d="M245 492H955" stroke="#880008" stroke-width="18"/>
+    <path d="M245 478H955" stroke="#FF5C61" stroke-width="10" opacity="0.75"/>
+    <path d="M290 382H910C935 382 955 402 955 427V482H245V427C245 402 265 382 290 382Z" fill="url(#lid)"/>
+    <path d="M270 420C382 388 803 386 925 419" stroke="#FFFFFF" stroke-width="10" stroke-linecap="round" opacity="0.75"/>
+
+    <!-- latch -->
+    <rect x="525" y="438" width="150" height="104" rx="28" fill="#1D2227"/>
+    <rect x="541" y="448" width="118" height="82" rx="20" fill="url(#red)"/>
+    <rect x="566" y="471" width="68" height="28" rx="7" fill="#F2F5F6"/>
+
+    <!-- heart + ECG -->
+    <path d="M600 676C540 620 485 586 485 532C485 489 519 461 560 461C580 461 596 469 610 485C624 469 640 461 660 461C701 461 735 489 735 532C735 586 680 620 620 676L610 686L600 676Z" fill="white" transform="translate(0 72)"/>
+    <path d="M507 633H557L581 575L618 685L652 605L675 633H723" stroke="#D80B14" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <!-- tracking orbit -->
+  <path d="M175 765C265 835 458 854 654 820C824 791 963 726 1035 635" stroke="url(#red)" stroke-width="28" stroke-linecap="round"/>
+  <path d="M182 754C346 825 545 826 725 775" stroke="#FF676B" stroke-width="7" stroke-linecap="round" opacity="0.85"/>
+  <circle cx="874" cy="742" r="37" fill="#E10C15" stroke="white" stroke-width="12"/>
+
+  <!-- location pin -->
+  <path d="M875 365C875 294 931 238 1002 238C1073 238 1129 294 1129 365C1129 458 1002 570 1002 570C1002 570 875 458 875 365Z" fill="url(#red)"/>
+  <circle cx="1002" cy="365" r="44" fill="white"/>
+  <path d="M1045 224C1093 226 1136 245 1167 278" stroke="#EF111B" stroke-width="24" stroke-linecap="round"/>
+  <path d="M1055 175C1131 179 1198 211 1242 262" stroke="#EF111B" stroke-width="24" stroke-linecap="round" opacity="0.75" transform="translate(-70 0)"/>
+
+  <!-- wordmark -->
+  <text x="600" y="1035" text-anchor="middle" fill="url(#deep)" font-family="Arial, Helvetica, sans-serif" font-size="190" font-weight="800" letter-spacing="-12">LifeBox</text>
+</svg>
