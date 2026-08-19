@@ -86,7 +86,7 @@ A implementação será incremental. O software poderá ser validado inicialment
 ```text
 ├── assets/
 │   ├── cover.svg
-│   └── lifebox-logo.jpg
+│   └── lifebox-logo.svg
 ├── docs/
 │   ├── architecture.md
 │   ├── database.md
