@@ -1,4 +1,4 @@
-<p align="center"><img src="assets/lifebox-logo.jpg" alt="LifeBox - monitoramento inteligente para transporte de órgãos" width="280"></p>
+<p align="center"><img src="assets/cover.jpg" alt="LifeBox - monitoramento inteligente para transporte de órgãos" width="100%"></p>
 
 # LifeBox — Transporte Inteligente de Órgãos
 
@@ -85,6 +85,7 @@ A implementação será incremental. O software poderá ser validado inicialment
 
 ```text
 ├── assets/
+│   ├── cover.jpg
 │   └── lifebox-logo.jpg
 ├── docs/
 │   ├── architecture.md
