@@ -1,40 +1,18 @@
-# Estrutura inicial de dados
-
-A modelagem final será refinada durante o desenvolvimento. A estrutura inicial considera pelo menos duas entidades principais.
-
-## transportes
-
-- id
-- identificador_caixa
-- hospital_origem
-- hospital_destino
-- inicio_transporte
-- fim_transporte
-- status
-
-## leituras
-
-- id
-- transporte_id
-- temperatura
-- umidade
-- impacto
-- latitude
-- longitude
-- registrado_em
-
-## Objetivo
-
-Manter histórico das condições da LifeBox ao longo de cada transporte, permitindo consultas, geração de indicadores e rastreabilidade dos eventos registrados.
-
----
-
-## Estado atual do MVP
-
 # Banco de dados
 
-O MySQL usa cinco tabelas: `transportes`, `leituras`, `alertas`, `eventos_rastreabilidade` e `otimizacoes_rota`. Chaves estrangeiras preservam a relação com o transporte e índices por data aceleram histórico e timeline.
+O schema MySQL é idempotente e não executa `DROP`. O setup aplica apenas criação e migrações aditivas.
 
-`otimizacoes_rota` registra todas as alternativas do lote calculado, score, viabilidade, rota selecionada, pesos, restrições e detalhes normalizados em JSON. As leituras armazenam também os três eixos simulados da aceleração.
+## Tabelas principais
 
-Execute `npm run setup-db` após configurar `.env`. `database/schema.sql` é idempotente e `database/seed.sql` cria um transporte demonstrativo sem paciente ou instituição real.
+- `transportes`: dados do transporte, status, início/fim e `execucao_atual_id`;
+- `leituras`: telemetria, eixos de aceleração e `execucao_id`;
+- `alertas`: ocorrências e resolução por execução;
+- `eventos_rastreabilidade`: timeline, incluindo reotimização aplicada;
+- `execution_summaries`: resumo persistido de cada execução concluída;
+- `otimizacoes_rota`: histórico legado de otimizações ponderadas, preservado para compatibilidade;
+- `organ_profiles`, `transport_plans`, `transport_plan_segments` e tabelas de `optimization_*`: estruturas do planejamento logístico atual;
+- `scientific_sources`: referências catalogadas.
+
+O resumo final consulta a execução atual pelo identificador de execução para não misturar leituras, alertas ou impactos de execuções anteriores do mesmo transporte.
+
+Execute `npm run setup-db` depois de configurar o `.env` local. O seed demonstrativo depende de `SEED_DEMO_DATA=true`; não é obrigatório para produção.

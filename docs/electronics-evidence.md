@@ -1,27 +1,17 @@
 # Evidências — Eletrônica Digital
 
-A lógica combinacional demonstrada no circuito é:
+A lógica combinacional validada no Logisim Evolution 4.1.0 e implementada no software é:
 
 ```text
 ALERTA = TRANSPORTE_ATIVO AND (TEMPERATURA_CRITICA OR IMPACTO_CRITICO)
 ```
 
-O circuito correspondente está em [`electronics/lifebox-alert-logic.circ`](../electronics/lifebox-alert-logic.circ) e foi validado no Logisim Evolution 4.1.0.
+O fluxo no MVP é: **sensor/simulação → software → comparação com o perfil do órgão → sinal booleano `TEMPERATURA_CRITICA` → lógica digital → LED/buzzer**. O circuito recebe apenas sinais `0` ou `1`; a comparação da temperatura é responsabilidade do software.
 
-## Lógica combinacional
+- Alertas **digitais**: temperatura crítica e impacto crítico; acionam LED e buzzer.
+- Alertas **operacionais**: umidade, bateria, sinal, atraso e reotimização; são registrados e exibidos, mas não entram na equação digital.
 
-A porta **OR** recebe `TEMPERATURA_CRITICA` e `IMPACTO_CRITICO`. Sua saída indica que existe ao menos uma condição crítica.
-
-A porta **AND** recebe a saída da OR e `TRANSPORTE_ATIVO`. Assim, o alerta só é ativado se o transporte estiver ativo e houver temperatura crítica ou impacto crítico.
-
-No software, a mesma lógica é implementada em [`src/services/digitalAlertLogic.js`](../src/services/digitalAlertLogic.js):
-
-```js
-const criticalCondition = Boolean(temperatureCritical || impactCritical);
-const alertOutput = Boolean(transportActive && criticalCondition);
-```
-
-`alertOutput` também controla os estados virtuais `ledOn` e `buzzerOn`.
+A porta **OR** representa a condição crítica de temperatura ou impacto. A porta **AND** bloqueia a saída quando o transporte não está ativo. A mesma regra está em [`src/services/digitalAlertLogic.js`](../src/services/digitalAlertLogic.js); o circuito é [`electronics/lifebox-alert-logic.circ`](../electronics/lifebox-alert-logic.circ).
 
 ## Tabela verdade
 
@@ -44,19 +34,19 @@ Transporte inativo e nenhuma condição crítica. ALERTA, LED e BUZZER permanece
 
 ## 2. Temperatura crítica
 
-Com o transporte ativo e temperatura crítica, a saída de alerta é ativada, acionando LED e BUZZER.
+Transporte ativo e temperatura fora da faixa de referência do órgão selecionado: ALERTA, LED e BUZZER são ativados.
 
 ![Temperatura crítica](evidencias/eletronica/02-temperatura-critica.png)
 
 ## 3. Impacto crítico
 
-Com o transporte ativo e impacto crítico, a lógica digital ativa ALERTA, LED e BUZZER.
+Transporte ativo e impacto crítico: ALERTA, LED e BUZZER são ativados.
 
 ![Impacto crítico](evidencias/eletronica/03-impacto-critico.png)
 
 ## 4. Transporte inativo
 
-Mesmo com condições críticas, o alerta não é acionado quando TRANSPORTE_ATIVO = 0.
+Mesmo com entradas críticas, a saída permanece em `0` quando `TRANSPORTE_ATIVO = 0`.
 
 ![Transporte inativo](evidencias/eletronica/04-transporte-inativo.png)
 

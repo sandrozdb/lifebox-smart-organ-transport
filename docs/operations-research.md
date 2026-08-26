@@ -1,46 +1,65 @@
-# Pesquisa Operacional — otimização de rota
+# Pesquisa Operacional Logística — LifeBox
 
-> Os valores utilizados são simulados e têm finalidade acadêmica.
+> Custos, velocidades, riscos, disponibilidade, infraestrutura e geometrias sem provider externo são premissas **SIMULATED** para fins acadêmicos. O módulo apoia decisão; não substitui coordenação clínica ou logística real.
 
 ## Problema de decisão
 
-Escolher exatamente uma rota entre alternativas candidatas antes do transporte. Para cada rota `i`:
+A LifeBox seleciona o plano logístico de menor custo total dentro do conjunto de alternativas factíveis:
 
-$$x_i \in \{0,1\}$$
+```text
+min C_total = soma(custos dos segmentos) + acionamento + preparação + transferências
+```
 
-$$x_i = 1 \text{ se a rota i for escolhida; caso contrário } x_i = 0$$
+A escolha só acontece quando todas as restrições são atendidas:
 
-Restrição de escolha:
+- janela máxima de isquemia do órgão;
+- isquemia já consumida + tempo simulado previsto;
+- margem operacional mínima;
+- disponibilidade modal e de infraestrutura;
+- perfil de preservação adotado;
+- condições logísticas, tempo e risco.
 
-$$\sum_i x_i = 1$$
+O desempate implementado é: menor custo, maior margem, menor tempo e menor risco.
 
-## Normalização
+## Planejamento em dois níveis
 
-Tempo, distância, risco e custo têm escalas diferentes. Para cada critério de minimização:
+1. Cada estratégia constrói e avalia suas alternativas: terrestre, helicóptero e aéreo multimodal.
+2. Os melhores planos factíveis são comparados globalmente para obter a solução recomendada.
 
-$$n(v)=\frac{v-v_{min}}{v_{max}-v_{min}}$$
+`GroundRoutingProvider` fornece alternativas terrestres. Na ausência de provider externo, as opções como Rodovia dos Bandeirantes e Rodovia Anhanguera são geometrias e condições **SIMULATED**, não cálculo de roteamento real.
 
-Quando máximo e mínimo são iguais, o valor normalizado é zero, pois o critério não diferencia as alternativas.
+## Planos e segmentos
 
-## Função objetivo
+Um plano é composto por segmentos. Pode ser terrestre, helicóptero ou multimodal. Todo plano aéreo inclui acesso e saída do aeroporto:
 
-$$\min Z_i=w_tT_i+w_rR_i+w_dD_i+w_cC_i$$
+```text
+Hospital → TERRESTRE ou HELICÓPTERO → aeroporto origem
+         → AVIÃO → aeroporto destino
+         → TERRESTRE ou HELICÓPTERO → hospital
+```
 
-Pesos demonstrativos em `src/config/operationsResearch.js`: tempo 40%, risco 30%, distância 20% e custo 10%. A soma deve ser 1.
+Os aeroportos configurados são identificados por ICAO; infraestrutura de helicóptero é marcada como `SIMULATED` ou premissa acadêmica quando não houver confirmação real.
 
-## Restrições
+## Cenários demonstrativos
 
-Antes do ranking, o serviço elimina rotas indisponíveis ou que excedem tempo, risco, distância ou que têm sinal insuficiente. Entre as viáveis, vence o menor score; empate é resolvido de modo determinístico pelo identificador.
+- Curta distância — Modal terrestre;
+- Urgência regional — Helicóptero;
+- Longa distância interestadual — Plano aéreo multimodal;
+- Transporte crítico multimodal — Helicóptero + Avião;
+- Janela crítica — nenhuma solução viável.
 
-## Alternativas
+## Reotimização
 
-- Rota A: alternativa equilibrada;
-- Rota B: menor tempo e risco;
-- Rota C: menor distância, mas comunicação insuficiente na configuração padrão.
+Uma condição logística pode disparar novo cálculo. O plano ativo não muda automaticamente:
 
-O dashboard mostra originais, normalizados, parcelas ponderadas, score, viabilidade e ranking. A decisão é persistida em `otimizacoes_rota`; o simulador passa a usar os pontos da rota selecionada.
+```text
+condição muda → PO recalcula → recomendação → operador avalia → APLICAR NOVO PLANO
+```
 
-## Limitações
+Quando aplicada, a nova execução parte da posição atual e preserva caminho percorrido, distância, tempo simulado e isquemia. A timeline registra `REOTIMIZACAO_APLICADA`.
 
-O modelo não usa trânsito real, emergências viárias, previsão meteorológica ou restrições clínicas. Confiabilidade e custos são parâmetros demonstrativos. Em produção, fontes verificadas e validação de especialistas serão necessárias.
+O cenário demonstrativo **Anhanguera indisponível** elimina essa alternativa terrestre e permite recomendar a Rodovia dos Bandeirantes sem reiniciar a execução.
 
+## Transparência
+
+O dashboard apresenta cenários, órgão, faixa, isquemia, restrições, alternativas, custo, tempo, margem, composição dos segmentos e solução ótima em área expansível. Não utiliza a antiga apresentação Rota A/Rota B/Rota C.

@@ -1,19 +1,234 @@
-const $=selector=>document.querySelector(selector);let transportId=1,map,layers={},candidateRoutes=[],activeOptimization=null,dismissedOverlayKey=null;
+const $=selector=>document.querySelector(selector);
+let transportId=1,map,layers={},dismissedOverlayKey=null;
 const formatDate=value=>value?new Intl.DateTimeFormat('pt-BR',{hour:'2-digit',minute:'2-digit',second:'2-digit'}).format(new Date(String(value).includes('T')?value:String(value).replace(' ','T'))):'--';
-async function api(path,options={}){const response=await fetch(path,{headers:{'Content-Type':'application/json'},...options});const data=await response.json();if(!response.ok)throw new Error(data.erro||'Falha na operação');return data}
-function statusVisual(status){const critical=status==='CRITICO',attention=status==='ATENCAO',el=$('#general-status');el.textContent=critical?'ALERTA CRÍTICO':attention?'ATENÇÃO':status==='CONCLUIDO'?'CONCLUÍDO':'NORMAL';el.className=`status-badge ${critical?'critical':attention?'attention':'normal'}`}
-function updateMetrics(reading,transport){if(!reading)return;$('#temperature').textContent=Number(reading.temperatura).toFixed(1);$('#humidity').textContent=Number(reading.umidade).toFixed(1);$('#impact').textContent=Number(reading.impacto).toFixed(2);$('#impact-label').textContent=reading.impacto>=1.8?'Ocorrência detectada':'Movimento normal';$('#battery').textContent=Number(reading.bateria).toFixed(0);$('#signal').textContent=Number(reading.sinal).toFixed(0);if(transport.inicio_transporte){const end=transport.fim_transporte?new Date(transport.fim_transporte):new Date(),start=new Date(String(transport.inicio_transporte).replace(' ','T')),minutes=Math.max(0,Math.floor((end-start)/60000));$('#elapsed').textContent=`${Math.floor(minutes/60).toString().padStart(2,'0')}:${(minutes%60).toString().padStart(2,'0')}`}statusVisual(transport.status)}
-function drawCharts(readings){const data=[...readings].reverse().slice(-40);LifeBoxCharts.draw($('#chart-temperature'),data.map(x=>Number(x.temperatura)),'#1ed6c5');LifeBoxCharts.draw($('#chart-humidity'),data.map(x=>Number(x.umidade)),'#49a7ff');LifeBoxCharts.draw($('#chart-impact'),data.map(x=>Number(x.impacto)),'#ff5367');LifeBoxCharts.draw($('#chart-battery'),data.map(x=>Number(x.bateria)),'#38da8a')}
-function drawCandidateRoutes(selectedId){if(!map)return;layers.alternatives?.forEach(line=>line.remove());layers.alternatives=candidateRoutes.map(route=>{const selected=Boolean(selectedId&&route.id===selectedId);return L.polyline(route.points.map(p=>[p.latitude,p.longitude]),{color:selected?'#1ed6c5':'#667b89',weight:selected?5:2,dashArray:selected?null:'7 8',opacity:selected?1:.55}).addTo(map).bindPopup(route.nome)})}
-function initMap(tracking){if(!window.L)return;map=L.map('map',{zoomControl:true}).setView([tracking.origin.latitude,tracking.origin.longitude],13);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap',maxZoom:19}).addTo(map);layers.origin=L.marker([tracking.origin.latitude,tracking.origin.longitude]).addTo(map).bindPopup(`Origem: ${tracking.origin.name}`);layers.destination=L.marker([tracking.destination.latitude,tracking.destination.longitude]).addTo(map).bindPopup(`Destino: ${tracking.destination.name}`);layers.path=L.polyline([],{color:'#fff',weight:3}).addTo(map);layers.current=L.circleMarker([tracking.origin.latitude,tracking.origin.longitude],{radius:9,color:'#fff',fillColor:'#1ed6c5',fillOpacity:1}).addTo(map).bindPopup('LifeBox simulada');drawCandidateRoutes(null);map.fitBounds(L.latLngBounds(candidateRoutes.flatMap(r=>r.points.map(p=>[p.latitude,p.longitude]))),{padding:[20,20]})}
-function updateTracking(t){if(!map&&window.L)initMap(t);if(map){drawCandidateRoutes(activeOptimization?.selectedRouteId);layers.path.setLatLngs(t.path.map(p=>[p.latitude,p.longitude]));if(t.current)layers.current.setLatLng([t.current.latitude,t.current.longitude])}$('#progress-bar').style.width=`${t.progress}%`;$('#progress-label').textContent=`${t.progress.toFixed(0)}% · ${t.routeName}`;$('#traveled').textContent=`${t.traveledKm.toFixed(1)} km`;$('#remaining').textContent=`${t.remainingKm.toFixed(1)} km`;$('#current-coordinates').textContent=t.current?`${Number(t.current.latitude).toFixed(5)}, ${Number(t.current.longitude).toFixed(5)}`:'Aguardando GPS'}
-function routeValue(route,camel,snake){return route[camel]??route[snake]}
-function renderOptimization(data){const routes=data.routes||[];candidateRoutes=routes.map(route=>route.points?route:candidateRoutes.find(item=>item.id===(route.id||route.rota))||route);const weights=data.weights||routes[0]?.pesos_utilizados||{};const selectedId=activeOptimization?.selectedRouteId||null;$('#optimization-weights').innerHTML=Object.entries(weights).map(([key,value])=>`<span>${key}: ${(Number(value)*100).toFixed(0)}%</span>`).join('');$('#route-table').innerHTML=routes.map(route=>{const id=route.id||route.rota,selected=id===selectedId,viable=Boolean(route.viavel??true);return`<tr class="${selected?'route-selected ':''}${!viable?'route-infeasible':''}"><td>${route.nome||route.nome_rota||id}</td><td>${Number(route.distancia).toFixed(0)} km</td><td>${Number(routeValue(route,'tempoEstimado','tempo_estimado')).toFixed(0)} min</td><td>${Number(route.risco).toFixed(2)}</td><td>R$ ${Number(route.custo).toFixed(0)}</td><td>${route.transito||'—'}</td><td>${route.score===undefined?'—':Number(route.score).toFixed(3)}</td><td>${viable?'Sim':'Não'}</td><td>${selected?(route.ranking||'1'):'—'}</td></tr>`}).join('');const selected=routes.find(route=>(route.id||route.rota)===selectedId);if(!selected){$('#route-recommendation').textContent='Aguardando cálculo da rota ótima';$('#calculation-content').innerHTML='';drawCandidateRoutes(null);return}$('#route-recommendation').innerHTML=`<strong>ROTA RECOMENDADA: ${selected.nome||selected.nome_rota}</strong><br>Alternativa com menor função objetivo entre as rotas viáveis. Score ${Number(selected.score).toFixed(3)}.`;const details=selected.detalhes_calculo||{normalized:selected.normalized,partials:selected.partials},normalized=details.normalized||{},partials=details.partials||{};$('#calculation-content').innerHTML=`<div class="calculation-card">${Object.keys(normalized).map(key=>`<div><span>${key}: original → normalizado → peso</span><b>${Number(normalized[key]).toFixed(3)} × ${Number(weights[key]).toFixed(2)} = ${Number(partials[key]).toFixed(3)}</b></div>`).join('')}<div><span>Score final</span><b>${Number(selected.score).toFixed(3)}</b></div></div>`;drawCandidateRoutes(selected.id||selected.rota)}
-function renderPhysics(data){if(!data.available){$('#physics-grid').innerHTML=`<div class="empty">${data.message}</div>`;return}const t=data.thermal,a=data.acceleration,e=data.electrical;$('#physics-grid').innerHTML=`<div class="physics-group"><h4>Termodinâmica didática</h4><p>Temperatura inicial <b>${t.initial.toFixed(2)} °C</b></p><p>Temperatura atual <b>${t.current.toFixed(2)} °C</b></p><p>ΔT <b>${t.deltaT>=0?'+':''}${t.deltaT.toFixed(2)} °C</b></p><p>ΔT/Δt <b>${t.rateCPerMinute.toFixed(3)} °C/min</b></p><p>Q = mcΔT <b>${t.heatJoules.toFixed(0)} J</b></p></div><div class="physics-group"><h4>Aceleração simulada</h4><p>Eixo X <b>${a.x.toFixed(3)} g</b></p><p>Eixo Y <b>${a.y.toFixed(3)} g</b></p><p>Eixo Z <b>${a.z.toFixed(3)} g</b></p><p>Resultante <b>${a.resultant.toFixed(3)} g</b></p><p>Pico <b>${a.peak.toFixed(3)} g</b></p></div><div class="physics-group"><h4>Grandezas elétricas</h4><p>Tensão simulada <b>${e.voltage.toFixed(2)} V</b></p><p>Corrente estimada <b>${e.current.toFixed(2)} A</b></p><p>P = VI <b>${e.powerWatts.toFixed(2)} W</b></p><p>E = Pt <b>${e.energyWh.toFixed(3)} Wh</b></p><p>Energia restante <b>${e.remainingEnergyWh.toFixed(2)} Wh</b></p><p>Autonomia estimada <b>${e.estimatedAutonomyHours.toFixed(2)} h</b></p><small>${data.disclaimer}</small></div>`}
-function renderAlerts(items){$('#alert-count').textContent=items.filter(x=>!x.resolvido).length;const el=$('#alerts');el.className='scroll-list';el.innerHTML=items.map(x=>`<div class="alert-item severity-${x.severidade}"><i class="alert-icon"></i><div><strong>${x.tipo} · ${x.severidade}</strong><p>${x.mensagem}${x.valor!==null?` Valor: ${Number(x.valor).toFixed(2)}`:''}</p><time>${formatDate(x.criado_em)} · ${x.resolvido?'Resolvido':'Ativo'}</time></div>${x.resolvido?'':`<button class="resolve" data-resolve="${x.id}">Resolver</button>`}</div>`).join('')||'<div class="empty">Nenhum alerta registrado.</div>'}
-function renderActuators(signal={}){const ledOn=Boolean(signal.ledOn),buzzerOn=Boolean(signal.buzzerOn);$('#virtual-led').classList.toggle('active',ledOn);$('#virtual-buzzer').classList.toggle('active',buzzerOn);$('#led-status').textContent=ledOn?'LIGADO':'DESLIGADO';$('#buzzer-status').textContent=buzzerOn?'ATIVO':'DESLIGADO'}
-function renderPresentationAlert(transport,alerts){const overlay=$('#presentation-alert'),current=alerts.find(alert=>!alert.resolvido);if(!current||!['ATENCAO','CRITICO'].includes(transport.status)){overlay.classList.add('hidden');dismissedOverlayKey=null;return}const key=`${current.id}-${current.severidade}`;if(dismissedOverlayKey===key)return;const labels={TEMPERATURA:'TEMPERATURA CRÍTICA',IMPACTO:'IMPACTO CRÍTICO',UMIDADE:'UMIDADE ALTA',BATERIA:'BATERIA BAIXA',SINAL:'PERDA DE SINAL',ATRASO:'ATRASO NO TRANSPORTE'};$('#presentation-alert-title').textContent=`⚠ ${labels[current.tipo]||current.tipo}`;$('#presentation-alert-message').textContent=current.mensagem;overlay.dataset.key=key;overlay.classList.remove('hidden')}
-function renderTimeline(items){const el=$('#timeline');el.className='scroll-list';el.innerHTML=items.map(x=>`<div class="timeline-item"><i class="timeline-dot"></i><div><strong>${x.tipo_evento.replaceAll('_',' ')}</strong><p>${x.descricao}</p></div><time>${formatDate(x.registrado_em)}</time></div>`).join('')||'<div class="empty">Nenhum evento registrado.</div>'}
-async function renderSummary(){const s=await api(`/api/transportes/${transportId}/resumo`);if(s.status_final!=='CONCLUIDO')return;$('#summary-section').classList.remove('hidden');const values=[['Duração',`${s.duracao_minutos||0} min`],['Temperatura mín.',`${Number(s.temperatura_min||0).toFixed(1)} °C`],['Temperatura máx.',`${Number(s.temperatura_max||0).toFixed(1)} °C`],['Temperatura média',`${Number(s.temperatura_media||0).toFixed(1)} °C`],['Umidade mín.',`${Number(s.umidade_min||0).toFixed(1)}%`],['Umidade máx.',`${Number(s.umidade_max||0).toFixed(1)}%`],['Impactos',s.impactos||0],['Alertas',s.numero_alertas||0],['Tempo nos limites',`${Number(s.percentual_tempo_limites||0).toFixed(0)}%`],['Bateria final',`${Number(s.bateria_final||0).toFixed(0)}%`]];$('#summary-grid').innerHTML=values.map(([label,value])=>`<div><b>${value}</b><span>${label}</span></div>`).join('')}
-async function refresh(){try{const transports=await api('/api/transportes');if(!transports.length)return;const transport=transports.find(x=>x.status!=='CONCLUIDO')||transports[0];transportId=transport.id;const candidates=await api(`/api/otimizacao/candidatas/${transportId}`);candidateRoutes=candidates.routes;const [readings,alerts,events,tracking,simulation,physics]=await Promise.all([api(`/api/transportes/${transportId}/leituras?limite=100`),api(`/api/transportes/${transportId}/alertas`),api(`/api/transportes/${transportId}/eventos`),api(`/api/transportes/${transportId}/rastreabilidade`),api('/api/simulacao/status'),api(`/api/fisica/${transportId}`)]);$('#transport-code').textContent=transport.codigo_transporte;$('#route-name').textContent=`${transport.hospital_origem} → ${transport.hospital_destino}`;$('#sim-status').textContent=simulation.running?'Executando':'Pausado';updateMetrics(readings[0]||simulation.initialTelemetry,transport);drawCharts(readings);renderAlerts(alerts);renderTimeline(events);renderOptimization(activeOptimization||candidates);renderPresentationAlert(transport,alerts);renderActuators(simulation.digitalSignal);renderPhysics(physics);updateTracking(tracking);if(transport.status==='CONCLUIDO')await renderSummary();$('#system-status').textContent='Sistema online'}catch(error){$('#system-status').textContent='API indisponível';$('#system-dot').className='dot critical';console.error(error)}}
-document.addEventListener('click',async event=>{const action=event.target.dataset.action,scenario=event.target.dataset.scenario,resolve=event.target.dataset.resolve,calculate=event.target.id==='calculate-route',dismiss=event.target.id==='dismiss-presentation-alert';if(dismiss){dismissedOverlayKey=$('#presentation-alert').dataset.key;$('#presentation-alert').classList.add('hidden');return}if(!action&&!scenario&&!resolve&&!calculate)return;try{if(action){if(action==='start'&&!activeOptimization)throw new Error('Calcule a rota ótima antes de iniciar o transporte.');if(action==='reset'){activeOptimization=null;dismissedOverlayKey=null;$('#presentation-alert').classList.add('hidden');renderActuators({ledOn:false,buzzerOn:false})}await api(`/api/simulacao/${action}`,{method:'POST',body:JSON.stringify({transporteId:transportId,rotaId:activeOptimization?.selectedRouteId})})}if(scenario)await api('/api/simulacao/cenario',{method:'POST',body:JSON.stringify({cenario:scenario,transporteId:transportId})});if(resolve)await api(`/api/alertas/${resolve}/resolver`,{method:'PATCH'});if(calculate){activeOptimization=await api(`/api/otimizacao/${transportId}/calcular`,{method:'POST',body:'{}'});renderOptimization(activeOptimization)}$('#action-feedback').textContent=scenario?`Cenário “${event.target.textContent.trim()}” ativado.`:'Comando executado.';await refresh()}catch(error){$('#action-feedback').textContent=error.message}});refresh();setInterval(refresh,2000);window.addEventListener('resize',()=>map?.invalidateSize());
+const formatMinutes=value=>{const minutes=Math.max(0,Math.floor(Number(value)||0)),hours=Math.floor(minutes/60),rest=minutes%60;return hours?`${hours}h ${rest.toString().padStart(2,'0')}min`:`${rest} min`};async function api(path,options={}){
+  const response=await fetch(path,{headers:{'Content-Type':'application/json'},...options});
+  const data=await response.json();
+  if(!response.ok)throw new Error(data.erro||'Falha na operação');
+  return data;
+}
+function statusVisual(status){
+  const critical=status==='CRITICO',attention=status==='ATENCAO',element=$('#general-status');
+  element.textContent=critical?'ALERTA CRÍTICO':attention?'ATENÇÃO':status==='CONCLUIDO'?'CONCLUÍDO':'NORMAL';
+  element.className=`status-badge ${critical?'critical':attention?'attention':'normal'}`;
+}
+function updateMetrics(reading,transport){
+  if(!reading)return;
+  $('#temperature').textContent=Number(reading.temperatura).toFixed(1);
+  $('#humidity').textContent=Number(reading.umidade).toFixed(1);
+  $('#impact').textContent=Number(reading.impacto).toFixed(2);
+  $('#impact-label').textContent=reading.impacto>=1.8?'Ocorrência detectada':'Movimento normal';
+  $('#battery').textContent=Number(reading.bateria).toFixed(0);
+  $('#signal').textContent=Number(reading.sinal).toFixed(0);
+  statusVisual(transport.status);
+}
+function updateExecutionMetrics(tracking){
+  const minutes=Math.max(0,Math.floor(Number(tracking.transportElapsedMinutes||0))),hours=Math.floor(minutes/60),rest=minutes%60;
+  const formattedTime=hours?`${hours}h ${rest.toString().padStart(2,'0')}min`:`${rest} min`;
+  $('#elapsed').textContent=formattedTime;
+  if(tracking.ischemiaTotalMinutes===undefined)return;
+  const ischemia=Math.max(0,Math.floor(Number(tracking.ischemiaTotalMinutes))),maximum=Math.floor(Number(tracking.maximumIschemiaMinutes));
+  const margin=Math.floor(Number(tracking.remainingMarginMinutes)),safety=Number(tracking.operationalSafetyMarginMinutes||0);
+  $('#simulated-transport-time').textContent=`TEMPO DE TRANSPORTE ${formattedTime}`;
+  $('#simulated-ischemia').textContent=`ISQUEMIA TOTAL ${ischemia} / ${maximum} min`;
+  $('#simulated-margin').textContent=`MARGEM RESTANTE ${margin} min`;
+  const card=$('#ischemia-card');
+  $('#ischemia').textContent=`${ischemia} / ${maximum} min`;
+  $('#ischemia-detail').textContent=`Margem: ${margin} min`;
+  card.classList.toggle('attention',margin>=0&&margin<safety);
+  card.classList.toggle('critical',margin<0);
+}
+function drawCharts(readings){
+  const data=[...readings].reverse().slice(-40);
+  LifeBoxCharts.draw($('#chart-temperature'),data.map(item=>Number(item.temperatura)),'#1ed6c5');
+  LifeBoxCharts.draw($('#chart-humidity'),data.map(item=>Number(item.umidade)),'#49a7ff');
+  LifeBoxCharts.draw($('#chart-impact'),data.map(item=>Number(item.impacto)),'#ff5367');
+  LifeBoxCharts.draw($('#chart-battery'),data.map(item=>Number(item.bateria)),'#38da8a');
+}
+function createTrackingMarker(position){
+  return L.circleMarker(position,{radius:9,color:'#fff',fillColor:'#1ed6c5',fillOpacity:1})
+    .addTo(map).bindPopup('LifeBox simulada');
+}
+function initMap(tracking){
+  if(!window.L||map)return;
+  const origin=tracking.origin,destination=tracking.destination;
+  map=L.map('map',{zoomControl:true}).setView([origin.latitude,origin.longitude],8);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+    attribution:'© OpenStreetMap',maxZoom:19
+  }).addTo(map);
+  layers.path=L.polyline([],{color:'#fff',weight:4,opacity:.95}).addTo(map);
+  layers.current=createTrackingMarker([origin.latitude,origin.longitude]);
+  layers.origin=L.marker([origin.latitude,origin.longitude]).addTo(map).bindPopup(`Origem: ${origin.name}`);
+  layers.destination=L.marker([destination.latitude,destination.longitude]).addTo(map).bindPopup(`Destino: ${destination.name}`);
+  map.fitBounds(L.latLngBounds([[origin.latitude,origin.longitude],[destination.latitude,destination.longitude]]),{padding:[20,20]});
+}
+function updateTracking(tracking){
+  initMap(tracking);
+  if(map&&tracking.current){
+    const position=[Number(tracking.current.latitude),Number(tracking.current.longitude)];
+    if(!layers.current)layers.current=createTrackingMarker(position);
+    else layers.current.setLatLng(position);
+    if(tracking.path?.length)layers.path.setLatLngs(tracking.path.map(point=>[point.latitude,point.longitude]));
+    map.invalidateSize();
+  }
+  $('#progress-bar').style.width=`${tracking.progress||0}%`;
+  const segment=tracking.currentSegment;
+  $('#progress-label').textContent=segment
+    ?`TRECHO ${tracking.segmentIndex+1}/${tracking.totalSegments} · ${segment.modal} · ${Number(tracking.progress).toFixed(0)}% total`
+    :`${Number(tracking.progress||0).toFixed(0)}% · ${tracking.routeName}`;
+  $('#traveled').textContent=`${Number(tracking.traveledKm||0).toFixed(1)} km`;
+  $('#remaining').textContent=`${Number(tracking.remainingKm||0).toFixed(1)} km`;
+  $('#current-coordinates').textContent=tracking.current
+    ?`${Number(tracking.current.latitude).toFixed(5)}, ${Number(tracking.current.longitude).toFixed(5)}`
+    :'Aguardando GPS';
+  updateExecutionMetrics(tracking);
+}
+function renderPhysics(data){
+  if(!data.available){$('#physics-grid').innerHTML=`<div class="empty">${data.message}</div>`;return}
+  const {thermal:t,acceleration:a,electrical:e,organ}=data,range=organ?.referenceRangeC?.join('–')||'demonstrativa';
+  $('#physics-grid').innerHTML=`<div class="physics-group"><h4>Termodinâmica didática</h4><p>Órgão <b>${organ?.name||'—'}</b></p><p>Faixa de referência <b>${range} °C</b></p><p>Status térmico <b>${t.status}</b></p><p>Temperatura inicial <b>${t.initial.toFixed(2)} °C</b></p><p>ΔT <b>${t.deltaT>=0?'+':''}${t.deltaT.toFixed(2)} °C</b></p><p>Tempo simulado <b>${formatMinutes(t.elapsedMinutes)}</b></p><p>ΔT/Δt <b>${t.rateCPerMinute.toFixed(3)} °C/min</b></p><p>Q = mcΔT <b>${t.heatJoules.toFixed(0)} J</b></p></div><div class="physics-group"><h4>Aceleração simulada</h4><p>Eixo X <b>${a.x.toFixed(3)} g</b></p><p>Eixo Y <b>${a.y.toFixed(3)} g</b></p><p>Eixo Z <b>${a.z.toFixed(3)} g</b></p><p>Resultante <b>${a.resultant.toFixed(3)} g</b></p><p>Maior pico <b>${a.peak.toFixed(3)} g</b></p></div><div class="physics-group"><h4>Grandezas elétricas</h4><p>P = VI <b>${e.powerWatts.toFixed(2)} W</b></p><p>E = Pt <b>${e.energyWh.toFixed(3)} Wh</b></p><p>Energia restante <b>${e.remainingEnergyWh.toFixed(2)} Wh</b></p><p>Autonomia estimada <b>${e.estimatedAutonomyHours.toFixed(2)} h</b></p><small>${data.disclaimer}</small></div>`;
+}
+function renderAlerts(items){
+  $('#alert-count').textContent=items.filter(item=>!Boolean(item.resolvido)).length;
+  const element=$('#alerts');element.className='scroll-list';
+  element.innerHTML=items.map(item=>`<div class="alert-item severity-${item.severidade}"><i class="alert-icon"></i><div><strong>${item.tipo} · ${item.severidade}</strong><p>${item.mensagem}${item.valor!==null?` Valor: ${Number(item.valor).toFixed(2)}`:''}</p><time>${formatDate(item.criado_em)} · ${item.resolvido?'Resolvido':'Ativo'}</time></div>${item.resolvido?'':`<button class="resolve" data-resolve="${item.id}">Resolver</button>`}</div>`).join('')||'<div class="empty">Nenhum alerta registrado.</div>';
+}
+function renderActuators(signal={}){
+  const ledOn=Boolean(signal.ledOn),buzzerOn=Boolean(signal.buzzerOn);
+  $('#virtual-led').classList.toggle('active',ledOn);$('#virtual-buzzer').classList.toggle('active',buzzerOn);
+  $('#led-status').textContent=ledOn?'LIGADO':'DESLIGADO';$('#buzzer-status').textContent=buzzerOn?'ATIVO':'DESLIGADO';
+  $('#digital-transport-active').textContent=signal.transportActive?'SIM':'NÃO';
+  $('#digital-temperature-critical').textContent=signal.temperatureCritical?'1':'0';
+  $('#digital-impact-critical').textContent=signal.impactCritical?'1':'0';
+  $('#digital-alert-output').textContent=signal.alertOutput?'1':'0';
+}
+function renderPresentationAlert(transport,alerts){
+  const overlay=$('#presentation-alert'),current=alerts.find(alert=>!Boolean(alert.resolvido));
+  if(!current||!['ATENCAO','CRITICO'].includes(transport.status)){
+    overlay.classList.add('hidden');dismissedOverlayKey=null;return;
+  }
+  const key=`${current.id}-${current.severidade}`;
+  if(dismissedOverlayKey===key)return;
+  const labels={TEMPERATURA:'TEMPERATURA CRÍTICA',IMPACTO:'IMPACTO CRÍTICO',UMIDADE:'UMIDADE ALTA',BATERIA:'BATERIA BAIXA',SINAL:'PERDA DE SINAL',ATRASO:'ATRASO LOGÍSTICO'};
+  const profile=window.lifeBoxActiveProfile,organ=profile?.name||transport.tipo_orgao||'órgão selecionado';
+  let message=current.mensagem;
+  if(current.tipo==='TEMPERATURA'){
+    const range=profile?.preservation?.referenceRangeC;
+    message=`Atual: ${Number(current.valor).toFixed(1)} °C${range?`\nFaixa de referência — ${organ}: ${range.join('–')} °C`:''}`;
+  }else if(current.tipo==='IMPACTO')message=`Impacto detectado: ${Number(current.valor).toFixed(2)} g.`;
+  $('#presentation-alert-title').textContent=`⚠ ${labels[current.tipo]||current.tipo}`;
+  $('#presentation-alert-message').textContent=message;
+  overlay.querySelector('p').textContent=current.tipo==='ATRASO'?'ALERTA OPERACIONAL':'OCORRÊNCIA EM TEMPO REAL';
+  overlay.dataset.key=key;overlay.classList.remove('hidden');
+}
+function renderTimeline(items){
+  const element=$('#timeline');element.className='scroll-list';
+  element.innerHTML=items.map(item=>`<div class="timeline-item"><i class="timeline-dot"></i><div><strong>${item.tipo_evento.replaceAll('_',' ')}</strong><p>${item.descricao}</p></div><time>${formatDate(item.registrado_em)}</time></div>`).join('')||'<div class="empty">Nenhum evento registrado.</div>';
+}
+async function renderSummary(){
+  const summary=await api(`/api/transportes/${transportId}/resumo`);
+  if(summary.status_final!=='CONCLUIDO')return;
+  $('#summary-section').classList.remove('hidden');
+  const values=[['Duração simulada',`${Number(summary.duracao_minutos||0).toFixed(1)} min`],['Isquemia',`${Number(summary.isquemia_inicial_minutos||0).toFixed(0)} → ${Number(summary.isquemia_final_minutos||0).toFixed(0)} min`],['Margem final',`${Number(summary.margem_final_minutos||0).toFixed(0)} min`],['Temperatura',`${Number(summary.temperatura_min||0).toFixed(1)} / ${Number(summary.temperatura_max||0).toFixed(1)} °C`],['Umidade',`${Number(summary.umidade_min||0).toFixed(1)} / ${Number(summary.umidade_max||0).toFixed(1)}%`],['Impactos críticos',summary.impactos_criticos||0],['Alertas únicos',summary.numero_alertas||0],['Tempo na faixa',`${Number(summary.percentual_tempo_limites||0).toFixed(0)}%`],['Bateria final',`${Number(summary.bateria_final||0).toFixed(0)}%`],['Reotimizações',summary.quantidade_reotimizacoes||0],['Plano final',summary.plano_final?.modal||'—'],['Distância percorrida',`${Number(summary.plano_final?.distancia_percorrida_km||0).toFixed(1)} km`]];
+  $('#summary-grid').innerHTML=values.map(([label,value])=>`<div><b>${value}</b><span>${label}</span></div>`).join('');
+}
+function renderQaStatus(qa){
+  $('#qa-test-count').textContent=qa.passed===null?'PENDENTE':`${qa.passed} aprovados${qa.failed?` · ${qa.failed} falharam`:''}`;
+  $('#qa-last-validation').textContent=qa.validatedAt?`${qa.status} · ${formatDate(qa.validatedAt)}`:'PENDENTE';
+}async function refresh(){
+  try{
+    const transports=await api('/api/transportes');
+    if(!transports.length)return;
+    const transport=transports.find(item=>item.status!=='CONCLUIDO')||transports[0];
+    transportId=transport.id;
+    window.lifeBoxTransportId=transportId;
+    const [readings,alerts,events,tracking,simulation,physics,qa]=await Promise.all([
+      api(`/api/transportes/${transportId}/leituras?limite=100`),
+      api(`/api/transportes/${transportId}/alertas`),
+      api(`/api/transportes/${transportId}/eventos`),
+      api(`/api/transportes/${transportId}/rastreabilidade`),
+      api('/api/simulacao/status'),
+      api(`/api/fisica/${transportId}`),
+      api(`/api/qualidade`)
+    ]);
+    $('#transport-code').textContent=transport.codigo_transporte;
+    $('#sim-status').textContent=simulation.running?'Executando':'Pausado';
+    window.lifeBoxExecutionActive=Boolean(simulation.running);
+    if(simulation.logistics){window.lifeBoxExecutionTracking={...tracking,...simulation.logistics};if(simulation.running&&!window.lifeBoxActiveExecutionPlan)window.lifeBoxActiveExecutionPlan={id:simulation.logistics.planId,modal:simulation.logistics.modal}}
+    updateMetrics(readings[0]||simulation.initialTelemetry,transport);
+    updateTracking(window.lifeBoxExecutionTracking||tracking);
+    drawCharts(readings);
+    renderAlerts(alerts);
+    renderTimeline(events);
+    renderPresentationAlert(transport,alerts);
+    renderActuators(simulation.digitalSignal);
+    renderPhysics(physics);
+    renderQaStatus(qa);
+    if(transport.status==='CONCLUIDO')await renderSummary();
+    $('#system-status').textContent='Sistema online';
+  }catch(error){
+    $('#system-status').textContent='API indisponível';
+    $('#system-dot').className='dot critical';
+    console.error('[LifeBox] dashboard refresh failed:',error);
+  }
+}
+document.addEventListener('click',async event=>{
+  const action=event.target.dataset.action,scenario=event.target.dataset.scenario,resolve=event.target.dataset.resolve,dismiss=event.target.id==='dismiss-presentation-alert';
+  if(dismiss){dismissedOverlayKey=$('#presentation-alert').dataset.key;$('#presentation-alert').classList.add('hidden');return}
+  if(!action&&!scenario&&!resolve)return;
+  try{
+    if(action){
+      if(action==='start'&&!window.lifeBoxCurrentPlan)throw new Error('Nenhum plano logístico factível disponível.');
+      if(action==='reset'){
+        dismissedOverlayKey=null;
+        $('#presentation-alert').classList.add('hidden');
+        renderActuators({ledOn:false,buzzerOn:false});
+      }
+      const simulationResponse=await api(`/api/simulacao/${action}`,{method:'POST',body:JSON.stringify({
+        transporteId:transportId,rotaId:'LOGISTICS_PLAN',
+        plan:window.lifeBoxCurrentPlan,result:window.lifeBoxPlanningResult
+      })});
+      if(action==='start'){window.lifeBoxExecutionActive=true;window.lifeBoxActiveExecutionPlan=window.lifeBoxCurrentPlan;window.lifeBoxExecutionTracking=simulationResponse.logistics}
+      if(action==='reset'){window.lifeBoxExecutionActive=false;window.lifeBoxActiveExecutionPlan=null;window.lifeBoxReoptimizationRecommendation=null}
+    }
+    if(scenario)await api('/api/simulacao/cenario',{method:'POST',body:JSON.stringify({cenario:scenario,transporteId:transportId})});
+    if(resolve)await api(`/api/alertas/${resolve}/resolver`,{method:'PATCH'});
+    $('#action-feedback').textContent=scenario?`Cenário “${event.target.textContent.trim()}” ativado.`:'Comando executado.';
+    await refresh();
+  }catch(error){$('#action-feedback').textContent=error.message}
+});
+window.lifeBoxShowPlan=(plan,result,points)=>{
+  window.lifeBoxPlanningActive=true;window.lifeBoxInspectedPlan=plan;
+  if(!window.L){document.querySelector('#map .map-fallback').innerHTML='<strong>Biblioteca do mapa não carregada</strong><p>Verifique a conexão com o Leaflet.</p>';return}
+  if(!map){
+    map=L.map('map',{zoomControl:true}).setView([result.origin.latitude,result.origin.longitude],8);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap',maxZoom:19}).addTo(map);
+    layers.path=L.polyline([],{color:'#fff',weight:4,opacity:.95}).addTo(map);
+    layers.current=createTrackingMarker([result.origin.latitude,result.origin.longitude]);
+  }
+  layers.planning?.forEach(item=>item.remove());layers.planning=[];
+  const marker=(point,label)=>L.marker([point.latitude,point.longitude]).addTo(map).bindPopup(`${label}: ${point.icao?`${point.icao} — `:''}${point.name||''}`);
+  layers.planning.push(marker(result.origin,'Hospital doador'),marker(result.destination,'Hospital receptor'));
+  (plan.facilities||[]).forEach(facility=>{
+    const facilityMarker=marker(facility,`${facility.type?.includes('AIRPORT')?'Aeroporto':'Infraestrutura'} · ${facility.classification==='REAL_OPEN_DATA'?'REAL':'SIMULADA'}`);
+    if(facility.icao)facilityMarker.bindTooltip(`${facility.icao} · ${facility.name}`,{permanent:true,direction:'top'});
+    layers.planning.push(facilityMarker);
+  });
+  (plan.segments||[]).forEach((segment,index)=>{
+    const start=segment.origin||points[index],end=segment.destination||points[index+1];
+    const geometry=(segment.geometry?.length?segment.geometry:[start,end]).filter(Boolean);
+    if(geometry.length<2)return;
+    const aerial=['AVIÃO','HELICÓPTERO'].includes(segment.modal);
+    layers.planning.push(L.polyline(geometry.map(point=>[point.latitude,point.longitude]),{
+      color:aerial?'#49a7ff':'#1ed6c5',weight:4,dashArray:aerial?'8 7':null
+    }).addTo(map));
+  });
+  const all=[result.origin,result.destination,...(plan.facilities||[])];
+  map.invalidateSize();map.fitBounds(L.latLngBounds(all.map(point=>[point.latitude,point.longitude])),{padding:[30,30]});
+  $('#route-name').textContent=`${result.origin.name} → ${result.destination.name} · Plano: ${plan.modal}`;
+  $('#map-mode').textContent='PLANEJAMENTO';
+  const start=document.querySelector('[data-action="start"]');
+  if(start)start.disabled=!plan.viavel;
+  $('#start-requirement').textContent=plan.viavel?'Plano logístico factível disponível.':'Nenhum plano logístico factível disponível.';
+};
+refresh();setInterval(refresh,2000);window.addEventListener('resize',()=>map?.invalidateSize());

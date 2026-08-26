@@ -1,0 +1,7 @@
+const simulated='SIMULATED_ASSUMPTION';
+module.exports=Object.freeze({
+ GROUND:{code:'GROUND',name:'Terrestre',averageSpeedKmh:42,baseCost:80,costPerKm:4.5,activationTimeMin:8,preparationTimeMin:5,transferTimeMin:0,availability:true,risk:.18,requiredInfrastructure:[],classification:simulated},
+ HELICOPTER:{code:'HELICOPTER',name:'Helicóptero',averageSpeedKmh:210,baseCost:4500,costPerKm:18,activationTimeMin:18,preparationTimeMin:12,transferTimeMin:12,availability:true,risk:.12,requiredInfrastructure:['HELIPORT_ORIGIN','HELIPORT_DESTINATION'],classification:simulated},
+ AIRPLANE:{code:'AIRPLANE',name:'Avião + terrestre',averageSpeedKmh:620,baseCost:2800,costPerKm:8.5,activationTimeMin:25,preparationTimeMin:25,transferTimeMin:15,availability:true,risk:.15,requiredInfrastructure:['AIRPORT_ORIGIN','AIRPORT_DESTINATION'],classification:simulated},
+ MULTIMODAL:{code:'MULTIMODAL',name:'Multimodal',averageSpeedKmh:360,baseCost:3400,costPerKm:10.5,activationTimeMin:28,preparationTimeMin:25,transferTimeMin:28,availability:true,risk:.16,requiredInfrastructure:['AIRPORT_ORIGIN','AIRPORT_DESTINATION'],classification:simulated}
+});
