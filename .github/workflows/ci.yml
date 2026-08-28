@@ -34,7 +34,9 @@ jobs:
       - run: npm run format:check
       - run: npm test
       - run: npm run coverage
+      - run: npm run e2e
       - run: npm run setup-db
       - run: node --test tests/mysql-integration.test.js
         env:
           RUN_MYSQL_INTEGRATION: "true"
+      - run: docker build .

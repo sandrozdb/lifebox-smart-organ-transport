@@ -8,8 +8,8 @@ const result = spawnSync(process.execPath, ["--test", "--test-concurrency=1"], {
 process.stdout.write(result.stdout || "");
 process.stderr.write(result.stderr || "");
 const combined = `${result.stdout || ""}\n${result.stderr || ""}`;
-const passed = Number(combined.match(/ℹ pass (\d+)/)?.[1] || 0),
-  failed = Number(combined.match(/ℹ fail (\d+)/)?.[1] || 0);
+const passed = Number(combined.match(/(?:ℹ|#)\s*pass\s+(\d+)/)?.[1] || 0),
+  failed = Number(combined.match(/(?:ℹ|#)\s*fail\s+(\d+)/)?.[1] || 0);
 const target = path.resolve(__dirname, "..", "work", "qa-last-run.json");
 try {
   fs.mkdirSync(path.dirname(target), { recursive: true });
