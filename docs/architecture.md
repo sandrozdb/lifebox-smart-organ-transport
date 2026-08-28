@@ -28,11 +28,11 @@ Ao iniciar, `executionPlanService` congela o plano. A progressão, posição, di
 
 ### Strategy
 
-`modalPlannerStrategies` encapsula estratégias terrestre, helicóptero e aéreo multimodal. `groundRoutingProvider` fornece alternativas terrestres. Novas estratégias podem ser incluídas sem alterar a orquestração principal.
+[`modalPlannerStrategies`](../src/services/modalPlannerStrategies.js) encapsula estratégias terrestre, helicóptero e aéreo multimodal. [`groundRoutingProvider`](../src/services/groundRoutingProvider.js) fornece alternativas terrestres. Novas estratégias podem ser incluídas sem alterar a orquestração principal.
 
 ### Observer
 
-`AlertNotifier` notifica `TimelineAlertObserver` quando uma ocorrência é criada. O observador registra o evento para que o dashboard exiba a timeline.
+[`AlertNotifier`](../src/observers/alertNotifier.js) notifica [`TimelineAlertObserver`](../src/observers/timelineAlertObserver.js) quando uma ocorrência é criada. O observador registra o evento para que o dashboard exiba a timeline.
 
 ## SOLID aplicado
 
@@ -41,3 +41,4 @@ Ao iniciar, `executionPlanService` congela o plano. A progressão, posição, di
 - **DIP:** o repositório de memória permite que os testes não dependam do MySQL; não há uma abstração de injeção de dependência completa além desse limite.
 
 O dashboard possui um painel técnico expansível com o resumo `Frontend → API → Serviços → Repository → MySQL`; os diagramas detalhados permanecem na documentação.
+

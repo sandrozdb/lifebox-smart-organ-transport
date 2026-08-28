@@ -6,7 +6,9 @@
 
 LifeBox é um sistema acadêmico de apoio à decisão e rastreabilidade para transporte de órgãos, integrando monitoramento simulado/IoT, análise física, lógica digital, otimização logística e reotimização dinâmica.
 
-> Sensores, instituições, rotas, parâmetros elétricos e dados logísticos são simulados ou acadêmicos quando indicado. A LifeBox não é dispositivo clínico certificado e não valida preservação de órgãos.
+## Aviso acadêmico
+
+Este é um projeto acadêmico e demonstrativo. A LifeBox não é um dispositivo médico certificado, não substitui protocolos clínicos, não constitui recomendação médica e não confirma a preservação de órgãos. Os parâmetros de preservação apresentados são referências acadêmicas e devem ser interpretados somente dentro desse contexto.
 
 ## Funcionalidades
 
@@ -74,6 +76,10 @@ O backend e o schema são preparados para configuração por ambiente, Docker, M
 - [Eletrônica digital e Logisim](docs/electronics-evidence.md)
 - [Circuito Logisim](electronics/lifebox-alert-logic.circ)
 
+![Operação normal da LifeBox](docs/evidencias/dashboard/01-dashboard-normal.png)
+
+![Análise física da execução](docs/evidencias/dashboard/14-fisica.png)
+
 ## Estrutura
 
 ```text
@@ -91,3 +97,8 @@ tests/       testes automatizados
 - escolha de cloud, backend público HTTPS e MySQL gerenciado;
 - CD real, backup e observabilidade;
 - integração futura de ESP32/sensores, mantendo o contrato de telemetria.
+
+## Licença
+
+Este projeto está licenciado sob a MIT License. Consulte o arquivo [LICENSE](LICENSE) para mais detalhes.
+

@@ -1,5 +1,8 @@
 # Galeria do dashboard
 
-Esta pasta contém as 20 capturas reais da versão multimodal atual do LifeBox. O catálogo completo, com cenário, requisito e disciplina de cada imagem, está em [`../README.md`](../README.md).
+Esta pasta contém 20 capturas reais da versão multimodal atual do LifeBox. Todas foram produzidas na aplicação em execução, validadas visualmente e salvas como PNG nativo.
 
-As capturas antigas da interface com PO A/B/C, tempo/isquemia ausentes, mapa parado e resumo acumulado foram substituídas. As evidências do Logisim permanecem separadas em [`../eletronica/`](../eletronica/README.md).
+O catálogo completo está organizado por operação, Pesquisa Operacional, multimodalidade, alertas, reotimização, Física, Eletrônica, arquitetura, QA, cloud e resumos finais em [`../README.md`](../README.md).
+
+As quatro evidências válidas do circuito Logisim permanecem separadas em [`../eletronica/`](../eletronica/README.md).
+

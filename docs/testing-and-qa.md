@@ -8,6 +8,8 @@ A suíte cobre: perfis de órgãos e preservação, PO, rotas terrestres, helic�
 
 Última validação local da versão final: **77 testes aprovados, 0 falhas**.
 
+O executor tenta registrar o resultado resumido em `work/qa-last-run.json`. Esse arquivo é apenas um artefato auxiliar: se o Windows negar a escrita com `EPERM`, a falha é comunicada como aviso e o código de saída continua refletindo o resultado real da suíte. Assim, uma restrição transitória de permissão não transforma 77 testes aprovados em uma falha falsa.
+
 ## Caso real de bug de interface
 
 A API e os testes estavam funcionando, mas o dashboard congelava porque `renderOptimization()` tentou usar `#optimization-weights`, elemento removido. O erro `Cannot set properties of null` interrompia `refresh()`. O caso reforça que testes unitários e de integração não substituem inspeção do navegador; o fluxo atual removeu essa renderização legada e inclui validação estrutural de seletores relevantes.
@@ -21,3 +23,4 @@ A API e os testes estavam funcionando, mas o dashboard congelava porque `renderO
 - [x] Finalizar e conferir resumo da execução atual.
 
 O painel técnico apresenta o resultado real desta execução no navegador integrado; as capturas correspondentes estão em `docs/evidencias/dashboard`.
+
