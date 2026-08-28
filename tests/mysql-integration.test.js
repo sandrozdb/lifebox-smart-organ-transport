@@ -10,6 +10,9 @@ if (process.env.RUN_MYSQL_INTEGRATION !== "true") {
 } else {
   process.env.DB_DRIVER = "mysql";
   const repository = require("../src/repositories");
+  const database = require("../src/database/mysql");
+
+  test.after(async () => database.close());
 
   test("MySQL insere transporte e isola telemetria por execução", async () => {
     const suffix = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
