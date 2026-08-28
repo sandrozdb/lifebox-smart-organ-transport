@@ -16,15 +16,15 @@ A porta **OR** representa a condição crítica de temperatura ou impacto. A por
 ## Tabela verdade
 
 | TRANSPORTE_ATIVO | TEMPERATURA_CRITICA | IMPACTO_CRITICO | ALERTA / LED / BUZZER |
-|---:|---:|---:|---:|
-| 0 | 0 | 0 | 0 |
-| 0 | 0 | 1 | 0 |
-| 0 | 1 | 0 | 0 |
-| 0 | 1 | 1 | 0 |
-| 1 | 0 | 0 | 0 |
-| 1 | 0 | 1 | 1 |
-| 1 | 1 | 0 | 1 |
-| 1 | 1 | 1 | 1 |
+| ---------------: | ------------------: | --------------: | --------------------: |
+|                0 |                   0 |               0 |                     0 |
+|                0 |                   0 |               1 |                     0 |
+|                0 |                   1 |               0 |                     0 |
+|                0 |                   1 |               1 |                     0 |
+|                1 |                   0 |               0 |                     0 |
+|                1 |                   0 |               1 |                     1 |
+|                1 |                   1 |               0 |                     1 |
+|                1 |                   1 |               1 |                     1 |
 
 ## 1. Estado normal
 

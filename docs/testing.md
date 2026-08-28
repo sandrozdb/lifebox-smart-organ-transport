@@ -1,6 +1,8 @@
 # Software Testing & Quality Assurance
 
-O projeto usa o executor nativo `node:test`, evitando dependências adicionais. O repositório em memória isola testes de domínio e API; a validação final também deve testar MySQL real localmente.
+A referência atual de comandos, resultados, cobertura, E2E e MySQL está em [Testing and QA](testing-and-qa.md).
+
+O projeto usa `node:test` para domínio/API, c8 para cobertura, ESLint/Prettier para qualidade estática e Playwright para interface real. O repositório em memória mantém os testes determinísticos; a integração MySQL roda de forma condicional localmente e obrigatória no CI.
 
 Cobertura principal:
 
@@ -12,5 +14,4 @@ Cobertura principal:
 - progresso, finalização e resumo;
 - sintaxe de todos os arquivos JavaScript.
 
-Casos adicionais recomendados: banco indisponível, leituras extremas, perda prolongada de sinal, concorrência de dispositivos e teste visual responsivo. O GitHub Actions executa `npm ci`, `npm run check` e `npm test` sem credenciais MySQL.
-
+Casos futuros recomendados: concorrência entre múltiplos dispositivos, testes prolongados e testes visuais por comparação de pixels. Eles são evolução de QA, não funcionalidades Cloud.

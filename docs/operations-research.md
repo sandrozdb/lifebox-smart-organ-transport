@@ -2,9 +2,9 @@
 
 > Custos, velocidades, riscos, disponibilidade, infraestrutura e geometrias sem provider externo são premissas **SIMULATED** para fins acadêmicos. O módulo apoia decisão; não substitui coordenação clínica ou logística real.
 
-## Problema de decisão
+## Problema de otimização discreta por enumeração
 
-A LifeBox seleciona o plano logístico de menor custo total dentro do conjunto de alternativas factíveis:
+A LifeBox enumera um conjunto finito de planos multimodais e seleciona o plano de menor custo entre as alternativas factíveis:
 
 ```text
 min C_total = soma(custos dos segmentos) + acionamento + preparação + transferências
@@ -16,10 +16,12 @@ A escolha só acontece quando todas as restrições são atendidas:
 - isquemia já consumida + tempo simulado previsto;
 - margem operacional mínima;
 - disponibilidade modal e de infraestrutura;
-- perfil de preservação adotado;
-- condições logísticas, tempo e risco.
+- perfil de preservação adotado como contexto do órgão;
+- condições logísticas e infraestrutura.
 
 O desempate implementado é: menor custo, maior margem, menor tempo e menor risco.
+
+Para cada alternativa enumerada, pode-se interpretar `xᵢ ∈ {0,1}` e `Σxᵢ = 1` entre as alternativas elegíveis. O sistema não usa MILP, solver ou programação inteira: a optimalidade é garantida somente dentro do conjunto finito que as Strategies geram.
 
 ## Planejamento em dois níveis
 
@@ -48,7 +50,7 @@ Os aeroportos configurados são identificados por ICAO; infraestrutura de helic�
 - Transporte crítico multimodal — Helicóptero + Avião;
 - Janela crítica — nenhuma solução viável.
 
-## Reotimização
+## Reotimização server-side
 
 Uma condição logística pode disparar novo cálculo. O plano ativo não muda automaticamente:
 
@@ -58,8 +60,14 @@ condição muda → PO recalcula → recomendação → operador avalia → APLI
 
 Quando aplicada, a nova execução parte da posição atual e preserva caminho percorrido, distância, tempo simulado e isquemia. A timeline registra `REOTIMIZACAO_APLICADA`.
 
+O backend emite um `recommendationId` vinculado a transporte e execução. Na confirmação, ele verifica validade e replay, recalcula a alternativa a partir do snapshot atual e não confia em custo, segmentos, geometria ou modal fornecidos pelo frontend.
+
 O cenário demonstrativo **Anhanguera indisponível** elimina essa alternativa terrestre e permite recomendar a Rodovia dos Bandeirantes sem reiniciar a execução.
 
 ## Transparência
 
 O dashboard apresenta cenários, órgão, faixa, isquemia, restrições, alternativas, custo, tempo, margem, composição dos segmentos e solução ótima em área expansível. Não utiliza a antiga apresentação Rota A/Rota B/Rota C.
+
+## Modelo legado A/B/C
+
+`routeOptimizationService`, `weightedRouteScoringStrategy`, `operationsResearch.js`, suas tabelas e endpoints `/api/otimizacao` são mantidos como **LEGACY / COMPATIBILIDADE / HISTÓRICO**. Esse modelo normaliza candidatos e aplica score ponderado; não é a PO principal atual e não deve ser apresentado como tal.

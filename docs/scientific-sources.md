@@ -7,9 +7,9 @@
 
 ## Científico
 
-- Parsons RF, Guarrera JV. *Preservation solutions for static cold storage of abdominal allografts: which is best?* 2014. [PMID 24553501](https://pubmed.ncbi.nlm.nih.gov/24553501/), DOI 10.1097/MOT.0000000000000063.
-- Oltean M, Churchill TA. *Organ-specific solutions and strategies for intestinal preservation.* 2014. [PMID 24328709](https://pubmed.ncbi.nlm.nih.gov/24328709/), DOI 10.3109/08830185.2013.853764.
-- *Machine perfusion of donor organs for transplantation.* 2021. [PMID 33349946](https://pubmed.ncbi.nlm.nih.gov/33349946/).
+- Parsons RF, Guarrera JV. _Preservation solutions for static cold storage of abdominal allografts: which is best?_ 2014. [PMID 24553501](https://pubmed.ncbi.nlm.nih.gov/24553501/), DOI 10.1097/MOT.0000000000000063.
+- Oltean M, Churchill TA. _Organ-specific solutions and strategies for intestinal preservation._ 2014. [PMID 24328709](https://pubmed.ncbi.nlm.nih.gov/24328709/), DOI 10.3109/08830185.2013.853764.
+- _Machine perfusion of donor organs for transplantation._ 2021. [PMID 33349946](https://pubmed.ncbi.nlm.nih.gov/33349946/).
 
 ## Premissas acadêmicas / dados simulados
 

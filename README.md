@@ -4,7 +4,25 @@
 
 # LifeBox — Smart Organ Transport
 
-LifeBox é um sistema acadêmico de apoio à decisão e rastreabilidade para transporte de órgãos, integrando monitoramento simulado/IoT, análise física, lógica digital, otimização logística e reotimização dinâmica.
+[![CI](https://github.com/sandrozdb/lifebox-smart-organ-transport/actions/workflows/ci.yml/badge.svg)](https://github.com/sandrozdb/lifebox-smart-organ-transport/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Node.js 20+](https://img.shields.io/badge/Node.js-20%2B-339933?logo=node.js&logoColor=white)](package.json)
+
+LifeBox é um sistema acadêmico de apoio à decisão e rastreabilidade para transporte de órgãos. O diferencial é integrar planejamento multimodal sob restrições, execução rastreável, reotimização confirmada pelo operador, monitoramento simulado, Física e Eletrônica em uma única demonstração verificável.
+
+## Stack e status
+
+| Área            | Tecnologia / estado                                                       |
+| --------------- | ------------------------------------------------------------------------- |
+| Backend         | Node.js 20 / Express                                                      |
+| Banco           | MySQL 8 local; repository em memória nos testes                           |
+| Frontend e mapa | HTML, CSS, JavaScript, Leaflet / OpenStreetMap                            |
+| Testes          | `node:test`, coverage e Playwright E2E                                    |
+| Arquitetura     | C4 Context/Container, Strategy, Observer e SOLID documentado honestamente |
+| CI              | GitHub Actions                                                            |
+| Cloud           | **PENDENTE**: backend público, MySQL gerenciado e CD                      |
+
+**Links rápidos:** [Arquitetura](docs/architecture.md) · [Pesquisa Operacional](docs/operations-research.md) · [API](docs/api.md) · [QA](docs/testing-and-qa.md) · [Demo](docs/demo-guide.md) · [Evidências](docs/evidencias/README.md) · [Requisitos](docs/academic-requirements.md) · [Eletrônica](docs/electronics.md) · [Física](docs/physics.md)
 
 ## Aviso acadêmico
 
@@ -28,24 +46,24 @@ Simulador / futuro ESP32 → API Express → Serviços → Repository → MySQL
                               Dashboard, mapa, alertas e timeline
 ```
 
-A arquitetura real, C4 conceitual, Strategy, Observer e SOLID estão em [docs/architecture.md](docs/architecture.md). Strategy organiza modalidades/plano logístico; Observer registra ocorrências na timeline.
+A arquitetura real, C4 Context/Container, sequência da reotimização, Strategy, Observer, SOLID e trade-offs estão em [docs/architecture.md](docs/architecture.md).
 
 ## Disciplinas integradas
 
-| Frente | Implementação | Dashboard / documento |
-|---|---|---|
-| Pesquisa Operacional | plano multimodal, restrições e reotimização | planejamento e mapa |
-| Física | cálculos didáticos da execução atual | Análise Física expansível |
-| Eletrônica | `digitalAlertLogic` + Logisim | atuadores e sinais lógicos |
-| Arquitetura | Strategy, Observer, SOLID | painel técnico e documentação |
-| QA | check, testes e CI | documentação de QA |
-| Cloud | estrutura cloud-ready | status real: local/pendente |
+| Frente               | Implementação                               | Dashboard / documento         |
+| -------------------- | ------------------------------------------- | ----------------------------- |
+| Pesquisa Operacional | plano multimodal, restrições e reotimização | planejamento e mapa           |
+| Física               | cálculos didáticos da execução atual        | Análise Física expansível     |
+| Eletrônica           | `digitalAlertLogic` + Logisim               | atuadores e sinais lógicos    |
+| Arquitetura          | C4, Strategy, Observer, SOLID               | painel técnico e documentação |
+| QA                   | check, lint, testes, coverage, E2E e CI     | documentação de QA            |
+| Cloud                | estrutura cloud-ready                       | status real: local/pendente   |
 
 Veja [requisitos acadêmicos](docs/academic-requirements.md).
 
 ## Execução local
 
-Pré-requisitos: Node.js 18+ e MySQL 8 local.
+Pré-requisitos: Node.js 20+ e MySQL 8 local.
 
 ```powershell
 npm install
@@ -60,7 +78,11 @@ Abra [http://localhost:3000](http://localhost:3000). O `.env` permanece local e 
 
 ```powershell
 npm run check
+npm run lint
+npm run format:check
 npm test
+npm run coverage
+npm run e2e
 ```
 
 A estratégia, o checklist E2E manual e o caso de bug de interface estão em [docs/testing-and-qa.md](docs/testing-and-qa.md). O CI executa as mesmas validações em push e pull request.
@@ -77,8 +99,6 @@ O backend e o schema são preparados para configuração por ambiente, Docker, M
 - [Circuito Logisim](electronics/lifebox-alert-logic.circ)
 
 ![Operação normal da LifeBox](docs/evidencias/dashboard/01-dashboard-normal.png)
-
-![Análise física da execução](docs/evidencias/dashboard/14-fisica.png)
 
 ## Estrutura
 
@@ -101,4 +121,3 @@ tests/       testes automatizados
 ## Licença
 
 Este projeto está licenciado sob a MIT License. Consulte o arquivo [LICENSE](LICENSE) para mais detalhes.
-

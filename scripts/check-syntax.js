@@ -1,2 +1,21 @@
-const fs=require('fs');const path=require('path');const {spawnSync}=require('child_process');const roots=['src','simulator','scripts','tests','public/js'];let failed=false;
-function walk(dir){if(!fs.existsSync(dir))return;for(const item of fs.readdirSync(dir,{withFileTypes:true})){const full=path.join(dir,item.name);if(item.isDirectory())walk(full);else if(full.endsWith('.js')){const result=spawnSync(process.execPath,['--check',full],{stdio:'inherit'});if(result.status)failed=true}}}roots.forEach(walk);if(failed)process.exit(1);console.log('Sintaxe JavaScript validada.');
+const fs = require("fs");
+const path = require("path");
+const { spawnSync } = require("child_process");
+const roots = ["src", "simulator", "scripts", "tests", "public/js"];
+let failed = false;
+function walk(dir) {
+  if (!fs.existsSync(dir)) return;
+  for (const item of fs.readdirSync(dir, { withFileTypes: true })) {
+    const full = path.join(dir, item.name);
+    if (item.isDirectory()) walk(full);
+    else if (full.endsWith(".js")) {
+      const result = spawnSync(process.execPath, ["--check", full], {
+        stdio: "inherit",
+      });
+      if (result.status) failed = true;
+    }
+  }
+}
+roots.forEach(walk);
+if (failed) process.exit(1);
+console.log("Sintaxe JavaScript validada.");

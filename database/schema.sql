@@ -38,7 +38,8 @@ CREATE TABLE IF NOT EXISTS leituras (
   device_id VARCHAR(40) NOT NULL,
   registrado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT fk_leitura_transporte FOREIGN KEY (transporte_id) REFERENCES transportes(id),
-  INDEX idx_leituras_transporte_data (transporte_id, registrado_em)
+  INDEX idx_leituras_transporte_data (transporte_id, registrado_em),
+  INDEX idx_leituras_execucao_data (transporte_id, execucao_id, registrado_em)
 );
 
 CREATE TABLE IF NOT EXISTS otimizacoes_rota (
@@ -74,7 +75,8 @@ CREATE TABLE IF NOT EXISTS alertas (
   criado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT fk_alerta_transporte FOREIGN KEY (transporte_id) REFERENCES transportes(id),
   CONSTRAINT fk_alerta_leitura FOREIGN KEY (leitura_id) REFERENCES leituras(id),
-  INDEX idx_alertas_transporte_data (transporte_id, criado_em)
+  INDEX idx_alertas_transporte_data (transporte_id, criado_em),
+  INDEX idx_alertas_execucao_data (transporte_id, execucao_id, criado_em)
 );
 
 CREATE TABLE IF NOT EXISTS eventos_rastreabilidade (
@@ -87,7 +89,8 @@ CREATE TABLE IF NOT EXISTS eventos_rastreabilidade (
   longitude DECIMAL(10,7) NULL,
   registrado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT fk_evento_transporte FOREIGN KEY (transporte_id) REFERENCES transportes(id),
-  INDEX idx_eventos_transporte_data (transporte_id, registrado_em)
+  INDEX idx_eventos_transporte_data (transporte_id, registrado_em),
+  INDEX idx_eventos_execucao_data (transporte_id, execucao_id, registrado_em)
 );
 
 -- Pesquisa Operacional logística V1. Estruturas adicionais, sem DROP e idempotentes.

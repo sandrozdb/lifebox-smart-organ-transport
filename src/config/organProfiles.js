@@ -1,13 +1,217 @@
-const officialSource={type:'OFFICIAL',classification:'OFFICIAL_DATA',institution:'Ministério da Saúde / Sistema Nacional de Transplantes',title:'Tipos de doador — tempos de isquemia aceitáveis',year:2023,url:'https://www.gov.br/saude/pt-br/composicao/saes/snt/tipos-de-doador/tipos-de-doador/'};
-const manualSource={type:'OFFICIAL',classification:'OFFICIAL_DATA',institution:'Ministério da Saúde',title:'Manual de Boas Práticas Cirúrgicas e Melhoria da Logística de Retirada, Preservação, Acondicionamento, Armazenamento e Transporte de Órgãos para Transplantes no Brasil',year:2026,url:'https://bvsms.saude.gov.br/bvs/publicacoes/manual_boas_praticas_cirurgicas_transplantes_brasil.pdf'};
-const abdominalReview={type:'SCIENTIFIC_ARTICLE',classification:'SCIENTIFIC_DATA',title:'Preservation solutions for static cold storage of abdominal allografts: which is best?',year:2014,doiOrPmc:'10.1097/MOT.0000000000000063',url:'https://pubmed.ncbi.nlm.nih.gov/24553501/'};
-const profiles=[
- {code:'HEART',name:'Coração',ischemia:{officialMaxMinutes:240,officialIntervalMinutes:[240,240],operationalSafetyMarginMinutes:30,source:officialSource},preservation:{method:'STATIC_COLD_STORAGE',targetTemperatureC:6,referenceRangeC:[4,8],targetIsModelAssumption:true,solutions:['Solução de preservação refrigerada conforme protocolo assistencial'],notes:['Hipotermia controlada para o modelo acadêmico.','6 °C é o ponto médio operacional adotado pelo modelo; não é temperatura clínica perfeita.'],evidenceLevel:'HIGH',sources:[manualSource,{type:'SCIENTIFIC_ARTICLE',classification:'SCIENTIFIC_DATA',title:'Machine perfusion of donor organs for transplantation',year:2021,doiOrPmc:'PMID:33349946',url:'https://pubmed.ncbi.nlm.nih.gov/33349946/'}]}},
- {code:'LUNG',name:'Pulmão',ischemia:{officialMaxMinutes:360,officialIntervalMinutes:[240,360],operationalSafetyMarginMinutes:45,source:officialSource},preservation:{method:'STATIC_COLD_STORAGE',targetTemperatureC:4,referenceRangeC:[0,4],targetIsModelAssumption:true,solutions:['Perfadex','Solução de baixo potássio e dextrano'],notes:['SCS convencional adotado na V1.','Preservação pulmonar controlada a 8–10 °C é evidência emergente e não é padrão adotado pelo modelo.'],emergingEvidence:'Preservação pulmonar controlada a 8–10 °C é objeto de estudos recentes.',evidenceLevel:'HIGH',sources:[manualSource,{type:'SCIENTIFIC_ARTICLE',classification:'SCIENTIFIC_DATA',title:'Advances in organ preservation for transplantation',year:2016,doiOrPmc:'PMID:27490874',url:'https://pubmed.ncbi.nlm.nih.gov/27490874/'}]}},
- {code:'KIDNEY',name:'Rim',ischemia:{officialMaxMinutes:2880,officialIntervalMinutes:[2880,2880],operationalSafetyMarginMinutes:120,source:officialSource},preservation:{method:'STATIC_COLD_STORAGE',targetTemperatureC:4,referenceRangeC:[0,4],targetIsModelAssumption:true,solutions:['University of Wisconsin (UW)','HTK','Celsior'],notes:['Janela oficial máxima não representa tempo ideal.','Maior duração de isquemia fria pode elevar risco operacional.'],evidenceLevel:'HIGH',sources:[manualSource,abdominalReview]}},
- {code:'LIVER',name:'Fígado',ischemia:{officialMaxMinutes:720,officialIntervalMinutes:[720,720],operationalSafetyMarginMinutes:60,source:officialSource},preservation:{method:'STATIC_COLD_STORAGE',targetTemperatureC:4,referenceRangeC:[0,4],targetIsModelAssumption:true,solutions:['University of Wisconsin (UW)','HTK','IGL-1','Celsior'],notes:['Faixa adotada para SCS no modelo acadêmico.'],evidenceLevel:'HIGH',sources:[manualSource,abdominalReview]}},
- {code:'PANCREAS',name:'Pâncreas',ischemia:{officialMaxMinutes:720,officialIntervalMinutes:[720,720],operationalSafetyMarginMinutes:60,source:officialSource},preservation:{method:'STATIC_COLD_STORAGE',targetTemperatureC:4,referenceRangeC:[0,4],targetIsModelAssumption:true,solutions:['University of Wisconsin (UW)','Celsior','HTK'],notes:['Faixa adotada pelo modelo para SCS; não representa temperatura clinicamente perfeita universal.','Não há afirmação de superioridade universal entre soluções.'],evidenceLevel:'MODERATE',sources:[manualSource,abdominalReview,{type:'SCIENTIFIC_ARTICLE',classification:'SCIENTIFIC_DATA',title:'Ischemia-Reperfusion Injuries Assessment during Pancreas Preservation',year:2021,doiOrPmc:'PMID:34068301',url:'https://pubmed.ncbi.nlm.nih.gov/34068301/'}]}},
- {code:'INTESTINE',name:'Intestino',ischemia:{officialMaxMinutes:360,officialIntervalMinutes:[240,360],operationalSafetyMarginMinutes:45,source:officialSource},preservation:{method:'STATIC_COLD_STORAGE',targetTemperatureC:4,referenceRangeC:[0,4],targetIsModelAssumption:true,solutions:['University of Wisconsin (UW)','HTK'],notes:['Evidência de preservação intestinal é menos consolidada que para rim e fígado.'],evidenceLevel:'LIMITADA/MODERADA',sources:[manualSource,abdominalReview,{type:'SCIENTIFIC_ARTICLE',classification:'SCIENTIFIC_DATA',title:'Organ-specific solutions and strategies for the intestinal preservation',year:2014,doiOrPmc:'10.3109/08830185.2013.853764',url:'https://pubmed.ncbi.nlm.nih.gov/24328709/'}]}}
+const officialSource = {
+  type: "OFFICIAL",
+  classification: "OFFICIAL_DATA",
+  institution: "Ministério da Saúde / Sistema Nacional de Transplantes",
+  title: "Tipos de doador — tempos de isquemia aceitáveis",
+  year: 2023,
+  url: "https://www.gov.br/saude/pt-br/composicao/saes/snt/tipos-de-doador/tipos-de-doador/",
+};
+const manualSource = {
+  type: "OFFICIAL",
+  classification: "OFFICIAL_DATA",
+  institution: "Ministério da Saúde",
+  title:
+    "Manual de Boas Práticas Cirúrgicas e Melhoria da Logística de Retirada, Preservação, Acondicionamento, Armazenamento e Transporte de Órgãos para Transplantes no Brasil",
+  year: 2026,
+  url: "https://bvsms.saude.gov.br/bvs/publicacoes/manual_boas_praticas_cirurgicas_transplantes_brasil.pdf",
+};
+const abdominalReview = {
+  type: "SCIENTIFIC_ARTICLE",
+  classification: "SCIENTIFIC_DATA",
+  title:
+    "Preservation solutions for static cold storage of abdominal allografts: which is best?",
+  year: 2014,
+  doiOrPmc: "10.1097/MOT.0000000000000063",
+  url: "https://pubmed.ncbi.nlm.nih.gov/24553501/",
+};
+const profiles = [
+  {
+    code: "HEART",
+    name: "Coração",
+    ischemia: {
+      officialMaxMinutes: 240,
+      officialIntervalMinutes: [240, 240],
+      operationalSafetyMarginMinutes: 30,
+      source: officialSource,
+    },
+    preservation: {
+      method: "STATIC_COLD_STORAGE",
+      targetTemperatureC: 6,
+      referenceRangeC: [4, 8],
+      targetIsModelAssumption: true,
+      solutions: [
+        "Solução de preservação refrigerada conforme protocolo assistencial",
+      ],
+      notes: [
+        "Hipotermia controlada para o modelo acadêmico.",
+        "6 °C é o ponto médio operacional adotado pelo modelo; não é temperatura clínica perfeita.",
+      ],
+      evidenceLevel: "HIGH",
+      sources: [
+        manualSource,
+        {
+          type: "SCIENTIFIC_ARTICLE",
+          classification: "SCIENTIFIC_DATA",
+          title: "Machine perfusion of donor organs for transplantation",
+          year: 2021,
+          doiOrPmc: "PMID:33349946",
+          url: "https://pubmed.ncbi.nlm.nih.gov/33349946/",
+        },
+      ],
+    },
+  },
+  {
+    code: "LUNG",
+    name: "Pulmão",
+    ischemia: {
+      officialMaxMinutes: 360,
+      officialIntervalMinutes: [240, 360],
+      operationalSafetyMarginMinutes: 45,
+      source: officialSource,
+    },
+    preservation: {
+      method: "STATIC_COLD_STORAGE",
+      targetTemperatureC: 4,
+      referenceRangeC: [0, 4],
+      targetIsModelAssumption: true,
+      solutions: ["Perfadex", "Solução de baixo potássio e dextrano"],
+      notes: [
+        "SCS convencional adotado na V1.",
+        "Preservação pulmonar controlada a 8–10 °C é evidência emergente e não é padrão adotado pelo modelo.",
+      ],
+      emergingEvidence:
+        "Preservação pulmonar controlada a 8–10 °C é objeto de estudos recentes.",
+      evidenceLevel: "HIGH",
+      sources: [
+        manualSource,
+        {
+          type: "SCIENTIFIC_ARTICLE",
+          classification: "SCIENTIFIC_DATA",
+          title: "Advances in organ preservation for transplantation",
+          year: 2016,
+          doiOrPmc: "PMID:27490874",
+          url: "https://pubmed.ncbi.nlm.nih.gov/27490874/",
+        },
+      ],
+    },
+  },
+  {
+    code: "KIDNEY",
+    name: "Rim",
+    ischemia: {
+      officialMaxMinutes: 2880,
+      officialIntervalMinutes: [2880, 2880],
+      operationalSafetyMarginMinutes: 120,
+      source: officialSource,
+    },
+    preservation: {
+      method: "STATIC_COLD_STORAGE",
+      targetTemperatureC: 4,
+      referenceRangeC: [0, 4],
+      targetIsModelAssumption: true,
+      solutions: ["University of Wisconsin (UW)", "HTK", "Celsior"],
+      notes: [
+        "Janela oficial máxima não representa tempo ideal.",
+        "Maior duração de isquemia fria pode elevar risco operacional.",
+      ],
+      evidenceLevel: "HIGH",
+      sources: [manualSource, abdominalReview],
+    },
+  },
+  {
+    code: "LIVER",
+    name: "Fígado",
+    ischemia: {
+      officialMaxMinutes: 720,
+      officialIntervalMinutes: [720, 720],
+      operationalSafetyMarginMinutes: 60,
+      source: officialSource,
+    },
+    preservation: {
+      method: "STATIC_COLD_STORAGE",
+      targetTemperatureC: 4,
+      referenceRangeC: [0, 4],
+      targetIsModelAssumption: true,
+      solutions: ["University of Wisconsin (UW)", "HTK", "IGL-1", "Celsior"],
+      notes: ["Faixa adotada para SCS no modelo acadêmico."],
+      evidenceLevel: "HIGH",
+      sources: [manualSource, abdominalReview],
+    },
+  },
+  {
+    code: "PANCREAS",
+    name: "Pâncreas",
+    ischemia: {
+      officialMaxMinutes: 720,
+      officialIntervalMinutes: [720, 720],
+      operationalSafetyMarginMinutes: 60,
+      source: officialSource,
+    },
+    preservation: {
+      method: "STATIC_COLD_STORAGE",
+      targetTemperatureC: 4,
+      referenceRangeC: [0, 4],
+      targetIsModelAssumption: true,
+      solutions: ["University of Wisconsin (UW)", "Celsior", "HTK"],
+      notes: [
+        "Faixa adotada pelo modelo para SCS; não representa temperatura clinicamente perfeita universal.",
+        "Não há afirmação de superioridade universal entre soluções.",
+      ],
+      evidenceLevel: "MODERATE",
+      sources: [
+        manualSource,
+        abdominalReview,
+        {
+          type: "SCIENTIFIC_ARTICLE",
+          classification: "SCIENTIFIC_DATA",
+          title:
+            "Ischemia-Reperfusion Injuries Assessment during Pancreas Preservation",
+          year: 2021,
+          doiOrPmc: "PMID:34068301",
+          url: "https://pubmed.ncbi.nlm.nih.gov/34068301/",
+        },
+      ],
+    },
+  },
+  {
+    code: "INTESTINE",
+    name: "Intestino",
+    ischemia: {
+      officialMaxMinutes: 360,
+      officialIntervalMinutes: [240, 360],
+      operationalSafetyMarginMinutes: 45,
+      source: officialSource,
+    },
+    preservation: {
+      method: "STATIC_COLD_STORAGE",
+      targetTemperatureC: 4,
+      referenceRangeC: [0, 4],
+      targetIsModelAssumption: true,
+      solutions: ["University of Wisconsin (UW)", "HTK"],
+      notes: [
+        "Evidência de preservação intestinal é menos consolidada que para rim e fígado.",
+      ],
+      evidenceLevel: "LIMITADA/MODERADA",
+      sources: [
+        manualSource,
+        abdominalReview,
+        {
+          type: "SCIENTIFIC_ARTICLE",
+          classification: "SCIENTIFIC_DATA",
+          title:
+            "Organ-specific solutions and strategies for the intestinal preservation",
+          year: 2014,
+          doiOrPmc: "10.3109/08830185.2013.853764",
+          url: "https://pubmed.ncbi.nlm.nih.gov/24328709/",
+        },
+      ],
+    },
+  },
 ];
-function getOrganProfile(code){const profile=profiles.find(item=>item.code===String(code||'').toUpperCase());return profile?JSON.parse(JSON.stringify(profile)):null}
-module.exports={profiles,officialSource,manualSource,getOrganProfile};
+function getOrganProfile(code) {
+  const profile = profiles.find(
+    (item) => item.code === String(code || "").toUpperCase(),
+  );
+  return profile ? JSON.parse(JSON.stringify(profile)) : null;
+}
+module.exports = { profiles, officialSource, manualSource, getOrganProfile };

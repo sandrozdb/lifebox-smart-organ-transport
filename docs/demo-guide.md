@@ -1,20 +1,24 @@
-# Roteiro acadêmico de demonstração (5–8 minutos)
+# Demo acadêmica — aproximadamente 3 minutos
 
-1. Apresente o problema e deixe claro que sensores, instituições, rota e limites são simulados.
-2. Mostre o diagrama em `docs/architecture.md` e as camadas do software.
-3. Explique ESP32, sensor térmico, MPU6050/I2C e GPS/UART usando `docs/electronics.md`.
-4. No dashboard, abra **Pesquisa Operacional** e compare as três alternativas.
-5. Mostre pesos, restrições e a variável binária `xᵢ`; clique em **Calcular rota ótima**.
-6. Abra **Ver cálculo** e explique normalização, parcelas ponderadas, score e inviabilidade.
-7. Observe no mapa a rota recomendada destacada e as alternativas secundárias.
-8. Clique em **Reiniciar** e **Iniciar**; o GPS percorrerá a rota escolhida.
-9. Mostre cards, gráficos, coordenadas, progresso e dados persistidos.
-10. Abra **Análise Física**: ΔT, taxa térmica, `Q=mcΔT`, aceleração resultante, `P=VI` e `E=Pt`.
-11. Ative **Temperatura crítica**, aguarde o alerta e mostre a timeline.
-12. Ative **Normal** e depois **Impacto**; explique os eixos simulados do MPU6050.
-13. Explique que Repository e Service Layer separam banco, regras e interface.
-14. Mostre `docs/cloud.md`, Docker, health check e configuração por ambiente.
-15. Mostre `docs/testing.md` e o resultado de `npm test`.
-16. Clique em **Finalizar transporte** e apresente o resumo como condições monitoradas, sem afirmação clínica.
+## Preparação
 
-Sem internet, o mapa-base pode não aparecer, mas API, MySQL, coordenadas, otimização, Física, alertas e timeline continuam funcionando.
+Use **Reiniciar**, selecione o cenário conhecido e aguarde API, Leaflet e tiles estabilizarem. Confirme ausência de recomendação pendente. O projeto é acadêmico, simulado e não certifica preservação clínica.
+
+## Roteiro
+
+- **0:00–0:20 — problema e LifeBox:** transporte exige tempo, rastreabilidade e controle ambiental; a LifeBox integra monitoramento e apoio à decisão.
+- **0:20–0:45 — perfil:** mostre faixa térmica, janela de isquemia, margem e separação entre fonte científica e parâmetro acadêmico.
+- **0:45–1:10 — PO:** calcule o plano, compare alternativas factíveis/inviáveis e destaque `MIN C_total` dentro do conjunto enumerado.
+- **1:10–1:30 — execução:** inicie e mostre mapa, segmento, posição, tempo, isquemia e margem.
+- **1:30–1:50 — ocorrência:** ative temperatura ou impacto; mostre alerta, timeline e `ATIVO AND (TEMP_CRÍTICA OR IMPACTO_CRÍTICO)`.
+- **1:50–2:20 — reotimização:** altere uma condição logística, mostre a recomendação, confirme e destaque preservação de caminho, tempo e isquemia.
+- **2:20–2:40 — Física e Eletrônica:** apresente fórmulas didáticas e circuito Logisim.
+- **2:40–3:00 — arquitetura e QA:** C4, Strategy, Observer, testes/CI e Cloud ainda **PENDENTE**.
+
+## Modelo legado
+
+O modelo A/B/C de score ponderado permanece apenas para compatibilidade/histórico nos endpoints `/api/otimizacao`. Ele não faz parte da demo principal. A PO atual é o planejamento multimodal em `/api/planejamento`.
+
+## Plano B sem internet
+
+Se os tiles OSM não carregarem, não improvise cache irregular. Use as evidências em [`docs/evidencias`](evidencias/README.md) e continue demonstrando coordenadas, segmentos, API, isquemia, Física, alertas e reotimização.

@@ -5,6 +5,5 @@ module.exports = Object.freeze({
   impacto: { warning: 1.8, critical: 3.5 },
   bateria: { warning: 25, critical: 10 },
   sinal: { warning: 30, lost: 5 },
-  atraso: { velocidadeMaximaKmh: 12 }
+  atraso: { velocidadeMaximaKmh: 12 },
 });
-

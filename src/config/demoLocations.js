@@ -1,3 +1,144 @@
-const airports={SBSP:{icao:'SBSP',name:'Aeroporto de São Paulo/Congonhas — Deputado Freitas Nobre',city:'São Paulo',state:'SP',latitude:-23.6261,longitude:-46.6566,type:'REAL',source:'ANAC'},SBGR:{icao:'SBGR',name:'Aeroporto Internacional de Guarulhos — Governador André Franco Montoro',city:'Guarulhos',state:'SP',latitude:-23.4356,longitude:-46.4731,type:'REAL',source:'ANAC'},SBKP:{icao:'SBKP',name:'Aeroporto Internacional de Viracopos',city:'Campinas',state:'SP',latitude:-23.0074,longitude:-47.1345,type:'REAL',source:'ANAC'},SBBR:{icao:'SBBR',name:'Aeroporto Internacional de Brasília — Presidente Juscelino Kubitschek',city:'Brasília',state:'DF',latitude:-15.8697,longitude:-47.9186,type:'REAL',source:'ANAC'}};
-const loc=(name,latitude,longitude)=>({name,latitude,longitude,classification:'REAL_OPEN_DATA'});
-const scenarios=[{id:'GROUND_SHORT',name:'Curta distância — Modal terrestre',organCode:'KIDNEY',consumedMinutes:45,origin:loc('São Paulo - SP',-23.5505,-46.6333),destination:loc('Campinas - SP',-22.9056,-47.0608),conditions:{},expectedPlanId:'PLAN_GROUND_ANHANGUERA',description:'Distância curta e janela ampla: terrestre é o menor custo factível.'},{id:'HELICOPTER_URGENT',name:'Urgência regional — Helicóptero',organCode:'HEART',consumedMinutes:120,origin:loc('São Paulo - SP',-23.5505,-46.6333),destination:loc('São José dos Campos - SP',-23.2237,-45.9009),conditions:{infrastructureAvailability:{AIRPORT_ORIGIN:false,AIRPORT_DESTINATION:false,HELIPORT_ORIGIN:true,HELIPORT_DESTINATION:true}},expectedPlanId:'PLAN_HELICOPTER',description:'Premissa demonstrativa: aeroportos indisponíveis e margem cardíaca restringem o terrestre.'},{id:'AIR_LONG',name:'Longa distância interestadual — Plano aéreo multimodal',organCode:'HEART',consumedMinutes:0,origin:loc('São Paulo - SP',-23.5505,-46.6333),destination:loc('Brasília - DF',-15.7939,-47.8828),conditions:{roadDistanceFactor:1,facilities:{AIRPORT_ORIGIN:airports.SBSP,AIRPORT_DESTINATION:airports.SBBR}},expectedPlanId:'PLAN_MULTIMODAL_T_A_T',description:'SBSP e SBBR são aeroportos reais; plano multimodal aéreo atende a janela com menor custo factível.'},{id:'CRITICAL_MULTIMODAL',name:'Transporte crítico multimodal — Helicóptero + Avião',organCode:'HEART',consumedMinutes:0,origin:loc('São Paulo - SP',-23.5505,-46.6333),destination:loc('Brasília - DF',-15.7939,-47.8828),conditions:{roadDistanceFactor:1,originHasHelipad:true,groundAccessOriginAvailable:false,infrastructureAvailability:{AIRPORT_ORIGIN:true,AIRPORT_DESTINATION:true,HELIPORT_ORIGIN:true,HELIPORT_DESTINATION:true},facilities:{AIRPORT_ORIGIN:airports.SBSP,AIRPORT_DESTINATION:airports.SBBR}},expectedPlanId:'PLAN_MULTIMODAL_H_A_T',description:'Premissa acadêmica: acesso terrestre ao aeroporto de origem indisponível; o helicóptero integra a cadeia multimodal.'},{id:'NO_SOLUTION',name:'Janela crítica — nenhuma solução viável',organCode:'HEART',consumedMinutes:235,origin:loc('São Paulo - SP',-23.5505,-46.6333),destination:loc('Brasília - DF',-15.7939,-47.8828),conditions:{roadDistanceFactor:1,facilities:{AIRPORT_ORIGIN:airports.SBSP,AIRPORT_DESTINATION:airports.SBBR}},expectedPlanId:null,description:'Tempo já consumido propositalmente alto; nenhuma alternativa é forçada.'}];module.exports={airports,scenarios};
+const airports = {
+  SBSP: {
+    icao: "SBSP",
+    name: "Aeroporto de São Paulo/Congonhas — Deputado Freitas Nobre",
+    city: "São Paulo",
+    state: "SP",
+    latitude: -23.6261,
+    longitude: -46.6566,
+    type: "REAL",
+    source: "ANAC",
+  },
+  SBGR: {
+    icao: "SBGR",
+    name: "Aeroporto Internacional de Guarulhos — Governador André Franco Montoro",
+    city: "Guarulhos",
+    state: "SP",
+    latitude: -23.4356,
+    longitude: -46.4731,
+    type: "REAL",
+    source: "ANAC",
+  },
+  SBKP: {
+    icao: "SBKP",
+    name: "Aeroporto Internacional de Viracopos",
+    city: "Campinas",
+    state: "SP",
+    latitude: -23.0074,
+    longitude: -47.1345,
+    type: "REAL",
+    source: "ANAC",
+  },
+  SBBR: {
+    icao: "SBBR",
+    name: "Aeroporto Internacional de Brasília — Presidente Juscelino Kubitschek",
+    city: "Brasília",
+    state: "DF",
+    latitude: -15.8697,
+    longitude: -47.9186,
+    type: "REAL",
+    source: "ANAC",
+  },
+};
+const loc = (name, latitude, longitude) => ({
+  name,
+  latitude,
+  longitude,
+  classification: "REAL_OPEN_DATA",
+});
+const scenarios = [
+  {
+    id: "GROUND_SHORT",
+    name: "Curta distância — Modal terrestre",
+    organCode: "KIDNEY",
+    consumedMinutes: 45,
+    origin: loc("São Paulo - SP", -23.5505, -46.6333),
+    destination: loc("Campinas - SP", -22.9056, -47.0608),
+    conditions: {},
+    expectedPlanId: "PLAN_GROUND_ANHANGUERA",
+    description:
+      "Distância curta e janela ampla: terrestre é o menor custo factível.",
+  },
+  {
+    id: "HELICOPTER_URGENT",
+    name: "Urgência regional — Helicóptero",
+    organCode: "HEART",
+    consumedMinutes: 120,
+    origin: loc("São Paulo - SP", -23.5505, -46.6333),
+    destination: loc("São José dos Campos - SP", -23.2237, -45.9009),
+    conditions: {
+      infrastructureAvailability: {
+        AIRPORT_ORIGIN: false,
+        AIRPORT_DESTINATION: false,
+        HELIPORT_ORIGIN: true,
+        HELIPORT_DESTINATION: true,
+      },
+    },
+    expectedPlanId: "PLAN_HELICOPTER",
+    description:
+      "Premissa demonstrativa: aeroportos indisponíveis e margem cardíaca restringem o terrestre.",
+  },
+  {
+    id: "AIR_LONG",
+    name: "Longa distância interestadual — Plano aéreo multimodal",
+    organCode: "HEART",
+    consumedMinutes: 0,
+    origin: loc("São Paulo - SP", -23.5505, -46.6333),
+    destination: loc("Brasília - DF", -15.7939, -47.8828),
+    conditions: {
+      roadDistanceFactor: 1,
+      facilities: {
+        AIRPORT_ORIGIN: airports.SBSP,
+        AIRPORT_DESTINATION: airports.SBBR,
+      },
+    },
+    expectedPlanId: "PLAN_MULTIMODAL_T_A_T",
+    description:
+      "SBSP e SBBR são aeroportos reais; plano multimodal aéreo atende a janela com menor custo factível.",
+  },
+  {
+    id: "CRITICAL_MULTIMODAL",
+    name: "Transporte crítico multimodal — Helicóptero + Avião",
+    organCode: "HEART",
+    consumedMinutes: 0,
+    origin: loc("São Paulo - SP", -23.5505, -46.6333),
+    destination: loc("Brasília - DF", -15.7939, -47.8828),
+    conditions: {
+      roadDistanceFactor: 1,
+      originHasHelipad: true,
+      groundAccessOriginAvailable: false,
+      infrastructureAvailability: {
+        AIRPORT_ORIGIN: true,
+        AIRPORT_DESTINATION: true,
+        HELIPORT_ORIGIN: true,
+        HELIPORT_DESTINATION: true,
+      },
+      facilities: {
+        AIRPORT_ORIGIN: airports.SBSP,
+        AIRPORT_DESTINATION: airports.SBBR,
+      },
+    },
+    expectedPlanId: "PLAN_MULTIMODAL_H_A_T",
+    description:
+      "Premissa acadêmica: acesso terrestre ao aeroporto de origem indisponível; o helicóptero integra a cadeia multimodal.",
+  },
+  {
+    id: "NO_SOLUTION",
+    name: "Janela crítica — nenhuma solução viável",
+    organCode: "HEART",
+    consumedMinutes: 235,
+    origin: loc("São Paulo - SP", -23.5505, -46.6333),
+    destination: loc("Brasília - DF", -15.7939, -47.8828),
+    conditions: {
+      roadDistanceFactor: 1,
+      facilities: {
+        AIRPORT_ORIGIN: airports.SBSP,
+        AIRPORT_DESTINATION: airports.SBBR,
+      },
+    },
+    expectedPlanId: null,
+    description:
+      "Tempo já consumido propositalmente alto; nenhuma alternativa é forçada.",
+  },
+];
+module.exports = { airports, scenarios };

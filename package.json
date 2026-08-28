@@ -8,13 +8,27 @@
     "dev": "node --watch src/server.js",
     "simulator": "node simulator/simulator.js",
     "test": "node scripts/run-tests.js",
+    "coverage": "c8 --reporter=text --reporter=json-summary node --test --test-concurrency=1",
     "check": "node scripts/check-syntax.js",
+    "lint": "eslint src simulator scripts tests public/js eslint.config.js playwright.config.js",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "e2e": "playwright test",
+    "e2e:install": "playwright install chromium",
     "setup-db": "node scripts/setup-db.js"
   },
-  "engines": { "node": ">=18" },
+  "engines": {
+    "node": ">=20"
+  },
   "dependencies": {
     "dotenv": "^17.2.1",
     "express": "^5.1.0",
-    "mysql2": "^3.14.3"
+    "mysql2": "^3.24.2"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.62.1",
+    "c8": "^10.1.3",
+    "eslint": "^9.39.5",
+    "prettier": "^3.9.6"
   }
 }

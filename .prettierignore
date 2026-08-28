@@ -1,0 +1,9 @@
+node_modules/
+coverage/
+playwright-report/
+test-results/
+work/
+docs/evidencias/
+electronics/*.circ
+package-lock.json
+public/index.html

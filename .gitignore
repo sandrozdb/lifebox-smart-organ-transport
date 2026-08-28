@@ -3,6 +3,9 @@ node_modules/
 .DS_Store
 *.log
 coverage/
+playwright-report/
+test-results/
+.playwright-browsers/
 dist/
 npm-debug.log*
 work/

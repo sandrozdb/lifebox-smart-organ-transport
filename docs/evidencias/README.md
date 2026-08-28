@@ -1,6 +1,6 @@
 # Evidências visuais — LifeBox
 
-As 20 imagens do dashboard foram recapturadas em 27/08/2026 na aplicação real em `http://localhost:3000`, por automação do navegador integrado, com zoom de 100% e viewport desktop 1920×1080. Os arquivos têm assinatura PNG nativa; não foram usados mockups, geração de imagens ou edição para simular estados.
+As 20 imagens do dashboard foram revisadas em 28/08/2026 na aplicação real em `http://localhost:3000`, por automação do navegador integrado, com zoom de 100%. As evidências críticas de mapa, impacto, reotimização, resumo e status técnico foram atualizadas; as demais capturas válidas foram preservadas. Os arquivos têm assinatura PNG nativa; não foram usados mockups nem geração de imagens para simular estados.
 
 Os mapas foram validados com Leaflet inicializado e tiles reais do OpenStreetMap completos (`naturalWidth = 256`). Sensores, instituições, tempos, custos, rotas e ocorrências permanecem identificados como dados simulados ou premissas acadêmicas.
 
@@ -47,7 +47,7 @@ Os mapas foram validados com Leaflet inicializado e tiles reais do OpenStreetMap
 
 ## 9. Qualidade e testes
 
-- [18 — Status de QA](dashboard/18-qa-status.png): comprova 77 testes aprovados e E2E manual validado no painel real.
+- [18 — Status de QA](dashboard/18-qa-status.png): comprova 83 testes aprovados no painel real; o E2E automatizado possui validação separada no relatório desta entrega.
 
 ## 10. Cloud e infraestrutura
 
@@ -61,15 +61,20 @@ Os mapas foram validados com Leaflet inicializado e tiles reais do OpenStreetMap
 ## Metadados da captura
 
 | Arquivos | Dimensão | Formato | Escala |
-|---|---:|---|---:|
-| 01–12 e 14–20 | 1920×1080 | PNG nativo | 100% |
+| --- | ---: | --- | ---: |
+| 01–05, 07–08, 10–11, 14–15 e 17–18 | 1920×1080 | PNG nativo | 100% |
+| 06, 09 e 12 | 1905×1056 | PNG nativo | 100% |
 | 13 | 1920×360, recorte de viewport | PNG nativo | 100% |
+| 16 | 1265×712, viewport responsivo | PNG nativo | 100% |
+| 19–20 | 480×259, recorte focal | PNG nativo | 100% |
 
 ## Validação executada
 
 - `npm run check`: aprovado;
-- `npm test`: 77 aprovados, 0 falhas;
-- 17 cenários E2E executados no dashboard real;
+- `npm test`: 83 aprovados, 0 falhas e 1 integração MySQL condicional ignorada;
+- `npm run coverage`: 86,28% de linhas/instruções, 80,90% de branches e 92,10% de funções;
+- `npm run e2e`: 4 cenários automatizados aprovados;
+- cenários adicionais auditados manualmente no dashboard real;
 - console do navegador sem erro crítico;
 - health check HTTP 200;
 - 20/20 imagens validadas como PNG nativo;
