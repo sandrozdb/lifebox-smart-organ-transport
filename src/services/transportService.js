@@ -9,7 +9,11 @@ const readingTime = (reading) =>
   new Date(
     String(reading.registrado_em || reading.timestamp).replace(" ", "T"),
   ).getTime();
-function weightedWithinRange(readings, elapsedMinutes) {
+function weightedWithinRange(
+  readings,
+  elapsedMinutes,
+  referenceRange = [2, 8],
+) {
   if (!readings.length) return 0;
   const sorted = [...readings].sort((a, b) => readingTime(a) - readingTime(b));
   const rawWeights = sorted.map((reading, index) =>
@@ -26,7 +30,8 @@ function weightedWithinRange(readings, elapsedMinutes) {
   const inside = sorted.reduce(
     (sum, reading, index) =>
       sum +
-      (numeric(reading.temperatura) >= 2 && numeric(reading.temperatura) <= 8
+      (numeric(reading.temperatura) >= referenceRange[0] &&
+      numeric(reading.temperatura) <= referenceRange[1]
         ? weights[index]
         : 0),
     0,
@@ -37,6 +42,8 @@ function summarizeExecution({ transport, readings, alerts, events, snapshot }) {
   const ordered = [...readings].reverse();
   const temps = ordered.map((row) => numeric(row.temperatura));
   const humidity = ordered.map((row) => numeric(row.umidade));
+  const impacts = ordered.map((row) => numeric(row.impacto));
+  const signals = ordered.map((row) => numeric(row.sinal));
   const duration = numeric(snapshot?.transportElapsedMinutes);
   const plan = snapshot
     ? {
@@ -72,12 +79,32 @@ function summarizeExecution({ transport, readings, alerts, events, snapshot }) {
           2,
         )
       : null,
+    impacto_max: impacts.length ? Math.max(...impacts) : null,
+    impacto_medio: impacts.length
+      ? round(
+          impacts.reduce((sum, value) => sum + value, 0) / impacts.length,
+          2,
+        )
+      : null,
+    sinal_medio: signals.length
+      ? round(
+          signals.reduce((sum, value) => sum + value, 0) / signals.length,
+          2,
+        )
+      : null,
     impactos_criticos: alerts.filter(
       (alert) => alert.tipo === "IMPACTO" && alert.severidade === "CRITICO",
     ).length,
     numero_alertas: Object.keys(byType).length,
     alertas_por_tipo: byType,
-    percentual_tempo_limites: round(weightedWithinRange(ordered, duration), 1),
+    percentual_tempo_limites: round(
+      weightedWithinRange(
+        ordered,
+        duration,
+        snapshot?.organProfile?.preservation?.referenceRangeC,
+      ),
+      1,
+    ),
     bateria_final: ordered.length ? numeric(ordered.at(-1).bateria) : null,
     isquemia_inicial_minutos: numeric(snapshot?.initialConsumedMinutes),
     isquemia_final_minutos: round(numeric(snapshot?.ischemiaTotalMinutes), 2),

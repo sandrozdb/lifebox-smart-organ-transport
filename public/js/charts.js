@@ -1,5 +1,5 @@
 window.LifeBoxCharts = {
-  draw(canvas, values, color = "#1ed6c5") {
+  draw(canvas, values, color = "#72a7c4") {
     const ctx = canvas.getContext("2d"),
       ratio = devicePixelRatio || 1,
       w = canvas.clientWidth,

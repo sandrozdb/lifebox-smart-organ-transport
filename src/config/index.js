@@ -6,7 +6,7 @@ module.exports = Object.freeze({
   nodeEnv: process.env.NODE_ENV || "development",
   dbDriver: process.env.DB_DRIVER || "mysql",
   simulatorIntervalMs: Number(process.env.SIMULATOR_INTERVAL_MS) || 2000,
-  simulationTimeScale: Number(process.env.SIMULATION_TIME_SCALE) || 60,
+  simulationTimeScale: Number(process.env.SIMULATION_TIME_SCALE) || 120,
   alertCooldownSeconds: Number(process.env.ALERT_COOLDOWN_SECONDS) || 30,
   apiBaseUrl: process.env.API_BASE_URL || "http://localhost:3000",
   database: {

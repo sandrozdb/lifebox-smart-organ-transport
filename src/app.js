@@ -5,7 +5,14 @@ const config = require("./config");
 const app = express();
 app.disable("x-powered-by");
 app.use(express.json({ limit: "50kb" }));
-app.use(express.static(path.resolve(__dirname, "..", "public")));
+app.use(
+  express.static(path.resolve(__dirname, "..", "public"), {
+    etag: false,
+    setHeaders(response) {
+      response.setHeader("Cache-Control", "no-store");
+    },
+  }),
+);
 app.use("/docs", express.static(path.resolve(__dirname, "..", "docs")));
 
 app.get("/api/health", async (_req, res) => {

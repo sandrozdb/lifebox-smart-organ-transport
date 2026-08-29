@@ -22,7 +22,7 @@ LifeBox é um sistema acadêmico de apoio à decisão e rastreabilidade para tra
 | CI              | GitHub Actions                                                            |
 | Cloud           | **PENDENTE**: backend público, MySQL gerenciado e CD                      |
 
-**Links rápidos:** [Arquitetura](docs/architecture.md) · [Pesquisa Operacional](docs/operations-research.md) · [API](docs/api.md) · [QA](docs/testing-and-qa.md) · [Demo](docs/demo-guide.md) · [Evidências](docs/evidencias/README.md) · [Requisitos](docs/academic-requirements.md) · [Eletrônica](docs/electronics.md) · [Física](docs/physics.md)
+**Links rápidos:** [Arquitetura](docs/architecture.md) · [Pesquisa Operacional](docs/operations-research.md) · [API](docs/api.md) · [QA](docs/testing-and-qa.md) · [Validação pré-cloud](docs/pre-cloud-validation.md) · [Demo](docs/demo-guide.md) · [Evidências](docs/evidencias/README.md) · [Requisitos](docs/academic-requirements.md) · [Eletrônica](docs/electronics.md) · [Física](docs/physics.md)
 
 ## Aviso acadêmico
 

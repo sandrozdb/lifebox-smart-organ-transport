@@ -619,6 +619,22 @@ test("reotimização traduz códigos internos para texto legível", () => {
     planningUi.includes("Motivo da reotimização: ${reasonLabel(reason)}"),
   );
 });
+test("condições logísticas informam plano mantido e atualizam o mapa aplicado", () => {
+  const planningUi = fs.readFileSync(
+    require.resolve("../public/js/planning.js"),
+    "utf8",
+  );
+  assert.ok(planningUi.includes('"PLAN_UNCHANGED"'));
+  assert.ok(planningUi.includes("CONDIÇÃO LOGÍSTICA CONSIDERADA"));
+  assert.ok(planningUi.includes("Novo plano aplicado. Deslocamento retomado."));
+  assert.ok(planningUi.includes("reoptimization-comparison"));
+  assert.ok(planningUi.includes("render(recommendation.result)"));
+  assert.ok(planningUi.includes("lifeBoxSnapExecutionTracking"));
+  assert.ok(planningUi.includes("Reinicie o transporte antes de trocar"));
+  assert.ok(
+    planningUi.includes("{ GROUND: false, HELICOPTER: true, AIRPLANE: true }"),
+  );
+});
 test("endpoint aplica recomendação revalidada sem reiniciar execução", async () => {
   const demo = await repository.createTransporte({
     codigo_transporte: "REOPT-001",
@@ -639,6 +655,10 @@ test("endpoint aplica recomendação revalidada sem reiniciar execução", async
   });
   try {
     await simulation.start(demo.id, "LOGISTICS_PLAN", first.selected, first);
+    await simulation.stop();
+    assert.equal(simulation.status().running, false);
+    await simulation.resume(demo.id);
+    assert.equal(simulation.status().running, true);
     executionPlan.advance(demo.id, 4);
     const before = executionPlan.get(demo.id);
     const recommendation = await simulation.recommendReoptimization(
@@ -655,6 +675,11 @@ test("endpoint aplica recomendação revalidada sem reiniciar execução", async
         },
       },
     );
+    assert.equal(simulation.status().running, false);
+    assert.deepEqual(
+      simulation.status().logistics.currentPosition,
+      before.currentPosition,
+    );
     const response = await fetch(`${base}/api/simulacao/reotimizar/aplicar`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -668,6 +693,7 @@ test("endpoint aplica recomendação revalidada sem reiniciar execução", async
     assert.equal(response.status, 200);
     const applied = await response.json();
     assert.notEqual(applied.logistics.planId, "MANIPULADO");
+    assert.equal(applied.running, true);
     assert.equal(
       applied.logistics.transportElapsedMinutes,
       before.transportElapsedMinutes,
@@ -746,6 +772,9 @@ test("resumo final considera apenas a execução atual e usa tempo simulado", as
   assert.equal(firstSummary.numero_alertas, 2);
   assert.equal(firstSummary.isquemia_final_minutos, 157);
   assert.equal(firstSummary.bateria_final, 80);
+  assert.ok(Number.isFinite(firstSummary.impacto_medio));
+  assert.ok(Number.isFinite(firstSummary.impacto_max));
+  assert.ok(Number.isFinite(firstSummary.sinal_medio));
   const second = await transportService.start(demo.id);
   await repository.createLeitura({
     ...payload({
@@ -894,6 +923,42 @@ test("painéis técnicos possuem seletores presentes no dashboard", () => {
     "#qa-last-validation",
   ])
     assert.ok(dashboard.includes(selector));
+});
+test("rastreamento visual percorre a geometria sem duplicar a linha", () => {
+  const dashboard = fs.readFileSync(
+    require.resolve("../public/js/dashboard.js"),
+    "utf8",
+  );
+  assert.ok(dashboard.includes("function animateTrackingMarker"));
+  assert.ok(dashboard.includes("function pointAlongRoute"));
+  assert.ok(dashboard.includes("requestAnimationFrame(frame)"));
+  assert.ok(dashboard.includes("const animationRoute"));
+  assert.ok(dashboard.includes("opacity: 0"));
+  assert.ok(dashboard.includes("layers.path?.setLatLngs([])"));
+  assert.ok(dashboard.includes('className: "airport-code-tooltip"'));
+  assert.ok(dashboard.includes("permanent: false"));
+  assert.ok(dashboard.includes('segment.modal === "OPERACIONAL"'));
+  assert.ok(dashboard.includes("L.divIcon"));
+  assert.ok(dashboard.includes('viewBox="0 0 24 34"'));
+  assert.ok(dashboard.includes("function createFacilityMarker"));
+  assert.ok(!dashboard.includes('"Aeroporto" : "Infraestrutura"'));
+});
+test("seletores da PO abrem a lista sem mover a página", () => {
+  const planning = fs.readFileSync(
+    require.resolve("../public/js/planning.js"),
+    "utf8",
+  );
+  assert.ok(planning.includes("function enhanceLocationSelect"));
+  assert.ok(planning.includes('menu.setAttribute("role", "listbox")'));
+  assert.ok(!planning.includes('wrapper.scrollIntoView({ block: "start" })'));
+  assert.ok(planning.includes("menu.scrollTop = Math.max"));
+  assert.ok(planning.includes("preventScroll: true"));
+  assert.ok(planning.includes('new Event("change", { bubbles: true })'));
+  assert.ok(
+    planning.includes('enhanceLocationSelect($("#planning-scenario"))'),
+  );
+  assert.ok(planning.includes('enhanceLocationSelect($("#planning-organ"))'));
+  assert.ok(!planning.includes("science-caveat"));
 });
 
 const {

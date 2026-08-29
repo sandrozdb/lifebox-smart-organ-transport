@@ -70,11 +70,19 @@ test("PO logística: avião inclui aeroporto até hospital destino", async () =>
 });
 test("PO logística: helicóptero inclui transferências quando necessárias", async () => {
   const r = await plan();
-  assert.ok(
-    r.alternatives
-      .find((a) => a.id === "PLAN_HELICOPTER")
-      .segments.filter((s) => s.modal === "TERRESTRE").length >= 2,
+  const alternative = r.alternatives.find(
+    (a) => a.id === "PLAN_MULTIMODAL_T_H_T",
   );
+  assert.equal(alternative.name, "Terrestre + Helicóptero + Terrestre");
+  assert.equal(
+    alternative.segments.filter((s) => s.modal === "TERRESTRE").length,
+    2,
+  );
+  const helicopter = alternative.segments.find(
+    (segment) => segment.modal === "HELICÓPTERO",
+  );
+  assert.equal(helicopter.geometry.length, 2);
+  assert.notDeepEqual(helicopter.geometry[0], helicopter.geometry[1]);
 });
 test("PO logística: heliponto hospitalar reduz transferência", async () => {
   const r = await plan({
@@ -112,7 +120,7 @@ test("PO logística: modal indisponível é eliminado", async () => {
     },
   });
   assert.equal(
-    r.alternatives.find((a) => a.id === "PLAN_HELICOPTER").status,
+    r.alternatives.find((a) => a.id === "PLAN_MULTIMODAL_T_H_T").status,
     "INVIAVEL",
   );
 });
@@ -194,13 +202,22 @@ test("cenários logísticos determinísticos selecionam o resultado configurado"
     assert.equal(result.selected?.id || null, item.expectedPlanId);
   }
 });
-test("cenário aéreo usa aeroportos reais SBSP e SBBR configurados", () => {
+test("cenários aéreos usam aeroportos correspondentes às capitais", async () => {
   assert.equal(demoAirports.SBSP.type, "REAL");
   assert.equal(demoAirports.SBBR.type, "REAL");
-  assert.equal(
-    demoScenarios.find((x) => x.id === "AIR_LONG").conditions.facilities
-      .AIRPORT_ORIGIN.icao,
-    "SBSP",
+  const item = demoScenarios.find(
+    (scenario) => scenario.id === "DEMO_06_GROUND_AIR_GROUND",
+  );
+  const result = await planning.calculate({
+    organCode: item.organCode,
+    consumedMinutes: item.consumedMinutes,
+    origin: item.origin,
+    destination: item.destination,
+    conditions: item.conditions,
+  });
+  assert.deepEqual(
+    result.selected.facilities.map((facility) => facility.icao),
+    ["SBPA", "SBBR"],
   );
 });
 const execution = require("../src/services/executionPlanService");
@@ -222,7 +239,9 @@ test("plano ativo permanece estável até confirmação explícita de reotimiza�
   const active = r.alternatives.find((x) => x.id === "PLAN_MULTIMODAL_T_A_T");
   execution.freeze(998, active, r);
   const before = execution.get(998).planId;
-  const alternative = r.alternatives.find((x) => x.id === "PLAN_HELICOPTER");
+  const alternative = r.alternatives.find(
+    (x) => x.id === "PLAN_MULTIMODAL_T_H_T",
+  );
   assert.notEqual(alternative.id, before);
   assert.equal(execution.get(998).planId, before);
 });
@@ -231,11 +250,12 @@ test("relógio simulado aplica escala, isquemia e margem", async () => {
   const active = r.alternatives.find((x) => x.id === "PLAN_MULTIMODAL_T_A_T");
   execution.freeze(777, active, r);
   const after = execution.advance(777, 1);
-  assert.equal(after.transportElapsedMinutes, 1);
-  assert.equal(after.ischemiaTotalMinutes, 46);
+  const elapsedMinutes = execution.timeScale() / 60;
+  assert.equal(after.transportElapsedMinutes, elapsedMinutes);
+  assert.equal(after.ischemiaTotalMinutes, 45 + elapsedMinutes);
   assert.equal(
     after.remainingMarginMinutes,
-    r.profile.ischemia.officialMaxMinutes - 46,
+    r.profile.ischemia.officialMaxMinutes - 45 - elapsedMinutes,
   );
 });
 test("pausa externa não avança e reinício do plano zera relógio", async () => {
@@ -263,12 +283,30 @@ const {
   GroundRoutingProvider,
 } = require("../src/services/groundRoutingProvider");
 test("groundRoutingProvider retorna múltiplos caminhos para São Paulo e Campinas", async () => {
+  const provider = new GroundRoutingProvider();
+  const saoPaulo = { latitude: -23.55, longitude: -46.63 };
+  const campinas = { latitude: -22.91, longitude: -47.06 };
+  const routes = await provider.routes(saoPaulo, campinas);
+  const reverseRoutes = await provider.routes(campinas, saoPaulo);
+  assert.equal(routes.length, 2);
+  assert.ok(routes.every((route) => route.name === "Terrestre"));
+  assert.ok(routes.every((route) => route.classification === "SIMULATED"));
+  assert.deepEqual(
+    reverseRoutes[0].geometry,
+    [...routes[0].geometry].reverse(),
+  );
+  assert.deepEqual(
+    reverseRoutes[1].geometry,
+    [...routes[1].geometry].reverse(),
+  );
+});
+test("rota terrestre genérica usa nome e via padronizados", async () => {
   const routes = await new GroundRoutingProvider().routes(
     { latitude: -23.55, longitude: -46.63 },
-    { latitude: -22.91, longitude: -47.06 },
+    { latitude: -12.97, longitude: -38.5 },
   );
-  assert.equal(routes.length, 2);
-  assert.ok(routes.every((route) => route.classification === "SIMULATED"));
+  assert.equal(routes[0].name, "Terrestre");
+  assert.equal(routes[0].via, "Rota estimada");
 });
 test("menor custo terrestre factível vence e expõe geometria", async () => {
   const r = await planning.calculate({
@@ -334,10 +372,11 @@ test("isquemia e margem usam o mesmo snapshot acelerado", async () => {
   );
   execution.freeze(773, active, r);
   const after = execution.advance(773, 3);
-  assert.equal(after.ischemiaTotalMinutes, 48);
+  const expectedIschemia = 45 + (3 * execution.timeScale()) / 60;
+  assert.equal(after.ischemiaTotalMinutes, expectedIschemia);
   assert.equal(
     after.remainingMarginMinutes,
-    r.profile.ischemia.officialMaxMinutes - 48,
+    r.profile.ischemia.officialMaxMinutes - expectedIschemia,
   );
 });
 test("plano com avião é sempre multimodal e possui acesso, voo e saída", async () => {
@@ -376,21 +415,36 @@ test("coração mantém máximo de isquemia de 240 minutos no plano", async () =
   assert.equal(r.profile.ischemia.officialMaxMinutes, 240);
   assert.equal(r.consumedMinutes, 45);
 });
-test("seletor não possui cenário São Paulo-Rio e mantém aéreo multimodal", () => {
-  assert.equal(
-    demoScenarios.some((item) => /rio/i.test(item.name)),
-    false,
+test("seletor possui nove planos padronizados e um cenário sem solução", () => {
+  assert.equal(demoScenarios.length, 10);
+  assert.deepEqual(
+    demoScenarios.map((item) => item.name),
+    [
+      "01 · Terrestre · Rodovia Anhanguera",
+      "02 · Terrestre · Rodovia dos Bandeirantes",
+      "03 · Terrestre · Rota estimada",
+      "04 · Helicóptero porta a porta",
+      "05 · Terrestre + Helicóptero + Terrestre",
+      "06 · Terrestre + Avião + Terrestre",
+      "07 · Helicóptero + Avião + Terrestre",
+      "08 · Terrestre + Avião + Helicóptero",
+      "09 · Helicóptero + Avião + Helicóptero",
+      "10 · Nenhum plano factível",
+    ],
+  );
+});
+test("cenários demonstram todos os órgãos e diferentes tempos de isquemia", () => {
+  assert.deepEqual(
+    [...new Set(demoScenarios.map((item) => item.organCode))].sort(),
+    ["HEART", "INTESTINE", "KIDNEY", "LIVER", "LUNG", "PANCREAS"],
   );
   assert.ok(
-    demoScenarios.some(
-      (item) =>
-        item.name === "Longa distância interestadual — Plano aéreo multimodal",
-    ),
+    new Set(demoScenarios.map((item) => item.consumedMinutes)).size >= 7,
   );
 });
 test("cenário crítico multimodal seleciona helicóptero mais avião por restrição operacional", async () => {
   const item = demoScenarios.find(
-    (scenario) => scenario.id === "CRITICAL_MULTIMODAL",
+    (scenario) => scenario.id === "DEMO_07_HELICOPTER_AIR_GROUND",
   );
   const r = await planning.calculate({
     organCode: item.organCode,
@@ -407,12 +461,20 @@ test("cenário crítico multimodal seleciona helicóptero mais avião por restri
     ["HELICÓPTERO", "AVIÃO", "TERRESTRE"],
   );
 });
-test("cenário crítico multimodal usa cidades padronizadas nos campos principais", () => {
+test("cenário crítico multimodal usa capitais diferentes nos campos principais", () => {
   const item = demoScenarios.find(
-    (scenario) => scenario.id === "CRITICAL_MULTIMODAL",
+    (scenario) => scenario.id === "DEMO_07_HELICOPTER_AIR_GROUND",
   );
-  assert.equal(item.origin.name, "São Paulo - SP");
-  assert.equal(item.destination.name, "Brasília - DF");
+  assert.equal(item.origin.name, "Manaus - AM");
+  assert.equal(item.destination.name, "Belém - PA");
+});
+test("cenários variam origem e destino entre regiões brasileiras", () => {
+  const routes = new Set(
+    demoScenarios.map(
+      (item) => `${item.origin.name} → ${item.destination.name}`,
+    ),
+  );
+  assert.equal(routes.size, demoScenarios.length);
 });
 test("reotimização preserva posição, histórico, tempo e isquemia da execução", async () => {
   const first = await plan({ consumedMinutes: 45 });

@@ -81,8 +81,22 @@ function buildSegments(plan, result) {
       (point) => [point.name, point],
     ),
   );
-  return plan.segments
-    .filter((segment) => segment.distanceKm > 0)
+  let operationalMinutes = 0;
+  const movingSegments = [];
+  for (const segment of plan.segments) {
+    if (segment.distanceKm <= 0) {
+      operationalMinutes += Number(segment.timeMin || 0);
+      continue;
+    }
+    movingSegments.push({
+      ...segment,
+      timeMin: Number(segment.timeMin || 0) + operationalMinutes,
+    });
+    operationalMinutes = 0;
+  }
+  if (operationalMinutes && movingSegments.length)
+    movingSegments.at(-1).timeMin += operationalMinutes;
+  return movingSegments
     .map((segment, index) => ({
       index,
       from: segment.from,
@@ -90,6 +104,7 @@ function buildSegments(plan, result) {
       modal: segment.modal,
       distanceKm: segment.distanceKm,
       timeMin: segment.timeMin,
+      cost: segment.cost,
       origin: segment.origin || points[segment.from],
       destination: segment.destination || points[segment.to],
       geometry: segment.geometry,
@@ -118,6 +133,14 @@ function snapshot(state) {
   const totalDistanceKm = historicalDistanceKm + remainingPlanDistance;
   const traveledKm = historicalDistanceKm + currentPlanTraveled;
   const remainingKm = Math.max(0, remainingPlanDistance - currentPlanTraveled);
+  const remainingPlanMinutes = state.segments.reduce(
+    (sum, segment) => sum + segment.timeMin * (1 - segment.progress),
+    0,
+  );
+  const remainingPlanCost = state.segments.reduce(
+    (sum, segment) => sum + Number(segment.cost || 0) * (1 - segment.progress),
+    0,
+  );
   const remainingPath = state.segments.reduce(
     (path, segment) => appendPath(path, geometryFor(segment)),
     [],
@@ -146,6 +169,8 @@ function snapshot(state) {
       totalDistanceKm,
       traveledKm,
       remainingKm,
+      remainingPlanMinutes,
+      remainingPlanCost,
       totalProgress: totalDistanceKm ? traveledKm / totalDistanceKm : 1,
       transportElapsedMinutes: elapsedMinutes,
       ischemiaTotalMinutes: state.initialConsumedMinutes + elapsedMinutes,

@@ -160,20 +160,39 @@ class HelicopterTransportStrategy extends ModalPlannerStrategy {
         airDistance,
         this.travelTime(airDistance),
         airDistance * this.config.costPerKm,
+        {
+          origin: hasOrigin ? origin : departure,
+          destination: hasDestination ? destination : arrival,
+          geometry: [
+            hasOrigin ? origin : departure,
+            hasDestination ? destination : arrival,
+          ],
+        },
       ),
     );
     if (!hasDestination)
       legs.push(
         await bestGroundSegment(arrival, destination, conditions, "destino"),
       );
+    const accessModes = [
+      ...(!hasOrigin ? ["Terrestre"] : []),
+      "Helicóptero",
+      ...(!hasDestination ? ["Terrestre"] : []),
+    ];
+    const doorToDoor = hasOrigin && hasDestination;
     return {
-      id: "PLAN_HELICOPTER",
-      name: "Helicóptero porta a porta",
-      modal: this.config.name,
+      id: doorToDoor
+        ? "PLAN_HELICOPTER"
+        : `PLAN_MULTIMODAL_${!hasOrigin ? "T_" : ""}H${!hasDestination ? "_T" : ""}`,
+      name: doorToDoor ? "Helicóptero porta a porta" : accessModes.join(" + "),
+      modal: doorToDoor ? "Helicóptero" : accessModes.join(" + "),
       modalCode: "HELICOPTER",
       segments: legs,
       requiredInfrastructure: ["HELIPORT_ORIGIN", "HELIPORT_DESTINATION"],
-      facilities: [departure, arrival],
+      facilities: [
+        ...(!hasOrigin ? [departure] : []),
+        ...(!hasDestination ? [arrival] : []),
+      ],
     };
   }
 }

@@ -138,8 +138,16 @@ async function calculate(input = {}, deps = {}) {
       );
       plan.segments = plan.segments.map((segment) => ({
         ...segment,
-        origin: points[segment.from] || null,
-        destination: points[segment.to] || null,
+        origin:
+          segment.origin ||
+          segment.geometry?.[0] ||
+          points[segment.from] ||
+          null,
+        destination:
+          segment.destination ||
+          segment.geometry?.at(-1) ||
+          points[segment.to] ||
+          null,
       }));
       return evaluatePlan(plan, profile, consumed, conditions);
     })

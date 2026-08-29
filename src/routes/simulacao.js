@@ -35,6 +35,19 @@ router.post("/stop", async (_req, res, next) => {
   }
 });
 
+router.post("/resume", async (req, res, next) => {
+  try {
+    object(req.body);
+    res.json(
+      await service.resume(
+        positiveId(req.body.transporteId ?? 1, "transporteId"),
+      ),
+    );
+  } catch (error) {
+    next(error);
+  }
+});
+
 router.post("/reset", async (req, res, next) => {
   try {
     object(req.body);

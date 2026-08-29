@@ -31,23 +31,48 @@ test("alerta crítico aciona saída digital, LED e buzzer", async ({ page }) => 
   });
   await expect(page.locator("#digital-alert-output")).toHaveText("1");
   await expect(page.locator("#led-status")).toHaveText("LIGADO");
-  await expect(page.locator("#buzzer-status")).toHaveText("ATIVO");
+  await expect(page.locator("#buzzer-status")).toHaveText("LIGADO");
 });
 
 test("reotimização exige confirmação e termina como aplicada", async ({
   page,
 }) => {
-  await page.locator("#planning-scenario").selectOption("GROUND_SHORT");
+  let recommendationId;
+  let applyPayload;
+  page.on("response", async (response) => {
+    if (response.url().endsWith("/api/simulacao/reotimizar/recomendar")) {
+      const body = await response.json();
+      recommendationId = body.recommendationId;
+    }
+  });
+  page.on("request", (request) => {
+    if (request.url().endsWith("/api/simulacao/reotimizar/aplicar"))
+      applyPayload = request.postDataJSON();
+  });
+  await page
+    .locator("#planning-scenario")
+    .selectOption("DEMO_01_GROUND_ANHANGUERA");
   await expect(page.locator("#planning-result")).toContainText("PLANO ÓTIMO");
   await page.locator('[data-action="start"]').click();
+  await expect(page.locator("#sim-status")).toContainText("Executando");
   await page.locator('[data-logistic="groundRouteUnavailable"]').click();
   const apply = page.locator("#apply-reoptimization");
   await expect(apply).toBeVisible({ timeout: 10_000 });
+  await expect
+    .poll(() => recommendationId)
+    .toMatch(/^[0-9a-f]{8}-[0-9a-f-]{27}$/i);
   await apply.click();
   await expect(page.locator("#planning-result")).toContainText(
     "REOTIMIZAÇÃO APLICADA",
   );
   await expect(page.locator("#apply-reoptimization")).toHaveCount(0);
+  expect(applyPayload).toEqual({
+    transporteId: 1,
+    recommendationId,
+  });
+  expect(
+    await page.evaluate(() => window.lifeBoxReoptimizationRecommendation),
+  ).toBeNull();
 });
 
 test("resumo final aparece após concluir", async ({ page }) => {

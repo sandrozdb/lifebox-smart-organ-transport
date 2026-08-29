@@ -2,9 +2,9 @@ const officialSource = {
   type: "OFFICIAL",
   classification: "OFFICIAL_DATA",
   institution: "Ministério da Saúde / Sistema Nacional de Transplantes",
-  title: "Tipos de doador — tempos de isquemia aceitáveis",
+  title: "Sistema Nacional de Transplantes",
   year: 2023,
-  url: "https://www.gov.br/saude/pt-br/composicao/saes/snt/tipos-de-doador/tipos-de-doador/",
+  url: "https://www.gov.br/saude/pt-br/composicao/saes/snt",
 };
 const manualSource = {
   type: "OFFICIAL",
@@ -13,7 +13,7 @@ const manualSource = {
   title:
     "Manual de Boas Práticas Cirúrgicas e Melhoria da Logística de Retirada, Preservação, Acondicionamento, Armazenamento e Transporte de Órgãos para Transplantes no Brasil",
   year: 2026,
-  url: "https://bvsms.saude.gov.br/bvs/publicacoes/manual_boas_praticas_cirurgicas_transplantes_brasil.pdf",
+  url: "https://www.gov.br/saude/pt-br/composicao/saes/snt/publicacoes",
 };
 const abdominalReview = {
   type: "SCIENTIFIC_ARTICLE",

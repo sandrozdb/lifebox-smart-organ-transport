@@ -44,11 +44,26 @@ Os aeroportos configurados são identificados por ICAO; infraestrutura de helic�
 
 ## Cenários demonstrativos
 
-- Curta distância — Modal terrestre;
-- Urgência regional — Helicóptero;
-- Longa distância interestadual — Plano aéreo multimodal;
-- Transporte crítico multimodal — Helicóptero + Avião;
-- Janela crítica — nenhuma solução viável.
+- 01 · Terrestre · Rodovia Anhanguera;
+- 02 · Terrestre · Rodovia dos Bandeirantes;
+- 03 · Terrestre · Rota estimada;
+- 04 · Helicóptero porta a porta;
+- 05 · Terrestre + Helicóptero + Terrestre;
+- 06 · Terrestre + Avião + Terrestre;
+- 07 · Helicóptero + Avião + Terrestre;
+- 08 · Terrestre + Avião + Helicóptero;
+- 09 · Helicóptero + Avião + Helicóptero;
+- 10 · Nenhum plano factível.
+
+Os exemplos alternam entre coração, pulmão, rim, fígado, pâncreas e intestino,
+com diferentes tempos de isquemia já consumida. Cada combinação permanece
+dentro das restrições do perfil demonstrado, exceto o cenário 10, configurado
+deliberadamente sem solução factível.
+
+As origens e os destinos também variam entre corredores regionais e
+interestaduais das regiões Sul, Sudeste, Nordeste, Norte e Centro-Oeste. Nos
+planos aéreos, os aeroportos são associados automaticamente às capitais de cada
+cenário.
 
 ## Reotimização server-side
 
@@ -62,7 +77,7 @@ Quando aplicada, a nova execução parte da posição atual e preserva caminho p
 
 O backend emite um `recommendationId` vinculado a transporte e execução. Na confirmação, ele verifica validade e replay, recalcula a alternativa a partir do snapshot atual e não confia em custo, segmentos, geometria ou modal fornecidos pelo frontend.
 
-O cenário demonstrativo **Anhanguera indisponível** elimina essa alternativa terrestre e permite recomendar a Rodovia dos Bandeirantes sem reiniciar a execução.
+A condição atual de interface **Transporte terrestre indisponível** elimina a rota terrestre ativa e força novo cálculo entre os modais ainda disponíveis. O caso interno/histórico que indisponibiliza especificamente a Anhanguera e recomenda a Bandeirantes permanece coberto por teste, sem ser apresentado como nome do controle atual.
 
 ## Transparência
 

@@ -1,6 +1,6 @@
 # Evidências visuais — LifeBox
 
-As 20 imagens do dashboard foram revisadas em 28/08/2026 na aplicação real em `http://localhost:3000`, por automação do navegador integrado, com zoom de 100%. As evidências críticas de mapa, impacto, reotimização, resumo e status técnico foram atualizadas; as demais capturas válidas foram preservadas. Os arquivos têm assinatura PNG nativa; não foram usados mockups nem geração de imagens para simular estados.
+As 20 imagens do dashboard foram recapturadas do zero em 29/08/2026 na aplicação real em `http://localhost:3000`, com viewport preferencial de 1920×1080 e zoom de 100%. Os arquivos têm assinatura PNG nativa; não foram usados mockups nem geração de imagens para simular estados.
 
 Os mapas foram validados com Leaflet inicializado e tiles reais do OpenStreetMap completos (`naturalWidth = 256`). Sensores, instituições, tempos, custos, rotas e ocorrências permanecem identificados como dados simulados ou premissas acadêmicas.
 
@@ -13,7 +13,7 @@ Os mapas foram validados com Leaflet inicializado e tiles reais do OpenStreetMap
 ## 2. Pesquisa Operacional
 
 - [02 — Plano terrestre](dashboard/02-po-terrestre.png): comprova órgão, preservação, custo, tempo, margem, plano ótimo e alternativas factíveis.
-- [03 — Rota terrestre no mapa](dashboard/03-rota-terrestre-mapa.png): comprova origem, destino, geometria da rota, marcador e vias comparadas.
+- [03 — Base científica](dashboard/03-base-cientifica.png): comprova órgão, faixa térmica, alvo acadêmico, janela de isquemia, margem e fontes oficial/científica.
 
 ## 3. Multimodalidade
 
@@ -29,7 +29,7 @@ Os mapas foram validados com Leaflet inicializado e tiles reais do OpenStreetMap
 
 ## 5. Reotimização
 
-- [11 — Reotimização recomendada](dashboard/11-reotimizacao-recomendada.png): comprova indisponibilidade da Anhanguera, plano recomendado, motivo e decisão manual.
+- [11 — Reotimização recomendada](dashboard/11-reotimizacao-recomendada.png): comprova transporte terrestre indisponível, plano recomendado, motivo e decisão manual.
 - [12 — Reotimização aplicada](dashboard/12-reotimizacao-aplicada.png): comprova aplicação da Bandeirantes com posição, caminho, tempo e isquemia preservados.
 
 ## 6. Física
@@ -47,7 +47,7 @@ Os mapas foram validados com Leaflet inicializado e tiles reais do OpenStreetMap
 
 ## 9. Qualidade e testes
 
-- [18 — Status de QA](dashboard/18-qa-status.png): comprova 83 testes aprovados no painel real; o E2E automatizado possui validação separada no relatório desta entrega.
+- [18 — Status de QA](dashboard/18-qa-status.png): registra o painel de QA após a suíte Node e a aprovação dos quatro cenários E2E; os resultados completos estão em `docs/testing-and-qa.md`.
 
 ## 10. Cloud e infraestrutura
 
@@ -62,21 +62,19 @@ Os mapas foram validados com Leaflet inicializado e tiles reais do OpenStreetMap
 
 | Arquivos | Dimensão | Formato | Escala |
 | --- | ---: | --- | ---: |
-| 01–05, 07–08, 10–11, 14–15 e 17–18 | 1920×1080 | PNG nativo | 100% |
-| 06, 09 e 12 | 1905×1056 | PNG nativo | 100% |
-| 13 | 1920×360, recorte de viewport | PNG nativo | 100% |
-| 16 | 1265×712, viewport responsivo | PNG nativo | 100% |
-| 19–20 | 480×259, recorte focal | PNG nativo | 100% |
+| 01–17 | 1920×1080 | PNG nativo | 100% |
+| 18–19 | 445×181, recorte focal nativo | PNG nativo | 100% |
+| 20 | 446×181, recorte focal nativo | PNG nativo | 100% |
 
 ## Validação executada
 
 - `npm run check`: aprovado;
-- `npm test`: 83 aprovados, 0 falhas e 1 integração MySQL condicional ignorada;
-- `npm run coverage`: 86,28% de linhas/instruções, 80,90% de branches e 92,10% de funções;
-- `npm run e2e`: 4 cenários automatizados aprovados;
+- `npm test`: 95 descobertos, 94 aprovados, 0 falhas e 1 integração MySQL condicional ignorada;
+- `npm run coverage`: 87,59% de linhas/instruções, 80,82% de branches e 93,16% de funções;
+- `npm run e2e`: 4/4 cenários aprovados, incluindo aplicação segura da reotimização com `recommendationId` server-side;
 - cenários adicionais auditados manualmente no dashboard real;
 - console do navegador sem erro crítico;
 - health check HTTP 200;
-- 20/20 imagens validadas como PNG nativo;
-- quatro evidências válidas do Logisim preservadas.
+- 20/20 imagens abertas e validadas como atuais, coerentes e PNG nativo; as evidências 11, 12 e 18 foram recapturadas após a correção funcional;
+- quatro evidências válidas do Logisim, com o estado normal recapturado como 1,0,0 → saída 0.
 

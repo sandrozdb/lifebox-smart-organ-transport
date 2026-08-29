@@ -42,12 +42,23 @@ function freshState(transporteId) {
 }
 
 function ensureActiveExecution(transporteId) {
-  const id = Number(transporteId);
-  if (!state.running || state.transporteId !== id) {
+  const execution = ensureExecution(transporteId);
+  if (!state.running)
     throw httpError(
       409,
       "EXECUTION_NOT_RUNNING",
       "O transporte precisa estar em execução.",
+    );
+  return execution;
+}
+
+function ensureExecution(transporteId) {
+  const id = Number(transporteId);
+  if (state.transporteId !== id) {
+    throw httpError(
+      409,
+      "EXECUTION_MISMATCH",
+      "A execução logística não pertence ao transporte informado.",
     );
   }
   const snapshot = executionPlan.get(id);
@@ -154,6 +165,22 @@ async function recommendReoptimization(transporteId, reason, conditions = {}) {
     used: false,
     result,
   });
+  state.running = false;
+  state.lastTickAt = null;
+  state.logistics = snapshot;
+  state.awaitingRecommendationId = recommendationId;
+  if (timer) {
+    clearInterval(timer);
+    timer = null;
+  }
+  await repository.createEvento({
+    transporteId: id,
+    executionId: state.executionId,
+    tipoEvento: "REOTIMIZACAO_AGUARDANDO_ROTA",
+    descricao: `Rota pausada para escolha de alternativa. Motivo: ${reason || "Condição operacional atualizada"}.`,
+    latitude: snapshot.currentPosition.latitude,
+    longitude: snapshot.currentPosition.longitude,
+  });
   return {
     recommendationId,
     status: "RECOMENDADA",
@@ -161,6 +188,9 @@ async function recommendReoptimization(transporteId, reason, conditions = {}) {
       id: snapshot.planId,
       modal: snapshot.modal,
       name: snapshot.planName,
+      timeMin: snapshot.remainingPlanMinutes,
+      cost: snapshot.remainingPlanCost,
+      marginMinutes: snapshot.remainingMarginMinutes,
     },
     plan: result.selected,
     result,
@@ -170,7 +200,7 @@ async function recommendReoptimization(transporteId, reason, conditions = {}) {
 }
 
 async function applyReoptimization(transporteId, recommendationId) {
-  const { id, snapshot } = ensureActiveExecution(transporteId);
+  const { id, snapshot } = ensureExecution(transporteId);
   const recommendation = recommendations.get(recommendationId);
   if (!recommendation || recommendation.transporteId !== id)
     throw httpError(
@@ -216,8 +246,12 @@ async function applyReoptimization(transporteId, recommendationId) {
   const plan = recalculated.selected;
   const next = executionPlan.replace(id, plan, recalculated);
   recommendation.used = true;
+  state.awaitingRecommendationId = null;
   state.logistics = next;
   state.routeId = "LOGISTICS_PLAN";
+  state.running = true;
+  state.lastTickAt = Date.now();
+  if (!timer) timer = setInterval(tick, config.simulatorIntervalMs);
   await repository.createEvento({
     transporteId: id,
     executionId: state.executionId,
@@ -236,6 +270,20 @@ async function stop() {
     clearInterval(timer);
     timer = null;
   }
+  return status();
+}
+
+async function resume(transporteId = state.transporteId) {
+  ensureExecution(transporteId);
+  if (state.awaitingRecommendationId)
+    throw httpError(
+      409,
+      "REOPTIMIZATION_DECISION_REQUIRED",
+      "Aplique o novo plano antes de retomar o deslocamento.",
+    );
+  state.running = true;
+  state.lastTickAt = Date.now();
+  if (!timer) timer = setInterval(tick, config.simulatorIntervalMs);
   return status();
 }
 
@@ -317,6 +365,7 @@ function status() {
 
 module.exports = {
   start,
+  resume,
   stop,
   reset,
   scenario,

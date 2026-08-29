@@ -2,6 +2,8 @@ const $ = (selector) => document.querySelector(selector);
 let transportId = 1,
   map,
   layers = {},
+  trackingAnimationFrame,
+  trackingPathLength = 0,
   dismissedOverlayKey = null;
 const formatDate = (value) =>
   value
@@ -22,6 +24,14 @@ const formatMinutes = (value) => {
   return hours
     ? `${hours}h ${rest.toString().padStart(2, "0")}min`
     : `${rest} min`;
+};
+const formatHoursMinutes = (value) => {
+  const totalMinutes = Math.max(0, Math.round(Number(value) || 0)),
+    hours = Math.floor(totalMinutes / 60),
+    minutes = totalMinutes % 60;
+  return hours
+    ? `${hours}h${minutes.toString().padStart(2, "0")}min`
+    : `${minutes}min`;
 };
 async function api(path, options = {}) {
   const response = await fetch(path, {
@@ -91,7 +101,7 @@ function drawCharts(readings) {
   LifeBoxCharts.draw(
     $("#chart-temperature"),
     data.map((item) => Number(item.temperatura)),
-    "#1ed6c5",
+    "#72a7c4",
   );
   LifeBoxCharts.draw(
     $("#chart-humidity"),
@@ -110,14 +120,116 @@ function drawCharts(readings) {
   );
 }
 function createTrackingMarker(position) {
-  return L.circleMarker(position, {
-    radius: 9,
-    color: "#fff",
-    fillColor: "#1ed6c5",
-    fillOpacity: 1,
+  return L.marker(position, {
+    icon: L.divIcon({
+      className: "lifebox-tracking-marker",
+      html: '<span class="tracking-cursor" aria-hidden="true"></span>',
+      iconSize: [20, 20],
+      iconAnchor: [10, 10],
+      popupAnchor: [0, -12],
+    }),
+    title: "LifeBox em deslocamento",
+    alt: "Localização atual da LifeBox",
+    zIndexOffset: 1200,
   })
     .addTo(map)
     .bindPopup("LifeBox simulada");
+}
+function createEndpointMarker(position, type) {
+  const destination = type === "destination";
+  return L.marker(position, {
+    icon: L.divIcon({
+      className: `route-pin-marker route-${type}`,
+      html: `<svg class="route-pin" viewBox="0 0 24 34" aria-hidden="true"><path d="M12 1C5.9 1 1 5.9 1 12c0 8.2 11 21 11 21s11-12.8 11-21C23 5.9 18.1 1 12 1Z"/><circle cx="12" cy="12" r="4"/></svg>`,
+      iconSize: [24, 34],
+      iconAnchor: [12, 33],
+      popupAnchor: [0, -30],
+    }),
+    title: destination ? "Destino" : "Origem",
+    alt: destination ? "Ponto de destino" : "Ponto de origem",
+    riseOnHover: true,
+  });
+}
+function createFacilityMarker(position, type) {
+  return L.marker(position, {
+    icon: L.divIcon({
+      className: `route-pin-marker route-facility route-facility-${type}`,
+      html: `<svg class="route-pin" viewBox="0 0 24 34" aria-hidden="true"><path d="M12 1C5.9 1 1 5.9 1 12c0 8.2 11 21 11 21s11-12.8 11-21C23 5.9 18.1 1 12 1Z"/><circle cx="12" cy="12" r="4"/></svg>`,
+      iconSize: [22, 31],
+      iconAnchor: [11, 30],
+      popupAnchor: [0, -27],
+    }),
+    title: type === "airport" ? "Aeroporto" : "Heliponto",
+    alt:
+      type === "airport"
+        ? "Infraestrutura aeroportuária"
+        : "Infraestrutura de heliponto",
+    riseOnHover: true,
+  });
+}
+function pointAlongRoute(points, progress) {
+  if (points.length < 2) return points[0];
+  const lengths = points.slice(1).map((point, index) => {
+    const previous = points[index];
+    return Math.hypot(point.lat - previous.lat, point.lng - previous.lng);
+  });
+  const total = lengths.reduce((sum, length) => sum + length, 0);
+  if (!total) return points.at(-1);
+  let distance = total * progress;
+  for (let index = 0; index < lengths.length; index += 1) {
+    if (distance <= lengths[index] || index === lengths.length - 1) {
+      const segmentProgress = lengths[index]
+        ? Math.min(1, distance / lengths[index])
+        : 1;
+      return L.latLng(
+        points[index].lat +
+          (points[index + 1].lat - points[index].lat) * segmentProgress,
+        points[index].lng +
+          (points[index + 1].lng - points[index].lng) * segmentProgress,
+      );
+    }
+    distance -= lengths[index];
+  }
+  return points.at(-1);
+}
+function animateTrackingMarker(position, path = []) {
+  const target = L.latLng(position[0], position[1]);
+  const traveledPath = path.map((point) =>
+    L.latLng(point.latitude, point.longitude),
+  );
+  if (!layers.current) {
+    layers.current = createTrackingMarker(position);
+    trackingPathLength = traveledPath.length;
+    return;
+  }
+
+  if (trackingAnimationFrame) cancelAnimationFrame(trackingAnimationFrame);
+  const start = layers.current.getLatLng();
+  const unchanged = start.equals(target, 1e-9);
+  if (unchanged) {
+    trackingPathLength = traveledPath.length;
+    return;
+  }
+
+  const durationMs = 1600;
+  const startedAt = performance.now();
+  const newlyTraveled = traveledPath.slice(Math.max(0, trackingPathLength - 1));
+  const animationRoute = [
+    start,
+    ...newlyTraveled.filter(
+      (point, index) => index > 0 || !point.equals(start, 1e-9),
+    ),
+  ];
+  if (!animationRoute.at(-1).equals(target, 1e-9)) animationRoute.push(target);
+  trackingPathLength = traveledPath.length;
+  const frame = (now) => {
+    const progress = Math.min(1, (now - startedAt) / durationMs);
+    const current = pointAlongRoute(animationRoute, progress);
+    layers.current.setLatLng(current);
+    if (progress < 1) trackingAnimationFrame = requestAnimationFrame(frame);
+    else trackingAnimationFrame = null;
+  };
+  trackingAnimationFrame = requestAnimationFrame(frame);
 }
 function initMap(tracking) {
   if (!window.L || map) return;
@@ -132,15 +244,20 @@ function initMap(tracking) {
     maxZoom: 19,
   }).addTo(map);
   layers.path = L.polyline([], {
-    color: "#fff",
-    weight: 4,
-    opacity: 0.95,
+    opacity: 0,
+    interactive: false,
   }).addTo(map);
   layers.current = createTrackingMarker([origin.latitude, origin.longitude]);
-  layers.origin = L.marker([origin.latitude, origin.longitude])
+  layers.origin = createEndpointMarker(
+    [origin.latitude, origin.longitude],
+    "origin",
+  )
     .addTo(map)
     .bindPopup(`Origem: ${origin.name}`);
-  layers.destination = L.marker([destination.latitude, destination.longitude])
+  layers.destination = createEndpointMarker(
+    [destination.latitude, destination.longitude],
+    "destination",
+  )
     .addTo(map)
     .bindPopup(`Destino: ${destination.name}`);
   map.fitBounds(
@@ -158,12 +275,7 @@ function updateTracking(tracking) {
       Number(tracking.current.latitude),
       Number(tracking.current.longitude),
     ];
-    if (!layers.current) layers.current = createTrackingMarker(position);
-    else layers.current.setLatLng(position);
-    if (tracking.path?.length)
-      layers.path.setLatLngs(
-        tracking.path.map((point) => [point.latitude, point.longitude]),
-      );
+    animateTrackingMarker(position, tracking.path);
     map.invalidateSize();
   }
   $("#progress-bar").style.width = `${tracking.progress || 0}%`;
@@ -171,6 +283,11 @@ function updateTracking(tracking) {
   $("#progress-label").textContent = segment
     ? `TRECHO ${tracking.segmentIndex + 1}/${tracking.totalSegments} · ${segment.modal} · ${Number(tracking.progress).toFixed(0)}% total`
     : `${Number(tracking.progress || 0).toFixed(0)}% · ${tracking.routeName}`;
+  const currentLeg = $("#current-leg");
+  if (currentLeg)
+    currentLeg.textContent = segment
+      ? `Trecho atual · ${segment.from} → ${segment.to}`
+      : "Trecho atual aguardando execução";
   $("#traveled").textContent =
     `${Number(tracking.traveledKm || 0).toFixed(1)} km`;
   $("#remaining").textContent =
@@ -180,6 +297,52 @@ function updateTracking(tracking) {
     : "Aguardando GPS";
   updateExecutionMetrics(tracking);
 }
+function updateSimulationControls(simulation, transport) {
+  const start = document.querySelector('[data-action="start"]'),
+    pause = document.querySelector('[data-action="stop"]'),
+    hasExecution = Boolean(
+      simulation.logistics && transport.status !== "CONCLUIDO",
+    ),
+    awaitingPlan = Boolean(simulation.awaitingRecommendationId);
+  window.lifeBoxCanResume =
+    hasExecution && !simulation.running && !awaitingPlan;
+  if (awaitingPlan) {
+    start.disabled = true;
+    start.textContent = "AGUARDANDO NOVO PLANO";
+    pause.disabled = true;
+    $("#sim-status").textContent = "Aguardando novo plano";
+  } else if (simulation.running) {
+    start.disabled = true;
+    start.textContent = "TRANSPORTE EM ANDAMENTO";
+    pause.disabled = false;
+    $("#sim-status").textContent = "Executando";
+  } else if (hasExecution) {
+    start.disabled = false;
+    start.textContent = "▶ RETOMAR TRANSPORTE";
+    pause.disabled = true;
+    $("#sim-status").textContent = "Pausado";
+  } else {
+    start.disabled = !window.lifeBoxCurrentPlan;
+    start.textContent = "▶ INICIAR TRANSPORTE";
+    pause.disabled = true;
+    $("#sim-status").textContent = "Preparado";
+  }
+}
+window.lifeBoxSnapExecutionTracking = (tracking) => {
+  if (!tracking?.current || !map) return;
+  if (trackingAnimationFrame) {
+    cancelAnimationFrame(trackingAnimationFrame);
+    trackingAnimationFrame = null;
+  }
+  const position = [
+    Number(tracking.current.latitude),
+    Number(tracking.current.longitude),
+  ];
+  layers.current?.setLatLng(position);
+  trackingPathLength = tracking.path?.length || 0;
+  window.lifeBoxExecutionTracking = tracking;
+  updateTracking(tracking);
+};
 function renderPhysics(data) {
   if (!data.available) {
     $("#physics-grid").innerHTML = `<div class="empty">${data.message}</div>`;
@@ -210,15 +373,27 @@ function renderActuators(signal = {}) {
   $("#virtual-led").classList.toggle("active", ledOn);
   $("#virtual-buzzer").classList.toggle("active", buzzerOn);
   $("#led-status").textContent = ledOn ? "LIGADO" : "DESLIGADO";
-  $("#buzzer-status").textContent = buzzerOn ? "ATIVO" : "DESLIGADO";
+  $("#buzzer-status").textContent = buzzerOn ? "LIGADO" : "DESLIGADO";
   $("#digital-transport-active").textContent = signal.transportActive
-    ? "SIM"
-    : "NÃO";
+    ? "1"
+    : "0";
   $("#digital-temperature-critical").textContent = signal.temperatureCritical
     ? "1"
     : "0";
   $("#digital-impact-critical").textContent = signal.impactCritical ? "1" : "0";
   $("#digital-alert-output").textContent = signal.alertOutput ? "1" : "0";
+  $("#digital-transport-state").textContent = signal.transportActive
+    ? "ATIVO"
+    : "INATIVO";
+  $("#digital-temperature-state").textContent = signal.temperatureCritical
+    ? "CRÍTICO"
+    : "NORMAL";
+  $("#digital-impact-state").textContent = signal.impactCritical
+    ? "CRÍTICO"
+    : "NORMAL";
+  $("#digital-alert-state").textContent = signal.alertOutput
+    ? "ATIVO"
+    : "INATIVO";
 }
 function renderPresentationAlert(transport, alerts) {
   const overlay = $("#presentation-alert"),
@@ -272,43 +447,50 @@ async function renderSummary() {
   if (summary.status_final !== "CONCLUIDO") return;
   $("#summary-section").classList.remove("hidden");
   const values = [
+    ["Duração simulada", formatHoursMinutes(summary.duracao_minutos)],
     [
-      "Duração simulada",
-      `${Number(summary.duracao_minutos || 0).toFixed(1)} min`,
-    ],
-    [
-      "Isquemia",
-      `${Number(summary.isquemia_inicial_minutos || 0).toFixed(0)} → ${Number(summary.isquemia_final_minutos || 0).toFixed(0)} min`,
+      `Isquemia final · início ${Number(summary.isquemia_inicial_minutos || 0).toFixed(0)} min`,
+      `${Number(summary.isquemia_final_minutos || 0).toFixed(0)} min`,
     ],
     [
       "Margem final",
       `${Number(summary.margem_final_minutos || 0).toFixed(0)} min`,
     ],
     [
-      "Temperatura",
-      `${Number(summary.temperatura_min || 0).toFixed(1)} / ${Number(summary.temperatura_max || 0).toFixed(1)} °C`,
+      "Temperatura · média / máxima",
+      `${Number(summary.temperatura_media || 0).toFixed(1)} / ${Number(summary.temperatura_max || 0).toFixed(1)} °C`,
     ],
     [
-      "Umidade",
-      `${Number(summary.umidade_min || 0).toFixed(1)} / ${Number(summary.umidade_max || 0).toFixed(1)}%`,
+      "Umidade · média / máxima",
+      `${Number(summary.umidade_media || 0).toFixed(1)} / ${Number(summary.umidade_max || 0).toFixed(1)}%`,
     ],
-    ["Impactos críticos", summary.impactos_criticos || 0],
-    ["Alertas únicos", summary.numero_alertas || 0],
     [
-      "Tempo na faixa",
+      "Impacto · média / máxima",
+      `${Number(summary.impacto_medio || 0).toFixed(2)} / ${Number(summary.impacto_max || 0).toFixed(2)} g`,
+    ],
+    ["Sinal médio", `${Number(summary.sinal_medio || 0).toFixed(0)}%`],
+    [
+      "Temperatura dentro da faixa",
       `${Number(summary.percentual_tempo_limites || 0).toFixed(0)}%`,
     ],
+    ["Alertas de temperatura", summary.alertas_por_tipo?.TEMPERATURA || 0],
+    ["Impactos críticos", summary.impactos_criticos || 0],
     ["Bateria final", `${Number(summary.bateria_final || 0).toFixed(0)}%`],
     ["Reotimizações", summary.quantidade_reotimizacoes || 0],
-    ["Plano final", summary.plano_final?.modal || "—"],
-    [
-      "Distância percorrida",
-      `${Number(summary.plano_final?.distancia_percorrida_km || 0).toFixed(1)} km`,
-    ],
   ];
   $("#summary-grid").innerHTML = values
     .map(([label, value]) => `<div><b>${value}</b><span>${label}</span></div>`)
     .join("");
+  let logistics = $("#summary-logistics");
+  if (!logistics) {
+    logistics = document.createElement("section");
+    logistics.id = "summary-logistics";
+    logistics.className = "summary-logistics";
+    $("#summary-grid").insertAdjacentElement("afterend", logistics);
+  }
+  const origin = summary.origem?.name || summary.origem?.nome || "—",
+    destination = summary.destino?.name || summary.destino?.nome || "—";
+  logistics.innerHTML = `<div class="summary-logistics-head"><small>RESULTADO LOGÍSTICO</small><strong>✓ Transporte concluído</strong></div><div><small>PLANO FINAL</small><b>${summary.plano_final?.modal || "—"}</b></div><div><small>DISTÂNCIA PERCORRIDA</small><b>${Number(summary.plano_final?.distancia_percorrida_km || 0).toFixed(1)} km</b></div><div class="summary-logistics-route"><small>ORIGEM → DESTINO</small><b>${origin} → ${destination}</b></div>`;
 }
 function renderQaStatus(qa) {
   $("#qa-test-count").textContent =
@@ -338,10 +520,10 @@ async function refresh() {
         api(`/api/qualidade`),
       ]);
     $("#transport-code").textContent = transport.codigo_transporte;
-    $("#sim-status").textContent = simulation.running
-      ? "Executando"
-      : "Pausado";
-    window.lifeBoxExecutionActive = Boolean(simulation.running);
+    updateSimulationControls(simulation, transport);
+    window.lifeBoxExecutionActive = Boolean(
+      simulation.logistics && transport.status !== "CONCLUIDO",
+    );
     if (simulation.logistics) {
       window.lifeBoxExecutionTracking = {
         ...tracking,
@@ -383,22 +565,31 @@ document.addEventListener("click", async (event) => {
   if (!action && !scenario && !resolve) return;
   try {
     if (action) {
-      if (action === "start" && !window.lifeBoxCurrentPlan)
+      if (
+        action === "start" &&
+        !window.lifeBoxCanResume &&
+        !window.lifeBoxCurrentPlan
+      )
         throw new Error("Nenhum plano logístico factível disponível.");
       if (action === "reset") {
         dismissedOverlayKey = null;
         $("#presentation-alert").classList.add("hidden");
         renderActuators({ ledOn: false, buzzerOn: false });
       }
-      const simulationResponse = await api(`/api/simulacao/${action}`, {
-        method: "POST",
-        body: JSON.stringify({
-          transporteId: transportId,
-          rotaId: "LOGISTICS_PLAN",
-          plan: window.lifeBoxCurrentPlan,
-          result: window.lifeBoxPlanningResult,
-        }),
-      });
+      const requestedAction =
+        action === "start" && window.lifeBoxCanResume ? "resume" : action;
+      const simulationResponse = await api(
+        `/api/simulacao/${requestedAction}`,
+        {
+          method: "POST",
+          body: JSON.stringify({
+            transporteId: transportId,
+            rotaId: "LOGISTICS_PLAN",
+            plan: window.lifeBoxCurrentPlan,
+            result: window.lifeBoxPlanningResult,
+          }),
+        },
+      );
       if (action === "start") {
         window.lifeBoxExecutionActive = true;
         window.lifeBoxActiveExecutionPlan = window.lifeBoxCurrentPlan;
@@ -408,6 +599,9 @@ document.addEventListener("click", async (event) => {
         window.lifeBoxExecutionActive = false;
         window.lifeBoxActiveExecutionPlan = null;
         window.lifeBoxReoptimizationRecommendation = null;
+        document
+          .querySelectorAll("[data-logistic]")
+          .forEach((button) => (button.disabled = false));
       }
     }
     if (scenario)
@@ -448,40 +642,70 @@ window.lifeBoxShowPlan = (plan, result, points) => {
       maxZoom: 19,
     }).addTo(map);
     layers.path = L.polyline([], {
-      color: "#fff",
-      weight: 4,
-      opacity: 0.95,
+      opacity: 0,
+      interactive: false,
     }).addTo(map);
     layers.current = createTrackingMarker([
       result.origin.latitude,
       result.origin.longitude,
     ]);
   }
+  if (!window.lifeBoxExecutionActive) {
+    if (trackingAnimationFrame) {
+      cancelAnimationFrame(trackingAnimationFrame);
+      trackingAnimationFrame = null;
+    }
+    layers.current?.setLatLng([
+      result.origin.latitude,
+      result.origin.longitude,
+    ]);
+    layers.path?.setLatLngs([]);
+    trackingPathLength = 0;
+  }
   layers.planning?.forEach((item) => item.remove());
   layers.planning = [];
-  const marker = (point, label) =>
-    L.marker([point.latitude, point.longitude])
-      .addTo(map)
-      .bindPopup(
-        `${label}: ${point.icao ? `${point.icao} — ` : ""}${point.name || ""}`,
-      );
+  layers.origin?.remove();
+  layers.destination?.remove();
+  layers.origin = null;
+  layers.destination = null;
+  const marker = (point, label, type = "facility") => {
+    const position = [point.latitude, point.longitude];
+    const layer =
+      type === "origin" || type === "destination"
+        ? createEndpointMarker(position, type)
+        : createFacilityMarker(
+            position,
+            point.type?.includes("AIRPORT") ? "airport" : "helipad",
+          );
+    const displayName = String(point.name || "").replace(
+      /\s+simulad[ao]$/i,
+      "",
+    );
+    const popupText = new RegExp(`^${label}\\b`, "i").test(displayName)
+      ? displayName
+      : `${label}: ${displayName}`;
+    return layer.addTo(map).bindPopup(popupText);
+  };
   layers.planning.push(
-    marker(result.origin, "Hospital doador"),
-    marker(result.destination, "Hospital receptor"),
+    marker(result.origin, "Hospital doador", "origin"),
+    marker(result.destination, "Hospital receptor", "destination"),
   );
   (plan.facilities || []).forEach((facility) => {
-    const facilityMarker = marker(
-      facility,
-      `${facility.type?.includes("AIRPORT") ? "Aeroporto" : "Infraestrutura"} · ${facility.classification === "REAL_OPEN_DATA" ? "REAL" : "SIMULADA"}`,
-    );
+    const facilityType = facility.type?.includes("AIRPORT")
+      ? "Aeroporto"
+      : "Heliponto";
+    const facilityMarker = marker(facility, facilityType);
     if (facility.icao)
-      facilityMarker.bindTooltip(`${facility.icao} · ${facility.name}`, {
-        permanent: true,
+      facilityMarker.bindTooltip(facility.icao, {
+        permanent: false,
+        sticky: true,
         direction: "top",
+        className: "airport-code-tooltip",
       });
     layers.planning.push(facilityMarker);
   });
   (plan.segments || []).forEach((segment, index) => {
+    if (segment.modal === "OPERACIONAL") return;
     const start = segment.origin || points[index],
       end = segment.destination || points[index + 1];
     const geometry = (
@@ -493,23 +717,51 @@ window.lifeBoxShowPlan = (plan, result, points) => {
       L.polyline(
         geometry.map((point) => [point.latitude, point.longitude]),
         {
-          color: aerial ? "#49a7ff" : "#1ed6c5",
-          weight: 4,
+          color: aerial ? "#49a7ff" : "#72a7c4",
+          weight: aerial ? 4 : 5,
+          opacity: 0.9,
           dashArray: aerial ? "8 7" : null,
+          lineCap: "round",
+          lineJoin: "round",
         },
       ).addTo(map),
     );
   });
+  layers.current?.bringToFront?.();
   const all = [result.origin, result.destination, ...(plan.facilities || [])];
   map.invalidateSize();
   map.fitBounds(
     L.latLngBounds(all.map((point) => [point.latitude, point.longitude])),
-    { padding: [30, 30] },
+    {
+      paddingTopLeft: [40, 80],
+      paddingBottomRight: [40, 55],
+    },
   );
   $("#route-name").textContent =
     `${result.origin.name} → ${result.destination.name} · Plano: ${plan.modal}`;
   $("#map-mode").textContent = "PLANEJAMENTO";
 };
+const mapMode = document.querySelector(".map-mode");
+if (mapMode) {
+  mapMode.innerHTML = `<span id="map-mode">PLANEJAMENTO</span><span><i class="legend-pin legend-pin-red"></i>Origem / destino</span><span><i class="legend-pin legend-pin-blue"></i>Aeroporto / heliponto</span><span><i class="legend-cursor"></i>Posição atual</span><span><i class="legend-line legend-ground"></i>Terrestre</span><span><i class="legend-line legend-air"></i>Aéreo</span>`;
+  mapMode.insertAdjacentHTML(
+    "afterend",
+    '<p id="current-leg" class="current-leg">Trecho atual aguardando execução</p>',
+  );
+}
+const projectDetails = [
+    ...document.querySelectorAll(".technical-details"),
+  ].find(
+    (details) =>
+      details.querySelector(":scope > summary")?.textContent.trim() ===
+      "DETALHES TÉCNICOS DO PROJETO",
+  ),
+  finalSummary = $("#summary-section");
+if (projectDetails && finalSummary)
+  finalSummary.insertAdjacentElement(
+    "afterend",
+    projectDetails.closest("section"),
+  );
 refresh();
 setInterval(refresh, 2000);
 window.addEventListener("resize", () => map?.invalidateSize());

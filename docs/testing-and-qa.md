@@ -6,7 +6,9 @@
 
 A suíte cobre: perfis de órgãos e preservação, PO, contrato das Strategies, rotas terrestres, helicóptero, planos multimodais e avião, segmentos e mapa, tempo/isquemia, alertas, atuadores digitais, Física, reotimização protegida contra adulteração/replay, resumo isolado por execução, API e repositórios em memória/MySQL.
 
-Última validação local: **83 testes aprovados, 0 falhas e 1 integração MySQL condicional ignorada**. Cobertura: **86,28% de linhas/instruções, 80,90% de branches e 92,10% de funções**. Playwright: **4 cenários aprovados**.
+Validação local de fechamento em 29/08/2026: **95 testes descobertos, 94 aprovados, 0 falhas e 1 integração MySQL condicional ignorada**. Cobertura: **87,59% de linhas/instruções, 80,82% de branches e 93,16% de funções**.
+
+O Playwright aprovou os **4/4 cenários**. O teste de regressão da reotimização confirma que o frontend recebe o `recommendationId` gerado pelo servidor, envia exclusivamente `{ transporteId, recommendationId }`, recebe sucesso, aplica o plano e limpa a recomendação utilizada. As proteções server-side contra ID inválido, transporte/execução incorretos, expiração, replay, reinício e adulteração permanecem cobertas.
 
 O executor registra o resultado resumido em `work/qa-last-run.json`. Esse arquivo é apenas um artefato auxiliar: se o Windows negar a escrita com `EPERM`, a falha é comunicada como aviso e o código de saída continua refletindo o resultado real da suíte.
 
@@ -24,8 +26,8 @@ O Playwright cobre quatro fluxos: execução normal, impacto crítico com atuado
 - [x] Testar impacto, atraso, reotimização e aplicação manual.
 - [x] Finalizar e conferir resumo da execução atual.
 
-O painel técnico apresenta o resultado real desta execução no navegador integrado; as capturas correspondentes estão em `docs/evidencias/dashboard`.
+O painel técnico apresenta a contagem da suíte Node disponível no momento da captura. O resultado integral do fechamento está registrado neste documento e em `docs/pre-cloud-validation.md`.
 
 ## MySQL real
 
-`RUN_MYSQL_INTEGRATION=true npm test` habilita a prova de persistência e isolamento por execução. No CI, um serviço MySQL 8.4 recebe o schema antes desse teste. Sem essa variável, o caso é explicitamente marcado como ignorado, nunca como aprovado fictício.
+`RUN_MYSQL_INTEGRATION=true npm test` habilita a prova de persistência e isolamento por execução. No CI, um serviço MySQL 8.4 recebe o schema antes desse teste. Sem essa variável, o caso é explicitamente marcado como ignorado, nunca como aprovado fictício. Na validação local de 29/08/2026, o serviço MySQL 8 estava ativo, mas o checkout não possuía credenciais configuradas; a tentativa explícita foi rejeitada por autenticação antes de inserir qualquer registro.
