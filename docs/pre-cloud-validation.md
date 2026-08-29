@@ -41,10 +41,14 @@ Na prova manual em navegador real, a API gerou um UUID, a aplicação respondeu 
 - Nenhum `pageerror` ou erro de console foi observado na auditoria responsiva.
 - As quatro evidências do Logisim continuam coerentes: normal 1,0,0 → 0; temperatura crítica → 1; impacto crítico → 1; transporte inativo → 0.
 
-## Limitações locais e gates remotos
+## Limitações locais e validação remota
 
-Nenhuma credencial foi adicionada. A integração MySQL não pode ser executada localmente com segurança e o Docker não está instalado. Por isso, o workflow do novo HEAD é a fonte final para a integração MySQL 8.4 e o build Docker. O resultado remoto deve ser confirmado diretamente no GitHub Actions associado ao commit publicado.
+Nenhuma credencial foi adicionada. A integração MySQL não pôde ser executada localmente com segurança e o Docker não está instalado. O [GitHub Actions do commit funcional](https://github.com/sandrozdb/lifebox-smart-organ-transport/actions/runs/33267415277) supriu esses dois gates e terminou com sucesso:
 
-## Veredito técnico local
+- MySQL 8.4 saudável, schema aplicado e teste de persistência/isolamento por execução aprovado;
+- Chromium instalado e 4/4 cenários Playwright aprovados;
+- imagem Docker construída com digest `sha256:fc35b62a370475d59941b844468fcc5b252c55a8bef78fecd797ad13f25bd1cc`.
 
-Todos os gates locais possíveis estão aprovados, as evidências estão coerentes e o bloqueio de reotimização foi resolvido sem mudança visual. O fechamento definitivo depende apenas da publicação fast-forward e da confirmação do CI do novo HEAD.
+## Veredito
+
+O pré-cloud está fechado: gates locais aprovados, `main` atualizada por fast-forward, CI remoto verde, evidências coerentes e bloqueio de reotimização resolvido sem mudança visual. Cloud e Wokwi permanecem pendentes por decisão de escopo.

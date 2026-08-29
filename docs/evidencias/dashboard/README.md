@@ -29,5 +29,5 @@ As quatro evidências válidas do circuito Logisim permanecem separadas em [`../
 19. `19-arquitetura-status.png` — arquitetura, Strategy e Observer;
 20. `20-cloud-status.png` — infraestrutura local e Cloud pendente.
 
-A auditoria de fechamento atual está em [`../../pre-cloud-validation.md`](../../pre-cloud-validation.md). Ela deve ser consultada junto à imagem 18 porque o E2E desta rodada encontrou um bloqueio funcional que não foi corrigido durante o congelamento do dashboard.
+A auditoria de fechamento atual está em [`../../pre-cloud-validation.md`](../../pre-cloud-validation.md). Ela registra a correção do bloqueio funcional, a aprovação dos quatro cenários E2E e os gates remotos de MySQL e Docker.
 
