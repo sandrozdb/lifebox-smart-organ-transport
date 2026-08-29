@@ -30,7 +30,7 @@ Os mapas foram validados com Leaflet inicializado e tiles reais do OpenStreetMap
 ## 5. Reotimização
 
 - [11 — Reotimização recomendada](dashboard/11-reotimizacao-recomendada.png): comprova transporte terrestre indisponível, plano recomendado, motivo e decisão manual.
-- [12 — Reotimização aplicada](dashboard/12-reotimizacao-aplicada.png): comprova aplicação da Bandeirantes com posição, caminho, tempo e isquemia preservados.
+- [12 — Reotimização aplicada](dashboard/12-reotimizacao-aplicada.png): comprova aplicação do plano Helicóptero porta a porta com posição, caminho, tempo e isquemia preservados.
 
 ## 6. Física
 
