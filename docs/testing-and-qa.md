@@ -12,6 +12,8 @@ O Playwright aprovou os **4/4 cenários**. O teste de regressão da reotimizaç�
 
 O executor registra o resultado resumido em `work/qa-last-run.json`. Esse arquivo é apenas um artefato auxiliar: se o Windows negar a escrita com `EPERM`, a falha é comunicada como aviso e o código de saída continua refletindo o resultado real da suíte.
 
+No ambiente publicado, `/api/qualidade` não depende desse arquivo local. Como `work/` é ignorado pelo Git e não existe no container limpo do Render, o endpoint usa `src/config/qaBaseline.json` como snapshot versionado da última validação publicada. Quando existe uma execução local mais recente, seus campos substituem os valores do baseline. Isso evita o falso status `PENDENTE` em produção sem transformar ausência de arquivo local em aprovação fictícia.
+
 ## Caso real de bug de interface
 
 A API e os testes estavam funcionando, mas o dashboard congelava porque `renderOptimization()` tentou usar `#optimization-weights`, elemento removido. O erro `Cannot set properties of null` interrompia `refresh()`. O caso reforça que testes unitários e de integração não substituem inspeção do navegador; o fluxo atual removeu essa renderização legada e inclui validação estrutural de seletores relevantes.
