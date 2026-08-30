@@ -33,7 +33,7 @@ function generate(state) {
   if (state.scenario === "temperatura")
     temperatura = criticalTemperature(profile, state.scenarioTick);
   if (state.scenario === "umidade")
-    umidade = Math.min(91, 58 + state.scenarioTick * 5);
+    umidade = Math.min(91, 72 + state.scenarioTick * 4);
   if (
     state.scenario === "impacto" &&
     state.scenarioTick >= 1 &&
