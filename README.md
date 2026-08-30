@@ -8,21 +8,23 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Node.js 20+](https://img.shields.io/badge/Node.js-20%2B-339933?logo=node.js&logoColor=white)](package.json)
 
-LifeBox é um sistema acadêmico de apoio à decisão e rastreabilidade para transporte de órgãos. O diferencial é integrar planejamento multimodal sob restrições, execução rastreável, reotimização confirmada pelo operador, monitoramento simulado, Física e Eletrônica em uma única demonstração verificável.
+LifeBox é um sistema acadêmico de apoio à decisão e rastreabilidade para transporte de órgãos. O diferencial é integrar planejamento multimodal sob restrições, execução rastreável, reotimização confirmada pelo operador, monitoramento simulado, Física, Eletrônica e infraestrutura em nuvem em uma única demonstração verificável.
+
+**Deploy público:** https://lifebox-expotech.onrender.com
 
 ## Stack e status
 
 | Área            | Tecnologia / estado                                                       |
 | --------------- | ------------------------------------------------------------------------- |
-| Backend         | Node.js 20 / Express                                                      |
-| Banco           | MySQL 8 local; repository em memória nos testes                           |
+| Backend         | Node.js 20 / Express em Docker no Render                                  |
+| Banco           | Aiven for MySQL gerenciado; repository em memória nos testes              |
 | Frontend e mapa | HTML, CSS, JavaScript, Leaflet / OpenStreetMap                            |
 | Testes          | `node:test`, coverage e Playwright E2E                                    |
 | Arquitetura     | C4 Context/Container, Strategy, Observer e SOLID documentado honestamente |
-| CI              | GitHub Actions                                                            |
-| Cloud           | **PENDENTE**: backend público, MySQL gerenciado e CD                      |
+| CI/CD           | GitHub Actions + Auto Deploy do Render                                    |
+| Cloud           | **CONCLUÍDA**: HTTPS público, MySQL gerenciado, secrets e CD validados    |
 
-**Links rápidos:** [Arquitetura](docs/architecture.md) · [Pesquisa Operacional](docs/operations-research.md) · [API](docs/api.md) · [QA](docs/testing-and-qa.md) · [Validação pré-cloud](docs/pre-cloud-validation.md) · [Demo](docs/demo-guide.md) · [Evidências](docs/evidencias/README.md) · [Requisitos](docs/academic-requirements.md) · [Eletrônica](docs/electronics.md) · [Física](docs/physics.md)
+**Links rápidos:** [Deploy](https://lifebox-expotech.onrender.com) · [Arquitetura](docs/architecture.md) · [Cloud](docs/cloud.md) · [Pesquisa Operacional](docs/operations-research.md) · [API](docs/api.md) · [QA](docs/testing-and-qa.md) · [Validação pré-cloud](docs/pre-cloud-validation.md) · [Demo](docs/demo-guide.md) · [Evidências](docs/evidencias/README.md) · [Requisitos](docs/academic-requirements.md) · [Eletrônica](docs/electronics.md) · [Física](docs/physics.md)
 
 ## Aviso acadêmico
 
@@ -36,14 +38,19 @@ Este é um projeto acadêmico e demonstrativo. A LifeBox não é um dispositivo 
 - plano congelado durante a execução e reotimização aplicada somente após confirmação;
 - Física didática da execução atual: ΔT, taxa, Q, aceleração, potência, energia e autonomia;
 - lógica digital `ATIVO AND (TEMP_CRÍTICA OR IMPACTO_CRÍTICO)` com LED/buzzer virtuais e circuito Logisim;
-- API Express, MySQL local, repositório em memória para testes e CI.
+- API Express em produção no Render, com persistência em Aiven for MySQL via TLS;
+- health check público em `/api/health`, CI no GitHub Actions e Auto Deploy do Render.
 
 ## Arquitetura
 
 ```text
-Simulador / futuro ESP32 → API Express → Serviços → Repository → MySQL
-                                            ↓
-                              Dashboard, mapa, alertas e timeline
+Simulador / futuro ESP32
+          ↓ HTTPS
+Render Web Service (Node.js + Express)
+          ↓ MySQL/TLS
+Aiven for MySQL
+          ↓
+Dashboard, mapa, alertas, timeline e reotimização
 ```
 
 A arquitetura real, C4 Context/Container, sequência da reotimização, Strategy, Observer, SOLID e trade-offs estão em [docs/architecture.md](docs/architecture.md).
@@ -57,13 +64,13 @@ A arquitetura real, C4 Context/Container, sequência da reotimização, Strategy
 | Eletrônica           | `digitalAlertLogic` + Logisim               | atuadores e sinais lógicos    |
 | Arquitetura          | C4, Strategy, Observer, SOLID               | painel técnico e documentação |
 | QA                   | check, lint, testes, coverage, E2E e CI     | documentação de QA            |
-| Cloud                | estrutura cloud-ready                       | status real: local/pendente   |
+| Cloud                | Render + Aiven + TLS + CI/CD                | status real: concluído        |
 
 Veja [requisitos acadêmicos](docs/academic-requirements.md).
 
 ## Execução local
 
-Pré-requisitos: Node.js 20+ e MySQL 8 local.
+Pré-requisitos: Node.js 20+ e MySQL 8 local, ou repository em memória conforme configuração de ambiente.
 
 ```powershell
 npm install
@@ -85,11 +92,13 @@ npm run coverage
 npm run e2e
 ```
 
-A estratégia, o checklist E2E manual e o caso de bug de interface estão em [docs/testing-and-qa.md](docs/testing-and-qa.md). O CI executa as mesmas validações em push e pull request.
+A estratégia, o checklist E2E manual e o caso de bug de interface estão em [docs/testing-and-qa.md](docs/testing-and-qa.md). O CI executa as validações definidas no workflow em push e pull request.
 
 ## Infraestrutura e limites
 
-O backend e o schema são preparados para configuração por ambiente, Docker, MySQL remoto e health check. Não há backend público, banco gerenciado, CD real ou URL HTTPS publicada: esses itens estão pendentes e documentados em [docs/cloud.md](docs/cloud.md).
+O backend está publicado em https://lifebox-expotech.onrender.com por meio de um Web Service Docker no Render. O banco de produção é um Aiven for MySQL gerenciado, acessado com TLS e certificado CA. Variáveis sensíveis são mantidas no ambiente do provedor, fora do repositório. A persistência foi validada após redeploy e o Auto Deploy do Render foi validado a partir de commits na `main`. Detalhes estão em [docs/cloud.md](docs/cloud.md).
+
+O serviço usa a camada gratuita do Render e pode entrar em suspensão por inatividade, causando atraso na primeira requisição após o período ocioso. Backup avançado e observabilidade permanecem como melhorias futuras, sem bloquear a entrega acadêmica atual.
 
 ## Evidências
 
@@ -112,11 +121,12 @@ docs/        documentação técnica e evidências
 tests/       testes automatizados
 ```
 
-## Próximas etapas pendentes
+## Próximas etapas
 
-- escolha de cloud, backend público HTTPS e MySQL gerenciado;
-- CD real, backup e observabilidade;
-- integração futura de ESP32/sensores, mantendo o contrato de telemetria.
+- integrar ESP32/sensores via Wokwi à mesma API pública, mantendo o backend como fonte de verdade;
+- consolidar evidências da integração IoT + Cloud;
+- evoluir backup e observabilidade do ambiente publicado;
+- preparar apresentação final, documentação consolidada e release da ExpoTech.
 
 ## Licença
 
