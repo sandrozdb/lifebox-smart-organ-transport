@@ -5,7 +5,9 @@ const { object } = require("../utils/validation");
 
 const router = express.Router();
 
-router.get("/status", (_req, res) => res.json(iotState.snapshot()));
+router.get("/status", (req, res) =>
+  res.json(iotState.snapshot(req.query.deviceId)),
+);
 
 router.put("/mode", async (req, res, next) => {
   try {
@@ -19,3 +21,4 @@ router.put("/mode", async (req, res, next) => {
 });
 
 module.exports = router;
+
