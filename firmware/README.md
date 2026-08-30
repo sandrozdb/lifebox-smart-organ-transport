@@ -8,7 +8,9 @@ Arquivos para importar no Wokwi:
 - `diagram.json`: circuito e ligações;
 - `libraries.txt`: bibliotecas utilizadas.
 
-O firmware conecta à rede pública `Wokwi-GUEST`, envia telemetria a `https://lifebox-expotech.onrender.com/api/telemetria` e consulta `GET /api/iot/status`. A validação TLS usa o pacote de certificados raiz do ESP32.
+O firmware conecta à rede pública `Wokwi-GUEST`, envia telemetria ao ambiente de teste em `https://lifebox-expotech-iot-test.onrender.com/api/telemetria` e consulta `GET /api/iot/status?deviceId=...`. A validação TLS usa o pacote de certificados raiz do ESP32.
+
+O transporte não fica fixo no firmware. O backend associa `IOT_DEVICE_ID` a `IOT_TRANSPORT_ID` no ambiente do serviço e devolve o transporte autorizado em `/api/iot/status`. Sem uma associação válida, o ESP32 registra o bloqueio no Serial Monitor e não envia telemetria.
 
 As leituras não são constantes no firmware:
 
@@ -23,3 +25,4 @@ O backend é a fonte de verdade. O ESP32 não decide se temperatura ou impacto s
 No Wokwi, os controles visuais dos componentes alteram as grandezas físicas simuladas. O cenário de demonstração do dashboard muda apenas o estado mostrado no OLED e não altera sensores.
 
 Para hardware físico, troque SSID/senha fora do repositório, calibre o divisor resistivo da bateria e revise os pinos conforme a placa. Nunca versionar credenciais.
+
