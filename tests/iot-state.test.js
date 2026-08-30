@@ -2,6 +2,8 @@ const assert = require("node:assert/strict");
 const { after, before, beforeEach, test } = require("node:test");
 
 process.env.DB_DRIVER = "memory";
+process.env.IOT_DEVICE_ID = "LIFEBOX-WOKWI-001";
+process.env.IOT_TRANSPORT_ID = "2";
 const app = require("../src/app");
 const iotState = require("../src/services/iotStateService");
 
@@ -23,6 +25,37 @@ test("estado IoT inicia seguro e sem telemetria artificial", async () => {
   assert.equal(state.online, false);
   assert.equal(state.lastReading, null);
   assert.equal(state.digitalSignal.alertOutput, false);
+  assert.equal(state.transportId, null);
+});
+
+test("backend informa o transporte associado ao dispositivo", async () => {
+  const response = await fetch(
+    `${baseUrl}/api/iot/status?deviceId=LIFEBOX-WOKWI-001`,
+  );
+  const state = await response.json();
+  assert.equal(state.transportId, 2);
+});
+
+test("backend rejeita transporte diferente da associação do dispositivo", async () => {
+  const response = await fetch(`${baseUrl}/api/telemetria`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      transporteId: 1,
+      deviceId: "LIFEBOX-WOKWI-001",
+      temperatura: 4,
+      umidade: 60,
+      aceleracao: 1,
+      impacto: 0,
+      latitude: -23.55,
+      longitude: -46.63,
+      velocidade: 20,
+      bateria: 80,
+      sinal: 90,
+    }),
+  });
+  assert.equal(response.status, 409);
+  assert.equal((await response.json()).code, "IOT_TRANSPORT_MISMATCH");
 });
 
 test("dashboard alterna para demonstração e volta ao IoT", async () => {
@@ -49,12 +82,15 @@ test("telemetria atualiza presença, leitura e sinal calculado pelo backend", ()
   const reading = { id: 42, temperatura: 4.1, impacto: 0.08 };
   const state = iotState.recordTelemetry(
     "LIFEBOX-WOKWI-001",
+    2,
     { alertOutput: true, ledOn: true, buzzerOn: true },
     reading,
   );
   assert.equal(state.online, true);
   assert.equal(state.deviceId, "LIFEBOX-WOKWI-001");
+  assert.equal(state.transportId, 2);
   assert.deepEqual(state.lastReading, reading);
   assert.equal(state.digitalSignal.ledOn, true);
   assert.equal(state.digitalSignal.buzzerOn, true);
 });
+
