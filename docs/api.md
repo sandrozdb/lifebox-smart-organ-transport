@@ -31,7 +31,7 @@ Health público: `https://lifebox-expotech.onrender.com/api/health`.
 | `GET /planejamento/perfis`        | —                                                                      | Perfis de órgãos.                                               |
 | `GET /planejamento/perfis/:code`  | Código como `HEART`.                                                   | `200`; `404` se ausente.                                        |
 | `GET /planejamento/cenarios`      | —                                                                      | Cenários acadêmicos.                                            |
-| `POST /planejamento/geocodificar` | `{ "query": "...", "role": "origin" }`                         | Ponto conhecido/simulado; `400/422` se inválido.                |
+| `POST /planejamento/geocodificar` | `{ "query": "...", "role": "origin" }`                                 | Ponto conhecido/simulado; `400/422` se inválido.                |
 | `POST /planejamento/calcular`     | `organCode`, `origin`, `destination`, `consumedMinutes`, `conditions`. | Alternativas, restrições, factibilidade e plano de menor custo. |
 
 Exemplo mínimo:
