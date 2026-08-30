@@ -336,7 +336,7 @@ function updateIotControls(iot) {
     : "ESP32 OFFLINE";
   $("#esp32-status").classList.toggle("online", Boolean(iot.online));
   $("#telemetry-status").textContent =
-    mode === "IOT" ? "TELEMETRIA AO VIVO" : "DEMONSTRAÇÃO";
+    mode === "IOT" ? "TELEMETRIA AO VIVO" : "TELEMETRIA DEMONSTRAÇÃO";
   $(".demo-panel").classList.toggle("mode-disabled", mode !== "DEMO");
   document
     .querySelectorAll(".demo-panel button, .demo-panel select")
@@ -562,7 +562,7 @@ async function refresh() {
     const activeReading =
       iot.mode === "IOT"
         ? iot.lastReading
-        : readings[0] || simulation.initialTelemetry;
+        : simulation.initialTelemetry || readings[0];
     updateMetrics(activeReading, transport);
     updateTracking(window.lifeBoxExecutionTracking || tracking);
     drawCharts(readings);
@@ -805,3 +805,4 @@ $("#iot-mode").addEventListener("change", async (event) => {
 refresh();
 setInterval(refresh, 2000);
 window.addEventListener("resize", () => map?.invalidateSize());
+
