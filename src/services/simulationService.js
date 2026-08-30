@@ -360,13 +360,14 @@ async function scenario(name, transporteId) {
 
 function status() {
   const currentTelemetry = iotState.snapshot();
+  const latestDemoReading =
+    currentTelemetry.mode === iotState.MODES.DEMO
+      ? currentTelemetry.lastReading
+      : null;
   return {
     ...state,
     logistics: executionPlan.get(state.transporteId),
-    initialTelemetry:
-      currentTelemetry.mode === iotState.MODES.DEMO && currentTelemetry.lastReading
-        ? currentTelemetry.lastReading
-        : initialTelemetry,
+    initialTelemetry: latestDemoReading || initialTelemetry,
     availableScenarios: Object.entries(SCENARIOS).map(([id, value]) => ({
       id,
       label: value.label,
