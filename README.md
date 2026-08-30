@@ -22,7 +22,7 @@ LifeBox é um sistema acadêmico de apoio à decisão e rastreabilidade para tra
 | Testes          | `node:test`, coverage e Playwright E2E                                    |
 | Arquitetura     | C4 Context/Container, Strategy, Observer e SOLID documentado honestamente |
 | CI/CD           | GitHub Actions + Auto Deploy do Render                                    |
-| Cloud           | **CONCLUÍDA**: HTTPS público, MySQL gerenciado, secrets e CD validados    |
+| Cloud           | HTTPS público, MySQL gerenciado, secrets e CD validados    |
 
 **Links rápidos:** [Deploy](https://lifebox-expotech.onrender.com) · [Arquitetura](docs/architecture.md) · [Cloud](docs/cloud.md) · [Pesquisa Operacional](docs/operations-research.md) · [API](docs/api.md) · [QA](docs/testing-and-qa.md) · [Validação pré-cloud](docs/pre-cloud-validation.md) · [Demo](docs/demo-guide.md) · [Evidências](docs/evidencias/README.md) · [Requisitos](docs/academic-requirements.md) · [Eletrônica](docs/electronics.md) · [Física](docs/physics.md)
 
