@@ -26,6 +26,12 @@ module.exports = Object.freeze({
   simulationTimeScale: Number(process.env.SIMULATION_TIME_SCALE) || 120,
   alertCooldownSeconds: Number(process.env.ALERT_COOLDOWN_SECONDS) || 30,
   apiBaseUrl: process.env.API_BASE_URL || "http://localhost:3000",
+  iot: {
+    deviceId: process.env.IOT_DEVICE_ID || null,
+    transportId: Number.isInteger(Number(process.env.IOT_TRANSPORT_ID))
+      ? Number(process.env.IOT_TRANSPORT_ID)
+      : null,
+  },
   database: {
     host: process.env.DB_HOST || "localhost",
     port: Number(process.env.DB_PORT) || 3306,
@@ -43,3 +49,4 @@ module.exports = Object.freeze({
       : undefined,
   },
 });
+
