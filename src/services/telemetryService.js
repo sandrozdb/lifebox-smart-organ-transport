@@ -57,6 +57,12 @@ function validate(payload) {
 }
 async function receive(payload) {
   const data = validate(payload);
+  const associatedTransportId = iotState.associatedTransportId(data.deviceId);
+  if (associatedTransportId && data.transporteId !== associatedTransportId)
+    throw Object.assign(
+      new Error("Transporte não corresponde ao dispositivo informado."),
+      { status: 409, code: "IOT_TRANSPORT_MISMATCH" },
+    );
   const transport = await repository.getTransporte(data.transporteId);
   if (!transport)
     throw Object.assign(new Error("Transporte não encontrado."), {
@@ -104,7 +110,13 @@ async function receive(payload) {
       : "EM_ANDAMENTO";
   if (transport.status !== "CONCLUIDO")
     await repository.updateTransporte(data.transporteId, { status });
-  iotState.recordTelemetry(data.deviceId, digitalSignal, reading);
+  iotState.recordTelemetry(
+    data.deviceId,
+    data.transporteId,
+    digitalSignal,
+    reading,
+  );
   return { reading, alerts, status, digitalSignal };
 }
 module.exports = { receive, validate, alertNotifier };
+
