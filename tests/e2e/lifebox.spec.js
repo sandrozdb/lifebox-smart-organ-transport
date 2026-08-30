@@ -5,7 +5,9 @@ test.beforeEach(async ({ page, request }) => {
   await request.post("/api/simulacao/reset", { data: { transporteId: 1 } });
   await page.goto("/");
   await page.locator("#iot-mode").selectOption("DEMO");
-  await expect(page.locator("#telemetry-status")).toHaveText("DEMONSTRAÇÃO");
+  await expect(page.locator("#telemetry-status")).toHaveText(
+    "TELEMETRIA DEMONSTRAÇÃO",
+  );
   await page.locator("#planning-calculate").click();
   await expect(page.locator("#planning-result")).toContainText("PLANO ÓTIMO");
   await expect(page.locator('[data-action="start"]')).toBeEnabled();
@@ -85,3 +87,4 @@ test("resumo final aparece após concluir", async ({ page }) => {
   });
   await expect(page.locator("#summary-grid")).not.toBeEmpty();
 });
+
