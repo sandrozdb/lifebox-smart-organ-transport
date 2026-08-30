@@ -1,0 +1,12 @@
+{
+  "passed": 94,
+  "failed": 0,
+  "skipped": 1,
+  "total": 95,
+  "status": "APROVADA",
+  "validatedAt": "2026-08-30T01:04:46.000Z",
+  "source": "GitHub Actions CI #36",
+  "ciStatus": "APROVADA",
+  "e2ePassed": 4,
+  "e2eTotal": 4
+}
