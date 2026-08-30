@@ -1,7 +1,7 @@
 {
   "name": "lifebox-smart-organ-transport",
   "version": "1.0.0",
-  "description": "MVP acadêmico local de monitoramento e rastreabilidade LifeBox",
+  "description": "Sistema acadêmico de apoio à decisão e rastreabilidade para transporte de órgãos, com API em cloud, PO, Física e Eletrônica.",
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",

@@ -34,15 +34,15 @@ flowchart LR
   CD --> API
 ```
 
-| Container / serviço     | Responsabilidade                                                      |
-| ----------------------- | --------------------------------------------------------------------- |
-| Dashboard               | Planejamento, mapa, telemetria, alertas, Física, Eletrônica e resumo. |
-| API Express no Render   | Validação HTTP, coordenação dos casos de uso e respostas JSON.        |
-| Simulador               | Gera cenários e telemetria acadêmica.                                 |
-| Aiven for MySQL         | Estado durável de transportes, leituras, alertas, timeline e resumos. |
-| Repository em memória   | Testes rápidos e determinísticos; não é banco de produção.            |
-| GitHub Actions          | Integração contínua e validações automatizadas.                        |
-| Render Auto Deploy      | Entrega contínua da branch `main` no serviço público.                  |
+| Container / serviço   | Responsabilidade                                                      |
+| --------------------- | --------------------------------------------------------------------- |
+| Dashboard             | Planejamento, mapa, telemetria, alertas, Física, Eletrônica e resumo. |
+| API Express no Render | Validação HTTP, coordenação dos casos de uso e respostas JSON.        |
+| Simulador             | Gera cenários e telemetria acadêmica.                                 |
+| Aiven for MySQL       | Estado durável de transportes, leituras, alertas, timeline e resumos. |
+| Repository em memória | Testes rápidos e determinísticos; não é banco de produção.            |
+| GitHub Actions        | Integração contínua e validações automatizadas.                       |
+| Render Auto Deploy    | Entrega contínua da branch `main` no serviço público.                 |
 
 ## Componentes do backend
 

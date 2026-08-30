@@ -60,7 +60,7 @@ Exemplo mínimo:
 | `GET /transportes/:id/rastreabilidade`     | Plano, posição e progresso.                                         | `200`, `404`                        |
 | `GET /transportes/:id/resumo`              | Resumo da execução atual/concluída.                                 | `200`, `404/409`                    |
 | `POST /telemetria`                         | Registrar leitura de dispositivo/simulador.                         | `201`, `404`, `422`                 |
-| `PATCH /alertas/:id/resolver`              | Resolver alerta.                                                     | `200`, `400`, `404`                 |
+| `PATCH /alertas/:id/resolver`              | Resolver alerta.                                                    | `200`, `400`, `404`                 |
 
 Telemetria exige `transporteId`, `deviceId`, temperatura, umidade, aceleração/impacto, latitude, longitude, velocidade, bateria e sinal. Percentuais aceitam `0–100`.
 

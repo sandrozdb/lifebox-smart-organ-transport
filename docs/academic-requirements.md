@@ -1,13 +1,13 @@
 # Requisitos acadêmicos — LifeBox
 
-| Disciplina  | Requisito                  | Implementação                                      | Dashboard / operação        | Evidência                    | Status    |
-| ----------- | -------------------------- | -------------------------------------------------- | --------------------------- | ---------------------------- | --------- |
-| Eletrônica  | Lógica digital             | `digitalAlertLogic` e Logisim                      | Atuadores e entradas 0/1    | circuito e capturas          | CONCLUÍDO |
-| Física      | Cálculos dinâmicos         | `physicsService`                                   | análise por execução        | testes de Física             | CONCLUÍDO |
-| Arquitetura | GoF, SOLID e componentes   | Strategy, Observer e serviços                      | painel técnico compacto     | `docs/architecture.md`       | CONCLUÍDO |
-| PO          | Otimização multimodal      | planos, segmentos e reotimização                   | painel de planejamento      | testes e dashboard           | CONCLUÍDO |
-| QA          | Testes, CI e E2E           | `node:test`, c8, Playwright e MySQL no CI          | validações automatizadas    | CI/local + evidências        | CONCLUÍDO |
-| Cloud       | Publicação e DB gerenciado | Render + Aiven MySQL + TLS + variáveis seguras     | deploy público e health     | `docs/cloud.md` + checklist  | CONCLUÍDO |
+| Disciplina  | Requisito                  | Implementação                                  | Dashboard / operação     | Evidência                   | Status    |
+| ----------- | -------------------------- | ---------------------------------------------- | ------------------------ | --------------------------- | --------- |
+| Eletrônica  | Lógica digital             | `digitalAlertLogic` e Logisim                  | Atuadores e entradas 0/1 | circuito e capturas         | CONCLUÍDO |
+| Física      | Cálculos dinâmicos         | `physicsService`                               | análise por execução     | testes de Física            | CONCLUÍDO |
+| Arquitetura | GoF, SOLID e componentes   | Strategy, Observer e serviços                  | painel técnico compacto  | `docs/architecture.md`      | CONCLUÍDO |
+| PO          | Otimização multimodal      | planos, segmentos e reotimização               | painel de planejamento   | testes e dashboard          | CONCLUÍDO |
+| QA          | Testes, CI e E2E           | `node:test`, c8, Playwright e MySQL no CI      | validações automatizadas | CI/local + evidências       | CONCLUÍDO |
+| Cloud       | Publicação e DB gerenciado | Render + Aiven MySQL + TLS + variáveis seguras | deploy público e health  | `docs/cloud.md` + checklist | CONCLUÍDO |
 
 ## Cloud validada
 
