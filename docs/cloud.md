@@ -1,6 +1,6 @@
-# Cloud e infraestrutura — etapa 2 em implementação
+# Cloud e infraestrutura — etapa 2 concluída
 
-## Arquitetura planejada
+## Arquitetura publicada
 
 ```text
 Wokwi/Cliente
@@ -10,46 +10,64 @@ Render Web Service (Node.js + Express)
 Aiven for MySQL
 ```
 
-**Status: EM IMPLEMENTAÇÃO.** O backend já está publicado em
-https://lifebox-expotech.onrender.com, conectado ao Aiven for MySQL e com
-persistência após redeploy validada. O Auto Deploy do Render ainda está em
-validação.
+**Status: CONCLUÍDA.** O backend está publicado em
+https://lifebox-expotech.onrender.com, conectado ao Aiven for MySQL, com
+persistência após redeploy validada e Auto Deploy do Render confirmado a partir
+de push na branch `main`.
 
-## Implementado
+## Implementado e validado
 
-- backend Node.js/Express apto a usar `process.env.PORT`;
-- frontend servido pelo mesmo Express;
-- MySQL configurável por variáveis de ambiente, TLS e certificado CA;
+- backend Node.js/Express publicado no Render;
+- frontend servido pelo mesmo Express em HTTPS;
+- URL pública: https://lifebox-expotech.onrender.com;
+- uso de `process.env.PORT` no ambiente Render;
+- MySQL gerenciado no Aiven conectado ao backend de produção;
+- conexão MySQL protegida com TLS e certificado CA;
+- variáveis de ambiente e credenciais configuradas fora do repositório;
 - `.env` ignorado e `.env.example` sem credenciais reais;
-- Docker e Docker Compose para execução local;
-- health check em `/api/health`;
+- banco `lifebox_db` com schema aplicado via `npm run setup-db`;
+- persistência dos dados confirmada após redeploy do serviço;
+- `SEED_DEMO_DATA=false` mantido em produção após criação inicial controlada;
+- health check em `/api/health` validado no ambiente público;
+- Dockerfile utilizado diretamente pelo Render para build e execução;
 - CI no GitHub Actions com check, lint, formatação, testes, cobertura, E2E,
   integração MySQL e build Docker;
-- shutdown e logs básicos no backend;
-- backend publicado no Render em https://lifebox-expotech.onrender.com;
-- Aiven MySQL conectado;
-- persistência após redeploy validada.
+- GitHub Actions executado com sucesso após push na `main`;
+- Auto Deploy/CD do Render validado: o commit `3365233`
+  (`docs: register production cloud deployment`) foi detectado e publicado
+  automaticamente sem uso de Manual Deploy;
+- shutdown e logs básicos disponíveis no backend.
 
-## Pendente
+## Render
 
-- validação do Auto Deploy/CD real;
-- backup e observabilidade do ambiente publicado.
-
-## Render e Aiven
-
-O Render constrói o Dockerfile existente diretamente, sem `render.yaml`:
+Configuração validada do Web Service:
 
 - runtime: Docker;
 - branch: `main`;
+- plano: Free;
 - build: realizado pelo Dockerfile (`npm ci --omit=dev`);
 - start: `npm start` (CMD do Dockerfile);
 - health check: `/api/health`;
-- auto deploy: após atualização da `main`, em validação neste momento.
+- Auto Deploy: `On Commit`;
+- serviço público: https://lifebox-expotech.onrender.com.
 
-No Aiven, o serviço MySQL e o banco indicado em `DB_NAME` já estão configurados.
-O schema foi aplicado com `npm run setup-db`. O script não executa `DROP`; o
-seed só roda quando `SEED_DEMO_DATA=true`. Em produção, mantenha-o como `false`.
+A instância gratuita pode entrar em modo de inatividade, portanto a primeira
+requisição após um período sem uso pode apresentar atraso de inicialização. Isso
+não altera a persistência dos dados, que permanece no Aiven for MySQL.
 
-Use `DB_SSL=true`, `DB_SSL_REJECT_UNAUTHORIZED=true` e configure `DB_SSL_CA` com
-o certificado CA em PEM fornecido pelo Aiven. Se o painel não aceitar múltiplas
-linhas, represente as quebras como `\n`.
+## Aiven for MySQL
+
+O serviço MySQL gerenciado e o banco indicado em `DB_NAME` estão configurados e
+operacionais. O schema foi aplicado com `npm run setup-db`. O script não executa
+`DROP`; o seed só roda quando `SEED_DEMO_DATA=true`. Em produção, ele permanece
+como `false`.
+
+A conexão usa `DB_SSL=true`, `DB_SSL_REJECT_UNAUTHORIZED=true` e `DB_SSL_CA` com
+o certificado CA em PEM fornecido pelo Aiven.
+
+## Melhorias operacionais futuras
+
+Backup dedicado, métricas avançadas, alertas e observabilidade externa podem ser
+adicionados como evolução operacional. Esses itens não impedem a conclusão da
+etapa acadêmica atual de Cloud Computing, já que backend em nuvem pública, banco
+gerenciado, configuração segura e CI/CD foram implementados e validados.
