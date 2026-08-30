@@ -10,8 +10,10 @@ Render Web Service (Node.js + Express)
 Aiven for MySQL
 ```
 
-**Status: PENDENTE DE DEPLOY.** Ainda não existe URL pública, serviço Render ou
-banco Aiven conectados e validados.
+**Status: EM IMPLEMENTAÇÃO.** O backend já está publicado em
+https://lifebox-expotech.onrender.com, conectado ao Aiven for MySQL e com
+persistência após redeploy validada. O Auto Deploy do Render ainda está em
+validação.
 
 ## Implementado
 
@@ -23,35 +25,30 @@ banco Aiven conectados e validados.
 - health check em `/api/health`;
 - CI no GitHub Actions com check, lint, formatação, testes, cobertura, E2E,
   integração MySQL e build Docker;
-- shutdown e logs básicos no backend.
+- shutdown e logs básicos no backend;
+- backend publicado no Render em https://lifebox-expotech.onrender.com;
+- Aiven MySQL conectado;
+- persistência após redeploy validada.
 
 ## Pendente
 
-- criação e configuração dos serviços no Render e no Aiven;
-- URL pública HTTPS;
-- backend publicado;
-- MySQL gerenciado;
-- secrets configurados no provedor;
-- CD real;
+- validação do Auto Deploy/CD real;
 - backup e observabilidade do ambiente publicado.
-
-O dashboard mostra estes fatos apenas no painel técnico: Backend LOCAL, MySQL LOCAL, CI ATIVO e itens cloud PENDENTE. Não existe deploy cloud ativo.
 
 ## Render e Aiven
 
-O Render pode construir o Dockerfile existente diretamente, sem `render.yaml`:
+O Render constrói o Dockerfile existente diretamente, sem `render.yaml`:
 
 - runtime: Docker;
 - branch: `main`;
 - build: realizado pelo Dockerfile (`npm ci --omit=dev`);
 - start: `npm start` (CMD do Dockerfile);
 - health check: `/api/health`;
-- auto deploy: após atualização da `main`, condicionado à configuração no painel.
+- auto deploy: após atualização da `main`, em validação neste momento.
 
-No Aiven, crie o serviço MySQL e o banco indicado em `DB_NAME`. Aplique o schema
-uma vez, a partir de uma máquina autorizada a acessar o serviço, com
-`npm run setup-db`. O script não executa `DROP`; o seed só roda quando
-`SEED_DEMO_DATA=true`. Em produção, mantenha-o como `false`.
+No Aiven, o serviço MySQL e o banco indicado em `DB_NAME` já estão configurados.
+O schema foi aplicado com `npm run setup-db`. O script não executa `DROP`; o
+seed só roda quando `SEED_DEMO_DATA=true`. Em produção, mantenha-o como `false`.
 
 Use `DB_SSL=true`, `DB_SSL_REJECT_UNAUTHORIZED=true` e configure `DB_SSL_CA` com
 o certificado CA em PEM fornecido pelo Aiven. Se o painel não aceitar múltiplas
