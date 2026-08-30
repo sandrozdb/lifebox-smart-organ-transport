@@ -98,11 +98,12 @@ void setup(){
   mpuReady=mpu.begin();Serial.printf("MPU %s\n",mpuReady?"OK":"FAIL");if(mpuReady)mpu.setAccelerometerRange(MPU6050_RANGE_8_G);gpsSerial.begin(9600,SERIAL_8N1,GPS_RX_PIN,GPS_TX_PIN);
   WiFi.mode(WIFI_STA);WiFi.begin(WIFI_SSID,WIFI_PASSWORD,6);while(WiFi.status()!=WL_CONNECTED){delay(250);Serial.print('.');}
   Serial.printf("\nWiFi RSSI %d dBm\n",WiFi.RSSI());drawStatus(initialClimate.temperature,initialClimate.humidity);
+  readBackendState();
+  sendTelemetry();
 }
 void loop(){
   while(gpsSerial.available())gps.encode(gpsSerial.read());const uint32_t now=millis();
   if(now-lastStateAt>=STATE_INTERVAL_MS){lastStateAt=now;readBackendState();}
   if(now-lastTelemetryAt>=TELEMETRY_INTERVAL_MS){lastTelemetryAt=now;sendTelemetry();}
-  delay(5);
+  delay(10);
 }
-
