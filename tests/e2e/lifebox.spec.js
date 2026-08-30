@@ -4,6 +4,8 @@ test.beforeEach(async ({ page, request }) => {
   page.on("pageerror", (error) => console.error("PAGE_ERROR", error.message));
   await request.post("/api/simulacao/reset", { data: { transporteId: 1 } });
   await page.goto("/");
+  await page.locator("#iot-mode").selectOption("DEMO");
+  await expect(page.locator("#telemetry-status")).toHaveText("DEMONSTRAÇÃO");
   await page.locator("#planning-calculate").click();
   await expect(page.locator("#planning-result")).toContainText("PLANO ÓTIMO");
   await expect(page.locator('[data-action="start"]')).toBeEnabled();

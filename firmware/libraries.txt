@@ -1,0 +1,5 @@
+Adafruit MPU6050
+Adafruit SSD1306
+ArduinoJson
+DHT sensor library for ESPx
+TinyGPSPlus

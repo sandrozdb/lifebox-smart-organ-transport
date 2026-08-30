@@ -9,6 +9,7 @@ const executionPlan = require("./executionPlanService");
 const { generate } = require("../../simulator/sensor-generator");
 const { SCENARIOS } = require("../../simulator/scenarios");
 const { httpError } = require("../utils/httpError");
+const iotState = require("./iotStateService");
 
 const RECOMMENDATION_TTL_MS = 5 * 60 * 1000;
 const recommendations = new Map();
@@ -82,7 +83,8 @@ function planningInput(snapshot, conditions = {}) {
 }
 
 async function tick() {
-  if (!state.running) return;
+  if (!state.running || iotState.snapshot().mode !== iotState.MODES.DEMO)
+    return;
   state.scenarioTick += 1;
   try {
     const now = Date.now();
@@ -116,6 +118,9 @@ async function tick() {
 }
 
 async function start(transporteId = 1, rotaId, plan, result) {
+  // Mantém compatibilidade com clientes antigos que iniciam o simulador
+  // diretamente, sem passar primeiro pelo seletor do dashboard.
+  iotState.setMode(iotState.MODES.DEMO);
   state.transporteId = Number(transporteId);
   if (!(await repository.getTransporte(state.transporteId)))
     throw httpError(404, "TRANSPORT_NOT_FOUND", "Transporte não encontrado.");
@@ -304,6 +309,8 @@ async function reset(transporteId = state.transporteId) {
 async function scenario(name, transporteId) {
   if (!SCENARIOS[name])
     throw httpError(422, "INVALID_SCENARIO", "Cenário inválido.");
+  iotState.setMode(iotState.MODES.DEMO);
+  iotState.setScenario(name);
   if (transporteId !== undefined) {
     const id = Number(transporteId);
     if (!(await repository.getTransporte(id)))

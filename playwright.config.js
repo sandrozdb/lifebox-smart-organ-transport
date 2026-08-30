@@ -1,5 +1,5 @@
 const { defineConfig } = require("@playwright/test");
-const e2ePort = 3101;
+const e2ePort = Number(process.env.E2E_PORT) || 3101;
 
 module.exports = defineConfig({
   testDir: "./tests/e2e",
@@ -22,7 +22,7 @@ module.exports = defineConfig({
     command: "node scripts/start-memory.js",
     env: { ...process.env, PORT: String(e2ePort), DB_DRIVER: "memory" },
     url: `http://127.0.0.1:${e2ePort}/api/health`,
-    reuseExistingServer: false,
+    reuseExistingServer: process.env.E2E_REUSE_SERVER === "true",
     gracefulShutdown: { signal: "SIGTERM", timeout: 1_000 },
   },
   reporter: process.env.CI ? [["line"], ["html", { open: "never" }]] : "line",

@@ -4,6 +4,7 @@ const { evaluate } = require("./ruleEngine");
 const { evaluateDigitalAlert } = require("./digitalAlertLogic");
 const { AlertNotifier } = require("../observers/alertNotifier");
 const { TimelineAlertObserver } = require("../observers/timelineAlertObserver");
+const iotState = require("./iotStateService");
 const alertNotifier = new AlertNotifier();
 alertNotifier.subscribe(new TimelineAlertObserver(repository));
 function validate(payload) {
@@ -103,6 +104,7 @@ async function receive(payload) {
       : "EM_ANDAMENTO";
   if (transport.status !== "CONCLUIDO")
     await repository.updateTransporte(data.transporteId, { status });
+  iotState.recordTelemetry(data.deviceId, digitalSignal, reading);
   return { reading, alerts, status, digitalSignal };
 }
 module.exports = { receive, validate, alertNotifier };
