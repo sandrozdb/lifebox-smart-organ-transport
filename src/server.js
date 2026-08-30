@@ -21,7 +21,7 @@ async function shutdown(signal) {
 async function main() {
   try {
     if (config.dbDriver === "mysql") await require("./database/mysql").health();
-    await ensureDemo();
+    if (config.dbDriver === "memory" || config.seedDemoData) await ensureDemo();
     server = app.listen(config.port, () =>
       console.log(
         JSON.stringify({

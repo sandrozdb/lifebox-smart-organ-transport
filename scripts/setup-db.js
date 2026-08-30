@@ -4,13 +4,17 @@ require("dotenv").config();
 const mysql = require("mysql2/promise");
 const { errorMessage } = require("../src/utils/errorMessage");
 const database = process.env.DB_NAME || "lifebox_db",
+  sslCa = process.env.DB_SSL_CA?.replace(/\\n/g, "\n"),
   ssl =
     process.env.DB_SSL === "true"
       ? {
           rejectUnauthorized:
             process.env.DB_SSL_REJECT_UNAUTHORIZED !== "false",
+          ...(sslCa ? { ca: sslCa } : {}),
         }
       : undefined;
+if (!/^[A-Za-z0-9_]+$/.test(database))
+  throw new Error("DB_NAME deve conter apenas letras, números e sublinhado.");
 async function ensureColumns(connection, table, columns) {
   const [rows] = await connection.query(
     "SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=? AND TABLE_NAME=?",

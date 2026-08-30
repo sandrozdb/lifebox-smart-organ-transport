@@ -13,6 +13,7 @@ O LifeBox usa variáveis de ambiente para separar configuração pública de dad
 | DB_NAME                    | Nome do banco de dados.                                              |            Não | Serviço cloud                         |
 | DB_SSL                     | Ativa ou desativa TLS na conexão MySQL.                              |            Não | Serviço cloud                         |
 | DB_SSL_REJECT_UNAUTHORIZED | Define a validação do certificado TLS do MySQL.                      |            Não | Serviço cloud                         |
+| DB_SSL_CA                  | Certificado CA em PEM fornecido pelo Aiven.                          |            Sim | Secret do provedor cloud              |
 | DB_CONNECT_TIMEOUT_MS      | Tempo máximo de conexão com o banco.                                 |            Não | Serviço cloud                         |
 | DB_CONNECTION_LIMIT        | Limite do pool de conexões MySQL.                                    |            Não | Serviço cloud                         |
 | SEED_DEMO_DATA             | Controla a carga opcional de dados demonstrativos no setup.          |            Não | Serviço cloud                         |
@@ -26,4 +27,4 @@ O LifeBox usa variáveis de ambiente para separar configuração pública de dad
 - Configure DB_PASSWORD e futuros tokens diretamente no painel de segredos do provedor.
 - Para CI/CD, guarde segredos em GitHub Actions Secrets; não os escreva no workflow.
 - Não registre valores de variáveis sensíveis em logs, prints de terminal ou documentação.
-- Em produção, use DB_SSL=true quando o MySQL gerenciado fornecer TLS.
+- Em produção no Aiven, use DB_SSL=true, mantenha a validação ativa e forneça DB_SSL_CA como secret.

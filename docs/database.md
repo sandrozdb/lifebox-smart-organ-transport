@@ -16,3 +16,9 @@ O schema MySQL é idempotente e não executa `DROP`. O setup aplica apenas cria�
 O resumo final consulta a execução atual pelo identificador de execução para não misturar leituras, alertas ou impactos de execuções anteriores do mesmo transporte.
 
 Execute `npm run setup-db` depois de configurar o `.env` local. O seed demonstrativo depende de `SEED_DEMO_DATA=true`; não é obrigatório para produção.
+
+Para o Aiven, crie previamente o banco definido em `DB_NAME`, configure as
+credenciais e o TLS (`DB_SSL=true`, validação ativa e `DB_SSL_CA` com o CA em
+PEM) e então execute `npm run setup-db` uma vez. O nome do banco aceita apenas
+letras, números e sublinhado. O serviço não cria dados demonstrativos durante a
+inicialização quando `SEED_DEMO_DATA=false`.

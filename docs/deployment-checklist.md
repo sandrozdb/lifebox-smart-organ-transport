@@ -1,6 +1,6 @@
-# Checklist genérico de deploy
+# Checklist de deploy — Render + Aiven
 
-Este checklist é independente de provedor. O projeto continua funcional localmente enquanto os itens abaixo não forem concluídos.
+O projeto continua funcional localmente enquanto os itens abaixo não forem concluídos.
 
 ## A. Aplicação
 
@@ -14,7 +14,7 @@ Este checklist é independente de provedor. O projeto continua funcional localme
 - [ ] Instância MySQL criada.
 - [ ] Banco lifebox_db criado.
 - [ ] Schema aplicado com npm run setup-db.
-- [ ] Conexão TLS configurada quando exigida.
+- [ ] Conexão TLS configurada com o certificado CA do Aiven.
 - [ ] Backup automático configurado.
 
 ## C. Variáveis de ambiente
@@ -22,6 +22,7 @@ Este checklist é independente de provedor. O projeto continua funcional localme
 - [ ] NODE_ENV=production.
 - [ ] DB_HOST, DB_PORT, DB_USER, DB_PASSWORD e DB_NAME configuradas.
 - [ ] DB_SSL e DB_SSL_REJECT_UNAUTHORIZED revisadas.
+- [ ] DB_SSL_CA configurada como secret com o CA fornecido pelo Aiven.
 - [ ] SEED_DEMO_DATA=false em produção.
 - [ ] Nenhum .env enviado ao GitHub.
 
@@ -45,12 +46,12 @@ Este checklist é independente de provedor. O projeto continua funcional localme
 - [ ] GitHub Actions executa npm test.
 - [ ] Última execução de CI aprovada.
 
-## G. CD futuro
+## G. CD no Render (pendente)
 
-- [ ] Provedor cloud escolhido.
-- [ ] Credenciais de deploy armazenadas como secrets.
-- [ ] Template de CD adaptado ao provedor escolhido.
-- [ ] Deploy executado sem credenciais no código.
+- [ ] Serviço Docker conectado ao repositório e à branch main.
+- [ ] Auto deploy habilitado no painel do Render.
+- [ ] Variáveis e secrets configurados apenas no painel do Render.
+- [ ] Deploy executado sem credenciais no código ou no workflow público.
 - [ ] Health check pós-deploy confirmado.
 
 ## H. Segurança
