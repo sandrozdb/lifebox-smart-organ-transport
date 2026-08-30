@@ -333,7 +333,7 @@ async function scenario(name, transporteId) {
       descricao: "Cenário normal reativado.",
     });
   }
-  if (name === "bateria") state.battery = 40;
+  if (name === "bateria") state.battery = 25;
   if (name === "atraso")
     await repository.createEvento({
       transporteId: state.transporteId,
@@ -359,10 +359,14 @@ async function scenario(name, transporteId) {
 }
 
 function status() {
+  const currentTelemetry = iotState.snapshot();
   return {
     ...state,
     logistics: executionPlan.get(state.transporteId),
-    initialTelemetry,
+    initialTelemetry:
+      currentTelemetry.mode === iotState.MODES.DEMO && currentTelemetry.lastReading
+        ? currentTelemetry.lastReading
+        : initialTelemetry,
     availableScenarios: Object.entries(SCENARIOS).map(([id, value]) => ({
       id,
       label: value.label,
