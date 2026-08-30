@@ -1,40 +1,48 @@
 # Arquitetura da LifeBox
 
-Esta documentação descreve a implementação atual. Cloud pública aparece apenas como evolução futura.
+Esta documentação descreve a implementação atual, incluindo o deploy público concluído no Render e o banco gerenciado no Aiven.
 
 ## C4 Level 1 — System Context
 
 ```mermaid
 flowchart LR
-  OP[Operador logístico] -->|Opera e confirma decisões| LB[LifeBox\nSistema acadêmico de apoio à decisão]
-  SIM[Simulador / futura caixa IoT] -->|Telemetria JSON via HTTP| LB
+  OP[Operador logístico] -->|HTTPS| LB[LifeBox\nSistema acadêmico de apoio à decisão\nRender]
+  SIM[Simulador / futura caixa IoT] -->|Telemetria JSON via HTTPS| LB
   LB -->|Mapa-base e atribuição| OSM[OpenStreetMap]
-  LB -->|Persiste transporte, leituras e eventos| DATA[(Armazenamento local\nMySQL)]
-  CLOUD[Cloud pública futura\nPENDENTE] -.-> LB
+  LB -->|MySQL/TLS| DATA[(Aiven for MySQL\nBanco gerenciado)]
+  GH[GitHub] -->|push na main| RENDER[Render Auto Deploy]
+  GH -->|push / pull request| CI[GitHub Actions CI]
+  RENDER --> LB
 ```
 
 O operador consulta planejamento, acompanha a execução e confirma uma reotimização. O simulador representa a futura caixa IoT; não há hardware clínico conectado. OpenStreetMap fornece tiles, enquanto rotas, custos, tempos e riscos do MVP são acadêmicos/simulados.
+
+O deploy oficial está em `https://lifebox-expotech.onrender.com`. A persistência de produção usa Aiven for MySQL com TLS e certificado CA.
 
 ## C4 Level 2 — Container
 
 ```mermaid
 flowchart LR
-  OP[Operador] -->|HTTPS futuro / HTTP local| WEB[Dashboard\nHTML, CSS, JavaScript, Leaflet]
-  WEB -->|JSON REST| API[API Node.js / Express]
-  SIM[Simulador Node.js] -->|JSON REST| API
-  API -->|SQL| MYSQL[(MySQL 8 local)]
+  OP[Operador] -->|HTTPS| WEB[Dashboard\nHTML, CSS, JavaScript, Leaflet\nservido pelo Express no Render]
+  WEB -->|JSON REST| API[API Node.js / Express\nRender Web Service]
+  SIM[Simulador Node.js / futuro ESP32] -->|JSON REST via HTTPS| API
+  API -->|MySQL/TLS| MYSQL[(Aiven for MySQL)]
   API -.->|Contrato equivalente em testes| MEM[(Repository em memória)]
   WEB -->|HTTPS e tiles| OSM[OpenStreetMap]
-  CI[GitHub Actions CI] -->|check, lint, format, testes e coverage| CODE[Código-fonte]
+  CI[GitHub Actions CI] -->|check, lint, format, testes, E2E, MySQL e Docker| CODE[Código-fonte]
+  CODE -->|push na main| CD[Render Auto Deploy]
+  CD --> API
 ```
 
-| Container             | Responsabilidade                                                      |
-| --------------------- | --------------------------------------------------------------------- |
-| Dashboard             | Planejamento, mapa, telemetria, alertas, Física, Eletrônica e resumo. |
-| API Express           | Validação HTTP, coordenação dos casos de uso e respostas JSON.        |
-| Simulador             | Gera cenários e telemetria acadêmica.                                 |
-| MySQL                 | Estado durável de transportes, leituras, alertas, timeline e resumos. |
-| Repository em memória | Testes rápidos e determinísticos; não é banco de produção.            |
+| Container / serviço     | Responsabilidade                                                      |
+| ----------------------- | --------------------------------------------------------------------- |
+| Dashboard               | Planejamento, mapa, telemetria, alertas, Física, Eletrônica e resumo. |
+| API Express no Render   | Validação HTTP, coordenação dos casos de uso e respostas JSON.        |
+| Simulador               | Gera cenários e telemetria acadêmica.                                 |
+| Aiven for MySQL         | Estado durável de transportes, leituras, alertas, timeline e resumos. |
+| Repository em memória   | Testes rápidos e determinísticos; não é banco de produção.            |
+| GitHub Actions          | Integração contínua e validações automatizadas.                        |
+| Render Auto Deploy      | Entrega contínua da branch `main` no serviço público.                  |
 
 ## Componentes do backend
 
@@ -97,7 +105,7 @@ O navegador não é autoridade sobre custo, segmentos, geometria ou modal. A rec
 - **Repositories:** contrato implícito comum às implementações MySQL e memória.
 - **Config:** perfis de órgãos e premissas acadêmicas centralizadas.
 
-O simulador independente usa a API. O modo de demonstração embutido também pode coordenar serviços dentro do processo para manter uma execução local simples; essa é uma escolha de MVP, não um microserviço.
+O simulador independente usa a API. O modo de demonstração embutido também pode coordenar serviços dentro do processo para manter uma execução simples; essa é uma escolha de MVP, não um microserviço.
 
 ## Strategy
 
@@ -123,8 +131,9 @@ Contrato implícito: `plan({ origin, destination, locationProvider, conditions }
 
 ## Trade-offs e limitações
 
-- execution plan e recommendationId ativos ficam em memória e são perdidos no reinício;
-- processo único é suficiente para o MVP local; múltiplas instâncias dependem da fase Cloud;
+- `execution plan` e `recommendationId` ativos ficam em memória do processo e podem ser perdidos em reinício; dados persistidos no MySQL permanecem no Aiven;
+- o MVP usa uma única instância gratuita do Render e pode sofrer cold start após inatividade;
+- o Auto Deploy está configurado em `On Commit`: CI e CD partem do mesmo push, mas o deploy não espera obrigatoriamente a conclusão da CI;
 - rotas, custos, tempos, risco e disponibilidade são acadêmicos/simulados;
-- autenticação completa será necessária antes de exposição pública;
-- MySQL é local; backend público, banco gerenciado e CD continuam **PENDENTES**.
+- o serviço é uma demonstração acadêmica pública sem autenticação completa; não deve receber dados clínicos, pessoais ou operacionais sensíveis;
+- restrição de rede do banco, usuário de menor privilégio, rotação de credenciais, backup avançado e observabilidade são melhorias de hardening futuras.

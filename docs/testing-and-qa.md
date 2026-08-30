@@ -26,8 +26,20 @@ O Playwright cobre quatro fluxos: execução normal, impacto crítico com atuado
 - [x] Testar impacto, atraso, reotimização e aplicação manual.
 - [x] Finalizar e conferir resumo da execução atual.
 
-O painel técnico apresenta a contagem da suíte Node disponível no momento da captura. O resultado integral do fechamento está registrado neste documento e em `docs/pre-cloud-validation.md`.
+O painel técnico apresenta a contagem da suíte Node disponível no momento da captura. O resultado integral do fechamento pré-cloud está registrado neste documento e em `docs/pre-cloud-validation.md`.
 
 ## MySQL real
 
-`RUN_MYSQL_INTEGRATION=true npm test` habilita a prova de persistência e isolamento por execução. No CI, um serviço MySQL 8.4 recebe o schema antes desse teste. Sem essa variável, o caso é explicitamente marcado como ignorado, nunca como aprovado fictício. Na validação local de 29/08/2026, o serviço MySQL 8 estava ativo, mas o checkout não possuía credenciais configuradas; a tentativa explícita foi rejeitada por autenticação antes de inserir qualquer registro.
+`RUN_MYSQL_INTEGRATION=true npm test` habilita a prova de persistência e isolamento por execução. No CI, um serviço MySQL 8.4 recebe o schema antes desse teste. Sem essa variável, o caso é explicitamente marcado como ignorado, nunca como aprovado fictício.
+
+Na validação local pré-cloud de 29/08/2026, o checkout ainda não possuía credenciais do MySQL remoto e a tentativa explícita foi rejeitada por autenticação antes de inserir qualquer registro. **Esse registro é histórico.** Depois da etapa Cloud, o Aiven for MySQL foi configurado com TLS/CA, o schema foi aplicado com sucesso, o backend do Render iniciou com `DB_DRIVER=mysql`, `/api/health` respondeu com sucesso e a persistência foi confirmada após redeploy.
+
+## Validação pós-cloud
+
+- [x] CI do commit de preparação para cloud aprovada no GitHub Actions;
+- [x] backend Docker iniciou no Render em `NODE_ENV=production` e `DB_DRIVER=mysql`;
+- [x] health check público validou API + Aiven;
+- [x] persistência do banco confirmada após redeploy;
+- [x] Auto Deploy do Render validado em push real para `main`.
+
+Detalhes: `docs/cloud.md`, `docs/ci-cd.md` e `docs/deployment-checklist.md`.

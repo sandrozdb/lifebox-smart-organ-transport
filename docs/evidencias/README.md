@@ -2,6 +2,8 @@
 
 As 20 imagens do dashboard foram recapturadas do zero em 29/08/2026 na aplicação real em `http://localhost:3000`, com viewport preferencial de 1920×1080 e zoom de 100%. Os arquivos têm assinatura PNG nativa; não foram usados mockups nem geração de imagens para simular estados.
 
+Essas imagens formam a **baseline pré-cloud** da interface. A funcionalidade principal, PO, Física, Eletrônica, arquitetura e QA permanecem válidas; a evidência `20-cloud-status.png` registra propositalmente o estado anterior ao deploy e hoje deve ser tratada como histórica.
+
 Os mapas foram validados com Leaflet inicializado e tiles reais do OpenStreetMap completos (`naturalWidth = 256`). Sensores, instituições, tempos, custos, rotas e ocorrências permanecem identificados como dados simulados ou premissas acadêmicas.
 
 ## 1. Operação e rastreabilidade
@@ -43,15 +45,26 @@ Os mapas foram validados com Leaflet inicializado e tiles reais do OpenStreetMap
 
 ## 8. Arquitetura
 
-- [19 — Arquitetura do sistema](dashboard/19-arquitetura-status.png): comprova Frontend → API Express → Serviços → Repository → MySQL, Strategy e Observer.
+- [19 — Arquitetura do sistema](dashboard/19-arquitetura-status.png): comprova Frontend → API Express → Serviços → Repository → MySQL, Strategy e Observer na baseline pré-cloud.
+- [Arquitetura atual](../architecture.md): documenta Render Web Service, Aiven for MySQL, CI e Auto Deploy no C4 atualizado.
 
 ## 9. Qualidade e testes
 
 - [18 — Status de QA](dashboard/18-qa-status.png): registra o painel de QA após a suíte Node e a aprovação dos quatro cenários E2E; os resultados completos estão em `docs/testing-and-qa.md`.
+- [CI/CD atual](../ci-cd.md): registra GitHub Actions e Auto Deploy do Render validados.
 
 ## 10. Cloud e infraestrutura
 
-- [20 — Status de infraestrutura](dashboard/20-cloud-status.png): comprova backend/MySQL locais e CI ativo; cloud pública, DB gerenciado e CD continuam corretamente pendentes.
+- [20 — Status de infraestrutura pré-cloud](dashboard/20-cloud-status.png): snapshot histórico feito antes do deploy; comprova o ponto de partida local e não representa o estado atual.
+- **Deploy público atual:** https://lifebox-expotech.onrender.com
+- **Health check:** https://lifebox-expotech.onrender.com/api/health
+- **Backend:** Docker/Node.js/Express no Render.
+- **Banco:** Aiven for MySQL gerenciado, conexão TLS com CA.
+- **Persistência:** validada após redeploy com `SEED_DEMO_DATA=false`.
+- **CD:** Auto Deploy validado quando o Render saiu de `d67f134` para `3365233` após push na `main`, sem `Manual Deploy`.
+- **CI:** GitHub Actions aprovado nos commits da etapa Cloud.
+
+A documentação consolidada está em [`../cloud.md`](../cloud.md), [`../ci-cd.md`](../ci-cd.md) e [`../deployment-checklist.md`](../deployment-checklist.md).
 
 ## 11. Resumos finais
 
@@ -69,12 +82,12 @@ Os mapas foram validados com Leaflet inicializado e tiles reais do OpenStreetMap
 ## Validação executada
 
 - `npm run check`: aprovado;
-- `npm test`: 95 descobertos, 94 aprovados, 0 falhas e 1 integração MySQL condicional ignorada;
-- `npm run coverage`: 87,59% de linhas/instruções, 80,82% de branches e 93,16% de funções;
+- `npm test`: 95 descobertos, 94 aprovados, 0 falhas e 1 integração MySQL condicional ignorada na execução local;
+- `npm run coverage`: 87,59% de linhas/instruções, 80,82% de branches e 93,16% de funções na baseline pré-cloud;
 - `npm run e2e`: 4/4 cenários aprovados, incluindo aplicação segura da reotimização com `recommendationId` server-side;
 - cenários adicionais auditados manualmente no dashboard real;
 - console do navegador sem erro crítico;
 - health check HTTP 200;
-- 20/20 imagens abertas e validadas como atuais, coerentes e PNG nativo; as evidências 11, 12 e 18 foram recapturadas após a correção funcional;
-- quatro evidências válidas do Logisim, com o estado normal recapturado como 1,0,0 → saída 0.
-
+- 20/20 imagens abertas e validadas como PNG nativo na baseline de 29/08/2026;
+- quatro evidências válidas do Logisim, com o estado normal recapturado como 1,0,0 → saída 0;
+- backend público, Aiven MySQL, TLS, persistência, CI e Auto Deploy validados posteriormente na etapa Cloud.

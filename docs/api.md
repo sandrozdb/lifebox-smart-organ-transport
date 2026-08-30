@@ -1,12 +1,19 @@
 # API REST
 
-Base local: `http://localhost:3000/api`. Payloads são JSON. Erros seguem:
+Bases disponíveis:
+
+- produção: `https://lifebox-expotech.onrender.com/api`;
+- local: `http://localhost:3000/api`.
+
+Payloads são JSON. Erros seguem:
 
 ```json
 { "error": "Mensagem segura", "code": "MACHINE_READABLE_CODE", "details": {} }
 ```
 
 Erros previsíveis usam `400` (estrutura/ID inválido), `404` (recurso ausente), `409` (conflito de estado) ou `422` (campo semanticamente inválido). Stack, SQL, caminhos locais e credenciais não são retornados.
+
+A URL pública é uma demonstração acadêmica. Não envie dados clínicos, pessoais ou operacionais sensíveis.
 
 ## Saúde e qualidade
 
@@ -15,6 +22,8 @@ Erros previsíveis usam `400` (estrutura/ID inválido), `404` (recurso ausente),
 | `GET /health`    | Verificar API e, com driver MySQL, conexão.   | `200`; `503 SERVICE_UNAVAILABLE`.                      |
 | `GET /qualidade` | Último resultado de QA registrado localmente. | `200`; pode ser `PENDENTE` antes da primeira execução. |
 
+Health público: `https://lifebox-expotech.onrender.com/api/health`.
+
 ## Planejamento principal
 
 | Método e path                     | Entrada                                                                | Resultado                                                       |
@@ -22,7 +31,7 @@ Erros previsíveis usam `400` (estrutura/ID inválido), `404` (recurso ausente),
 | `GET /planejamento/perfis`        | —                                                                      | Perfis de órgãos.                                               |
 | `GET /planejamento/perfis/:code`  | Código como `HEART`.                                                   | `200`; `404` se ausente.                                        |
 | `GET /planejamento/cenarios`      | —                                                                      | Cenários acadêmicos.                                            |
-| `POST /planejamento/geocodificar` | `{ "query": "...", "role": "origin" }`                                 | Ponto conhecido/simulado; `400/422` se inválido.                |
+| `POST /planejamento/geocodificar` | `{ "query": "...", "role": "origin" }`                         | Ponto conhecido/simulado; `400/422` se inválido.                |
 | `POST /planejamento/calcular`     | `organCode`, `origin`, `destination`, `consumedMinutes`, `conditions`. | Alternativas, restrições, factibilidade e plano de menor custo. |
 
 Exemplo mínimo:
@@ -51,7 +60,7 @@ Exemplo mínimo:
 | `GET /transportes/:id/rastreabilidade`     | Plano, posição e progresso.                                         | `200`, `404`                        |
 | `GET /transportes/:id/resumo`              | Resumo da execução atual/concluída.                                 | `200`, `404/409`                    |
 | `POST /telemetria`                         | Registrar leitura de dispositivo/simulador.                         | `201`, `404`, `422`                 |
-| `PATCH /alertas/:id/resolver`              | Resolver alerta.                                                    | `200`, `400`, `404`                 |
+| `PATCH /alertas/:id/resolver`              | Resolver alerta.                                                     | `200`, `400`, `404`                 |
 
 Telemetria exige `transporteId`, `deviceId`, temperatura, umidade, aceleração/impacto, latitude, longitude, velocidade, bateria e sinal. Percentuais aceitam `0–100`.
 
