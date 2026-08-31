@@ -37,16 +37,16 @@ flowchart LR
   CD --> API
 ```
 
-| Container / serviço | Responsabilidade |
-| --- | --- |
-| Dashboard | Planejamento, mapa, telemetria, alertas, Física, Eletrônica, logística e resumo. |
-| API Express no Render | Validação HTTP, regras, coordenação dos casos de uso e respostas JSON. |
-| ESP32 / Wokwi | Lê sensores, envia telemetria e aplica `digitalSignal`/perfil recebidos. |
-| Simulador DEMO | Gera telemetria acadêmica quando o modo não é IOT. |
-| Aiven for MySQL | Estado durável de transportes, leituras, alertas, timeline e resumos. |
-| Repository em memória | Testes rápidos e determinísticos; não é banco de produção. |
-| GitHub Actions | Integração contínua e validações automatizadas. |
-| Render Auto Deploy | Entrega contínua da branch `main` no serviço público. |
+| Container / serviço   | Responsabilidade                                                                 |
+| --------------------- | -------------------------------------------------------------------------------- |
+| Dashboard             | Planejamento, mapa, telemetria, alertas, Física, Eletrônica, logística e resumo. |
+| API Express no Render | Validação HTTP, regras, coordenação dos casos de uso e respostas JSON.           |
+| ESP32 / Wokwi         | Lê sensores, envia telemetria e aplica `digitalSignal`/perfil recebidos.         |
+| Simulador DEMO        | Gera telemetria acadêmica quando o modo não é IOT.                               |
+| Aiven for MySQL       | Estado durável de transportes, leituras, alertas, timeline e resumos.            |
+| Repository em memória | Testes rápidos e determinísticos; não é banco de produção.                       |
+| GitHub Actions        | Integração contínua e validações automatizadas.                                  |
+| Render Auto Deploy    | Entrega contínua da branch `main` no serviço público.                            |
 
 ## Componentes do backend
 
