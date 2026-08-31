@@ -354,7 +354,12 @@ function updateSimulationControls(simulation, transport) {
   }
 }
 function updateIotControls(iot) {
-  const mode = iot.mode || "IOT";
+  const mode = iot.mode || "IOT",
+    demoMode = mode === "DEMO",
+    boxScenarioGroup = document
+      .querySelector("[data-scenario]")
+      ?.closest(".scenario-group"),
+    modeMessage = $("#scenario-mode-message");
   window.lifeBoxIotMode = mode;
   $("#iot-mode").value = mode;
   syncSourceSelector();
@@ -364,13 +369,16 @@ function updateIotControls(iot) {
   $("#esp32-status").classList.toggle("online", Boolean(iot.online));
   $("#telemetry-status").textContent =
     mode === "IOT" ? "TELEMETRIA AO VIVO" : "TELEMETRIA DEMONSTRAÇÃO";
-  $(".scenario-controls").classList.toggle("mode-disabled", mode !== "DEMO");
-  $("#scenario-mode-message").hidden = mode === "DEMO";
-  document
-    .querySelectorAll("[data-scenario], [data-logistic]")
-    .forEach((control) => {
-      control.disabled = mode !== "DEMO";
-    });
+  boxScenarioGroup?.classList.toggle("mode-disabled", !demoMode);
+  if (modeMessage) {
+    modeMessage.hidden = demoMode;
+    modeMessage.textContent = demoMode
+      ? ""
+      : "No modo IoT, as condições da caixa vêm do ESP32/Wokwi. Condições logísticas permanecem disponíveis para o operador.";
+  }
+  document.querySelectorAll("[data-scenario]").forEach((control) => {
+    control.disabled = !demoMode;
+  });
 }
 window.lifeBoxSnapExecutionTracking = (tracking) => {
   if (!tracking?.current || !map) return;
