@@ -34,7 +34,7 @@ test("IoT mantém ações operacionais e bloqueia apenas cenários", async ({
   await expect(page.locator("#iot-mode-button")).toContainText("ESP32 / WOKWI");
   await expect(page.locator("#scenario-mode-message")).toBeVisible();
   await expect(page.locator('[data-scenario="impacto"]')).toBeDisabled();
-  await expect(page.locator('[data-logistic="traffic30"]')).toBeDisabled();
+  await expect(page.locator('[data-logistic="traffic30"]')).toBeEnabled();
   await expect(page.locator('[data-action="start"]')).toBeEnabled();
   await expect(page.locator('[data-action="reset"]')).toBeEnabled();
   await expect(page.locator('[data-action="finish"]')).toBeEnabled();
