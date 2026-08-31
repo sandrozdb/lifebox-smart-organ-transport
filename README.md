@@ -18,19 +18,19 @@ LifeBox é um sistema acadêmico de apoio à decisão, rastreabilidade e monitor
 
 **MVP acadêmico concluído e validado de ponta a ponta.** O fluxo IoT está integrado ao backend público: o ESP32/Wokwi envia telemetria real do simulador para o Render, o backend vincula cada leitura à execução ativa, persiste no Aiven for MySQL e atualiza dashboard, gráficos, Física e resumo final. Condições logísticas continuam disponíveis no modo IoT e podem acionar a reotimização sem transformar eventos operacionais em telemetria artificial.
 
-| Área | Tecnologia / estado |
-| --- | --- |
-| Backend | Node.js 20 / Express em Docker no Render |
-| IoT | ESP32 no Wokwi Web, DHT22, MPU6050, GPS NEO-6M, OLED, LED e buzzer |
-| Banco | Aiven for MySQL gerenciado, persistência por execução e TLS/CA |
-| Frontend e mapa | HTML, CSS, JavaScript, Leaflet / OpenStreetMap |
-| Pesquisa Operacional | planejamento multimodal, restrições e reotimização confirmada |
-| Física | análise dinâmica da execução com telemetria vinculada |
-| Eletrônica | lógica digital + Logisim + atuadores virtuais/IoT |
-| Testes | `node:test`, c8, Playwright E2E e integração MySQL |
-| Arquitetura | C4 Context/Container, Strategy, Observer e SOLID documentado |
-| CI/CD | GitHub Actions + Auto Deploy do Render na `main` |
-| Cloud | HTTPS público + Render + Aiven MySQL + secrets fora do repositório |
+| Área                 | Tecnologia / estado                                                |
+| -------------------- | ------------------------------------------------------------------ |
+| Backend              | Node.js 20 / Express em Docker no Render                           |
+| IoT                  | ESP32 no Wokwi Web, DHT22, MPU6050, GPS NEO-6M, OLED, LED e buzzer |
+| Banco                | Aiven for MySQL gerenciado, persistência por execução e TLS/CA     |
+| Frontend e mapa      | HTML, CSS, JavaScript, Leaflet / OpenStreetMap                     |
+| Pesquisa Operacional | planejamento multimodal, restrições e reotimização confirmada      |
+| Física               | análise dinâmica da execução com telemetria vinculada              |
+| Eletrônica           | lógica digital + Logisim + atuadores virtuais/IoT                  |
+| Testes               | `node:test`, c8, Playwright E2E e integração MySQL                 |
+| Arquitetura          | C4 Context/Container, Strategy, Observer e SOLID documentado       |
+| CI/CD                | GitHub Actions + Auto Deploy do Render na `main`                   |
+| Cloud                | HTTPS público + Render + Aiven MySQL + secrets fora do repositório |
 
 **Links rápidos:** [IoT](docs/iot.md) · [Arquitetura](docs/architecture.md) · [Cloud](docs/cloud.md) · [Pesquisa Operacional](docs/operations-research.md) · [API](docs/api.md) · [QA](docs/testing-and-qa.md) · [Demo](docs/demo-guide.md) · [Evidências](docs/evidencias/README.md) · [Requisitos](docs/academic-requirements.md) · [Eletrônica](docs/electronics.md) · [Física](docs/physics.md)
 
@@ -88,14 +88,14 @@ A arquitetura real, C4 Context/Container, sequência da reotimização, Strategy
 
 ## Disciplinas integradas
 
-| Frente | Implementação | Dashboard / documento |
-| --- | --- | --- |
-| Pesquisa Operacional | plano multimodal, restrições e reotimização | planejamento e mapa |
-| Física | cálculos didáticos da execução atual | Análise Física expansível |
-| Eletrônica | `digitalAlertLogic`, ESP32/Wokwi e Logisim | atuadores e sinais lógicos |
-| Arquitetura | C4, Strategy, Observer, SOLID | painel técnico e documentação |
-| QA | check, lint, testes, coverage, E2E e CI | documentação de QA |
-| Cloud | Render + Aiven + TLS + CI/CD | status real: concluído |
+| Frente               | Implementação                               | Dashboard / documento         |
+| -------------------- | ------------------------------------------- | ----------------------------- |
+| Pesquisa Operacional | plano multimodal, restrições e reotimização | planejamento e mapa           |
+| Física               | cálculos didáticos da execução atual        | Análise Física expansível     |
+| Eletrônica           | `digitalAlertLogic`, ESP32/Wokwi e Logisim  | atuadores e sinais lógicos    |
+| Arquitetura          | C4, Strategy, Observer, SOLID               | painel técnico e documentação |
+| QA                   | check, lint, testes, coverage, E2E e CI     | documentação de QA            |
+| Cloud                | Render + Aiven + TLS + CI/CD                | status real: concluído        |
 
 Veja [requisitos acadêmicos](docs/academic-requirements.md).
 
