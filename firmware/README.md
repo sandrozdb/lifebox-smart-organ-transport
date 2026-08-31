@@ -26,15 +26,15 @@ O Wokwi instala as dependências declaradas em `libraries.txt`. Este projeto nã
 
 ## Pinagem
 
-| Componente | Sinal | ESP32 |
-|---|---|---|
-| DHT22 | Dados | GPIO 14 |
-| MPU6050 | SDA / SCL | GPIO 21 / GPIO 22 |
-| OLED SSD1306 | SDA / SCL | GPIO 21 / GPIO 22 |
-| GPS NEO-6M | TX / RX | RX2 GPIO 16 / TX2 GPIO 17 |
-| LED | Ânodo | GPIO 25 |
-| Buzzer | Sinal | GPIO 26 |
-| Bateria simulada | ADC | GPIO 34 |
+| Componente       | Sinal     | ESP32                     |
+| ---------------- | --------- | ------------------------- |
+| DHT22            | Dados     | GPIO 14                   |
+| MPU6050          | SDA / SCL | GPIO 21 / GPIO 22         |
+| OLED SSD1306     | SDA / SCL | GPIO 21 / GPIO 22         |
+| GPS NEO-6M       | TX / RX   | RX2 GPIO 16 / TX2 GPIO 17 |
+| LED              | Ânodo     | GPIO 25                   |
+| Buzzer           | Sinal     | GPIO 26                   |
+| Bateria simulada | ADC       | GPIO 34                   |
 
 Todos os módulos compartilham alimentação e terra conforme `diagram.json`.
 

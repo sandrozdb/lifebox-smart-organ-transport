@@ -1108,9 +1108,7 @@ test("firmware exibe perfil sem substituir DHT nem decidir os atuadores", () => 
   assert.ok(firmware.includes('signal["ledOn"]'));
   assert.ok(firmware.includes('signal["buzzerOn"]'));
   assert.ok(firmware.includes("climate.temperature"));
-  assert.ok(
-    firmware.includes('payload["temperatura"] = climate.temperature'),
-  );
+  assert.ok(firmware.includes('payload["temperatura"] = climate.temperature'));
   assert.ok(firmware.includes('if (backendMode != "IOT")'));
   assert.ok(firmware.includes("bool waitForGps()"));
   assert.ok(firmware.includes("void showDiagnostic("));
@@ -1128,9 +1126,7 @@ test("firmware exibe perfil sem substituir DHT nem decidir os atuadores", () => 
   );
   assert.ok(firmware.includes('payload["timestamp"] = timestamp'));
   assert.ok(!firmware.includes('payload["timestamp"] = String(millis())'));
-  assert.ok(
-    firmware.includes("[TELEMETRIA] BLOQUEADA: HORARIO UTC INVALIDO"),
-  );
+  assert.ok(firmware.includes("[TELEMETRIA] BLOQUEADA: HORARIO UTC INVALIDO"));
   assert.ok(firmware.includes("constexpr uint8_t DHT_PIN = 14"));
   assert.ok(firmware.includes("GPS_RX_PIN = 16"));
   assert.ok(firmware.includes("GPS_TX_PIN = 17"));
