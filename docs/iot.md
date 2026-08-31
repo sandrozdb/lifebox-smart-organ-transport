@@ -104,12 +104,12 @@ ALERTA = TRANSPORTE_ATIVO AND (TEMPERATURA_CRITICA OR IMPACTO_CRITICO)
 
 ## Endpoints IoT
 
-| Método | Endpoint | Uso |
-| --- | --- | --- |
-| `GET` | `/api/iot/status?deviceId=...` | estado consultado pelo ESP32 |
-| `PUT` | `/api/iot/mode` | alterna `IOT` / `DEMO` |
-| `PUT` | `/api/iot/profile` | publica perfil térmico ativo |
-| `POST` | `/api/telemetria` | recebe leitura física/simulada |
+| Método | Endpoint                       | Uso                            |
+| ------ | ------------------------------ | ------------------------------ |
+| `GET`  | `/api/iot/status?deviceId=...` | estado consultado pelo ESP32   |
+| `PUT`  | `/api/iot/mode`                | alterna `IOT` / `DEMO`         |
+| `PUT`  | `/api/iot/profile`             | publica perfil térmico ativo   |
+| `POST` | `/api/telemetria`              | recebe leitura física/simulada |
 
 ## Persistência no Aiven
 
