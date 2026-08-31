@@ -1,93 +1,111 @@
 # Evidências visuais — LifeBox
 
-As 20 imagens do dashboard foram recapturadas do zero em 29/08/2026 na aplicação real em `http://localhost:3000`, com viewport preferencial de 1920×1080 e zoom de 100%. Os arquivos têm assinatura PNG nativa; não foram usados mockups nem geração de imagens para simular estados.
+Este diretório reúne duas camadas de evidência:
 
-Essas imagens formam a **baseline pré-cloud** da interface. A funcionalidade principal, PO, Física, Eletrônica, arquitetura e QA permanecem válidas; a evidência `20-cloud-status.png` registra propositalmente o estado anterior ao deploy e hoje deve ser tratada como histórica.
+1. **baseline histórica pré-cloud**, com 20 capturas reais do dashboard feitas em 29/08/2026;
+2. **pacote final IoT + Cloud**, com pastas e nomes já preparados para receber as novas capturas reais.
 
-Os mapas foram validados com Leaflet inicializado e tiles reais do OpenStreetMap completos (`naturalWidth = 256`). Sensores, instituições, tempos, custos, rotas e ocorrências permanecem identificados como dados simulados ou premissas acadêmicas.
+As imagens históricas continuam válidas para demonstrar PO, Física, Eletrônica, arquitetura, QA, rastreabilidade, alertas e reotimização. A captura antiga `20-cloud-status.png` representa propositalmente o estado anterior ao deploy e não deve ser usada como prova do ambiente atual.
 
-## 1. Operação e rastreabilidade
+## Pacote final — pronto para upload
 
-- [01 — Dashboard normal](dashboard/01-dashboard-normal.png): visão completa da execução terrestre, com telemetria, mapa, plano e resumo final.
-- [04 — Transporte em andamento](dashboard/04-transporte-andamento.png): comprova marcador deslocado, percurso, distância percorrida/restante, tempo e isquemia.
-- [13 — Isquemia e tempo](dashboard/13-isquemia-tempo.png): enquadra o relógio logístico, o limite máximo e a margem restante.
+- [IoT / Wokwi](iot/README.md): ESP32, telemetria, gráficos, Física, logística, reotimização e resumo final.
+- [Cloud](cloud/README.md): Render, Aiven, health check, CI e dashboard público.
+- [Checklist geral](../evidence-checklist.md): estado de cada frente e capturas ainda não versionadas.
 
-## 2. Pesquisa Operacional
+## Ambiente atual
 
-- [02 — Plano terrestre](dashboard/02-po-terrestre.png): comprova órgão, preservação, custo, tempo, margem, plano ótimo e alternativas factíveis.
-- [03 — Base científica](dashboard/03-base-cientifica.png): comprova órgão, faixa térmica, alvo acadêmico, janela de isquemia, margem e fontes oficial/científica.
+- Dashboard/Backend: `https://lifebox-expotech-iot-test.onrender.com`
+- Health check: `https://lifebox-expotech-iot-test.onrender.com/api/health`
+- Wokwi: `https://wokwi.com/projects/473749722940837889`
+- Banco: Aiven for MySQL com TLS/CA
+- CI: GitHub Actions; CI #84 verde em 31/08/2026
 
-## 3. Multimodalidade
+## Baseline pré-cloud — 20 capturas
 
-- [05 — Plano aéreo multimodal](dashboard/05-plano-aereo-multimodal.png): comprova Terrestre + Avião + Terrestre para longa distância, nunca avião isolado.
-- [06 — Aeroportos no mapa](dashboard/06-aeroportos-mapa.png): comprova segmentos e identificação dos aeroportos SBSP/SBBR.
-- [07 — Helicóptero + avião](dashboard/07-helicoptero-aviao.png): comprova o plano crítico Helicóptero + Avião + Terrestre e seus segmentos.
+As imagens abaixo foram recapturadas da aplicação real local, preferencialmente em 1920×1080, zoom 100%, sem mockup e sem geração artificial de estados.
 
-## 4. Alertas e atuadores
+### 1. Operação e rastreabilidade
 
-- [08 — Temperatura crítica](dashboard/08-alerta-temperatura.png): comprova faixa violada, ocorrência, LED ligado e buzzer ativo.
-- [09 — Impacto crítico](dashboard/09-alerta-impacto.png): comprova leitura de 4,40 g, ocorrência, LED ligado e buzzer ativo.
-- [10 — Atraso operacional](dashboard/10-alerta-atraso.png): comprova motivo operacional com LED e buzzer desligados, separando atraso de alerta crítico.
+- [01 — Dashboard normal](dashboard/01-dashboard-normal.png)
+- [04 — Transporte em andamento](dashboard/04-transporte-andamento.png)
+- [13 — Isquemia e tempo](dashboard/13-isquemia-tempo.png)
 
-## 5. Reotimização
+### 2. Pesquisa Operacional
 
-- [11 — Reotimização recomendada](dashboard/11-reotimizacao-recomendada.png): comprova transporte terrestre indisponível, plano recomendado, motivo e decisão manual.
-- [12 — Reotimização aplicada](dashboard/12-reotimizacao-aplicada.png): comprova aplicação do plano Helicóptero porta a porta com posição, caminho, tempo e isquemia preservados.
+- [02 — Plano terrestre](dashboard/02-po-terrestre.png)
+- [03 — Base científica](dashboard/03-base-cientifica.png)
 
-## 6. Física
+### 3. Multimodalidade
 
-- [14 — Análise física](dashboard/14-fisica.png): comprova ΔT, taxa térmica, Q, aceleração, pico, potência, energia e autonomia.
+- [05 — Plano aéreo multimodal](dashboard/05-plano-aereo-multimodal.png)
+- [06 — Aeroportos no mapa](dashboard/06-aeroportos-mapa.png)
+- [07 — Helicóptero + avião](dashboard/07-helicoptero-aviao.png)
 
-## 7. Eletrônica e lógica digital
+### 4. Alertas e atuadores
 
-- [15 — Lógica digital](dashboard/15-logica-digital.png): comprova entradas binárias, equação, saída, LED e buzzer no cenário crítico.
-- [Circuito no Logisim](eletronica/README.md): preserva as quatro evidências válidas de estado normal, temperatura crítica, impacto crítico e transporte inativo.
+- [08 — Temperatura crítica](dashboard/08-alerta-temperatura.png)
+- [09 — Impacto crítico](dashboard/09-alerta-impacto.png)
+- [10 — Atraso operacional](dashboard/10-alerta-atraso.png)
 
-## 8. Arquitetura
+### 5. Reotimização
 
-- [19 — Arquitetura do sistema](dashboard/19-arquitetura-status.png): comprova Frontend → API Express → Serviços → Repository → MySQL, Strategy e Observer na baseline pré-cloud.
-- [Arquitetura atual](../architecture.md): documenta Render Web Service, Aiven for MySQL, CI e Auto Deploy no C4 atualizado.
+- [11 — Reotimização recomendada](dashboard/11-reotimizacao-recomendada.png)
+- [12 — Reotimização aplicada](dashboard/12-reotimizacao-aplicada.png)
 
-## 9. Qualidade e testes
+### 6. Física
 
-- [18 — Status de QA](dashboard/18-qa-status.png): registra o painel de QA após a suíte Node e a aprovação dos quatro cenários E2E; os resultados completos estão em `docs/testing-and-qa.md`.
-- [CI/CD atual](../ci-cd.md): registra GitHub Actions e Auto Deploy do Render validados.
+- [14 — Análise física](dashboard/14-fisica.png)
 
-## 10. Cloud e infraestrutura
+### 7. Eletrônica e lógica digital
 
-- [20 — Status de infraestrutura pré-cloud](dashboard/20-cloud-status.png): snapshot histórico feito antes do deploy; comprova o ponto de partida local e não representa o estado atual.
-- **Deploy público atual:** https://lifebox-expotech.onrender.com
-- **Health check:** https://lifebox-expotech.onrender.com/api/health
-- **Backend:** Docker/Node.js/Express no Render.
-- **Banco:** Aiven for MySQL gerenciado, conexão TLS com CA.
-- **Persistência:** validada após redeploy com `SEED_DEMO_DATA=false`.
-- **CD:** Auto Deploy validado quando o Render saiu de `d67f134` para `3365233` após push na `main`, sem `Manual Deploy`.
-- **CI:** GitHub Actions aprovado nos commits da etapa Cloud.
+- [15 — Lógica digital](dashboard/15-logica-digital.png)
+- [Circuito no Logisim](eletronica/README.md)
 
-A documentação consolidada está em [`../cloud.md`](../cloud.md), [`../ci-cd.md`](../ci-cd.md) e [`../deployment-checklist.md`](../deployment-checklist.md).
+### 8. Arquitetura e QA
 
-## 11. Resumos finais
+- [18 — Status de QA](dashboard/18-qa-status.png)
+- [19 — Arquitetura do sistema](dashboard/19-arquitetura-status.png)
 
-- [16 — Execução normal](dashboard/16-resumo-final-normal.png): comprova nova viagem sem ocorrências, sensores normais e atuadores desligados.
-- [17 — Execução com ocorrências](dashboard/17-resumo-final-ocorrencias.png): comprova impacto, alertas únicos, reotimização e resumo isolado da execução atual.
+Essas capturas são históricas. A arquitetura e o QA atuais estão em [`../architecture.md`](../architecture.md) e [`../testing-and-qa.md`](../testing-and-qa.md).
 
-## Metadados da captura
+### 9. Cloud histórica
+
+- [20 — Status de infraestrutura pré-cloud](dashboard/20-cloud-status.png)
+
+Essa imagem **não representa o estado atual**. Para a prova atual de Cloud, use a pasta [`cloud/`](cloud/README.md).
+
+### 10. Resumos finais
+
+- [16 — Execução normal](dashboard/16-resumo-final-normal.png)
+- [17 — Execução com ocorrências](dashboard/17-resumo-final-ocorrencias.png)
+
+## Estado final já validado, aguardando apenas captura
+
+- [x] ESP32/Wokwi conectado ao Render.
+- [x] Telemetria IoT persistida no Aiven.
+- [x] Leituras vinculadas à execução ativa pelo backend.
+- [x] Gráficos IoT preenchidos.
+- [x] Análise Física IoT funcionando.
+- [x] Resumo final IoT com agregados da execução.
+- [x] Condições Logísticas disponíveis no modo IOT.
+- [x] Reotimização e mudança de rota funcionando em IOT.
+- [x] Render público e health check funcionando.
+- [x] Aiven for MySQL conectado via TLS.
+- [x] CI/CD validados.
+- [ ] Capturas finais IoT adicionadas em `docs/evidencias/iot/`.
+- [ ] Capturas finais Cloud adicionadas em `docs/evidencias/cloud/`.
+
+## Metadados da baseline histórica
 
 | Arquivos | Dimensão | Formato | Escala |
 | --- | ---: | --- | ---: |
 | 01–17 | 1920×1080 | PNG nativo | 100% |
-| 18–19 | 445×181, recorte focal nativo | PNG nativo | 100% |
-| 20 | 446×181, recorte focal nativo | PNG nativo | 100% |
+| 18–19 | recorte focal nativo | PNG nativo | 100% |
+| 20 | recorte focal nativo | PNG nativo | 100% |
 
-## Validação executada
+## Validação atual
 
-- `npm run check`: aprovado;
-- `npm test`: 95 descobertos, 94 aprovados, 0 falhas e 1 integração MySQL condicional ignorada na execução local;
-- `npm run coverage`: 87,59% de linhas/instruções, 80,82% de branches e 93,16% de funções na baseline pré-cloud;
-- `npm run e2e`: 4/4 cenários aprovados, incluindo aplicação segura da reotimização com `recommendationId` server-side;
-- cenários adicionais auditados manualmente no dashboard real;
-- console do navegador sem erro crítico;
-- health check HTTP 200;
-- 20/20 imagens abertas e validadas como PNG nativo na baseline de 29/08/2026;
-- quatro evidências válidas do Logisim, com o estado normal recapturado como 1,0,0 → saída 0;
-- backend público, Aiven MySQL, TLS, persistência, CI e Auto Deploy validados posteriormente na etapa Cloud.
+A CI #84 terminou verde em 31/08/2026. A suíte Node descobriu 108 testes, com 107 aprovados, 0 falhas e 1 integração condicional ignorada nessa etapa; o Playwright aprovou 5/5 fluxos E2E. O fechamento atual também foi validado manualmente no dashboard público com Wokwi ativo.
+
+Documentação consolidada: [`../iot.md`](../iot.md), [`../cloud.md`](../cloud.md), [`../ci-cd.md`](../ci-cd.md), [`../deployment-checklist.md`](../deployment-checklist.md) e [`../testing-and-qa.md`](../testing-and-qa.md).
