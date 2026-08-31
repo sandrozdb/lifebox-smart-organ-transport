@@ -27,36 +27,48 @@ jobs:
         run: |
           python - <<'PY'
           from pathlib import Path
+          import re
 
           dashboard = Path('public/js/dashboard.js')
           text = dashboard.read_text(encoding='utf-8')
 
-          old = 'if (!response.ok) throw new Error(data.erro || "Falha na operação");'
-          new = 'if (!response.ok) throw new Error(data.error || data.erro || "Falha na operação");'
-          assert old in text
-          text = text.replace(old, new, 1)
+          text, count = re.subn(
+              r'if \(!response\.ok\) throw new Error\(data\.erro \|\| "Falha na operação"\);',
+              'if (!response.ok) throw new Error(data.error || data.erro || "Falha na operação");',
+              text,
+              count=1,
+          )
+          assert count == 1, count
 
           selector = '".demo-panel button, .demo-panel select"'
           assert text.count(selector) == 2, text.count(selector)
           text = text.replace(selector, '".scenario-group button, .finish-transport"')
 
-          old = '''  } else {
-            start.disabled = !window.lifeBoxCurrentPlan;
-            start.textContent = "▶ INICIAR TRANSPORTE";'''
-          new = '''  } else {
-            const availablePlan =
-              window.lifeBoxCurrentPlan || window.lifeBoxPlanningResult?.selected || null;
-            if (!window.lifeBoxCurrentPlan && availablePlan)
-              window.lifeBoxCurrentPlan = availablePlan;
-            start.disabled = !availablePlan;
-            start.textContent = "▶ INICIAR TRANSPORTE";'''
-          assert old in text
-          text = text.replace(old, new, 1)
+          text, count = re.subn(
+              r'(\s*} else \{\n)(\s*)start\.disabled = !window\.lifeBoxCurrentPlan;\n\2start\.textContent = "▶ INICIAR TRANSPORTE";',
+              lambda m: (
+                  m.group(1)
+                  + m.group(2)
+                  + 'const availablePlan =\n'
+                  + m.group(2)
+                  + '  window.lifeBoxCurrentPlan || window.lifeBoxPlanningResult?.selected || null;\n'
+                  + m.group(2)
+                  + 'if (!window.lifeBoxCurrentPlan && availablePlan)\n'
+                  + m.group(2)
+                  + '  window.lifeBoxCurrentPlan = availablePlan;\n'
+                  + m.group(2)
+                  + 'start.disabled = !availablePlan;\n'
+                  + m.group(2)
+                  + 'start.textContent = "▶ INICIAR TRANSPORTE";'
+              ),
+              text,
+              count=1,
+          )
+          assert count == 1, count
 
-          old = '''    if (action) {
-              if (
-                action === "start" &&'''
-          new = '''    if (action) {
+          needle = '    if (action) {\n      if (\n        action === "start" &&'
+          assert needle in text
+          replacement = '''    if (action) {
               if (
                 action === "start" &&
                 !window.lifeBoxCurrentPlan &&
@@ -65,47 +77,45 @@ jobs:
                 window.lifeBoxCurrentPlan = window.lifeBoxPlanningResult.selected;
               if (
                 action === "start" &&'''
-          assert old in text
-          text = text.replace(old, new, 1)
+          text = text.replace(needle, replacement, 1)
 
-          old = '''            transporteId: transportId,
-                    rotaId: "LOGISTICS_PLAN",'''
-          new = '''            transporteId: transportId,
-                    mode: $("#iot-mode").value,
-                    rotaId: "LOGISTICS_PLAN",'''
-          assert old in text
-          text = text.replace(old, new, 1)
+          needle = '            transporteId: transportId,\n            rotaId: "LOGISTICS_PLAN",'
+          assert needle in text
+          text = text.replace(
+              needle,
+              '            transporteId: transportId,\n            mode: $("#iot-mode").value,\n            rotaId: "LOGISTICS_PLAN",',
+              1,
+          )
           dashboard.write_text(text, encoding='utf-8')
 
           service = Path('src/services/simulationService.js')
           text = service.read_text(encoding='utf-8')
-          old = 'async function start(transporteId = 1, rotaId, plan, result) {'
-          new = 'async function start(transporteId = 1, rotaId, plan, result, sourceMode = "DEMO") {'
-          assert old in text
-          text = text.replace(old, new, 1)
+          needle = 'async function start(transporteId = 1, rotaId, plan, result) {'
+          assert needle in text
+          text = text.replace(
+              needle,
+              'async function start(transporteId = 1, rotaId, plan, result, sourceMode = "DEMO") {',
+              1,
+          )
 
-          old = '''  // Mantém compatibilidade com clientes antigos que iniciam o simulador
-            // diretamente, sem passar primeiro pelo seletor do dashboard.
-            iotState.setMode(iotState.MODES.DEMO);'''
-          new = '''  const requestedMode = String(sourceMode || "DEMO").toUpperCase();
-            if (!Object.values(iotState.MODES).includes(requestedMode))
-              throw httpError(422, "INVALID_IOT_MODE", "Modo deve ser IOT ou DEMO.");
-            iotState.setMode(requestedMode);'''
-          assert old in text
-          text = text.replace(old, new, 1)
+          text, count = re.subn(
+              r'  // Mantém compatibilidade com clientes antigos que iniciam o simulador\n  // diretamente, sem passar primeiro pelo seletor do dashboard\.\n  iotState\.setMode\(iotState\.MODES\.DEMO\);',
+              '  const requestedMode = String(sourceMode || "DEMO").toUpperCase();\n  if (!Object.values(iotState.MODES).includes(requestedMode))\n    throw httpError(422, "INVALID_IOT_MODE", "Modo deve ser IOT ou DEMO.");\n  iotState.setMode(requestedMode);',
+              text,
+              count=1,
+          )
+          assert count == 1, count
           service.write_text(text, encoding='utf-8')
 
           route = Path('src/routes/simulacao.js')
           text = route.read_text(encoding='utf-8')
-          old = '''        req.body.plan,
-                req.body.result,
-              ),'''
-          new = '''        req.body.plan,
-                req.body.result,
-                req.body.mode,
-              ),'''
-          assert old in text
-          text = text.replace(old, new, 1)
+          needle = '        req.body.plan,\n        req.body.result,\n      ),'
+          assert needle in text
+          text = text.replace(
+              needle,
+              '        req.body.plan,\n        req.body.result,\n        req.body.mode,\n      ),',
+              1,
+          )
           route.write_text(text, encoding='utf-8')
           PY
       - name: Validate syntax and lint
