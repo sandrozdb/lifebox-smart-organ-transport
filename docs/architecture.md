@@ -1,13 +1,14 @@
 # Arquitetura da LifeBox
 
-Esta documentação descreve a implementação atual, incluindo o deploy público concluído no Render e o banco gerenciado no Aiven.
+Esta documentação descreve a implementação atual: dashboard público, backend Node.js/Express no Render, Aiven for MySQL, simulador DEMO, ESP32/Wokwi em modo IOT, reotimização e CI/CD.
 
 ## C4 Level 1 — System Context
 
 ```mermaid
 flowchart LR
   OP[Operador logístico] -->|HTTPS| LB[LifeBox\nSistema acadêmico de apoio à decisão\nRender]
-  SIM[Simulador / futura caixa IoT] -->|Telemetria JSON via HTTPS| LB
+  ESP[ESP32 / Wokwi] -->|Telemetria JSON via HTTPS| LB
+  LB -->|Estado / digitalSignal| ESP
   LB -->|Mapa-base e atribuição| OSM[OpenStreetMap]
   LB -->|MySQL/TLS| DATA[(Aiven for MySQL\nBanco gerenciado)]
   GH[GitHub] -->|push na main| RENDER[Render Auto Deploy]
@@ -15,17 +16,19 @@ flowchart LR
   RENDER --> LB
 ```
 
-O operador consulta planejamento, acompanha a execução e confirma uma reotimização. O simulador representa a futura caixa IoT; não há hardware clínico conectado. OpenStreetMap fornece tiles, enquanto rotas, custos, tempos e riscos do MVP são acadêmicos/simulados.
+O operador calcula planos, acompanha a execução, altera condições logísticas e confirma reotimizações. O ESP32/Wokwi envia telemetria ambiental e física, enquanto o backend permanece como fonte de verdade para criticidade, execução, regras digitais e decisão logística.
 
-O deploy oficial está em `https://lifebox-expotech.onrender.com`. A persistência de produção usa Aiven for MySQL com TLS e certificado CA.
+O deploy público atualmente usado pelo firmware está em `https://lifebox-expotech-iot-test.onrender.com`. A persistência usa Aiven for MySQL com TLS e validação de CA.
 
 ## C4 Level 2 — Container
 
 ```mermaid
 flowchart LR
-  OP[Operador] -->|HTTPS| WEB[Dashboard\nHTML, CSS, JavaScript, Leaflet\nservido pelo Express no Render]
+  OP[Operador] -->|HTTPS| WEB[Dashboard\nHTML, CSS, JavaScript, Leaflet\nservido pelo Express]
   WEB -->|JSON REST| API[API Node.js / Express\nRender Web Service]
-  SIM[Simulador Node.js / futuro ESP32] -->|JSON REST via HTTPS| API
+  ESP[ESP32 / Wokwi] -->|Telemetria HTTPS| API
+  API -->|status + digitalSignal| ESP
+  SIM[Simulador DEMO] -->|cenários acadêmicos| API
   API -->|MySQL/TLS| MYSQL[(Aiven for MySQL)]
   API -.->|Contrato equivalente em testes| MEM[(Repository em memória)]
   WEB -->|HTTPS e tiles| OSM[OpenStreetMap]
@@ -34,15 +37,16 @@ flowchart LR
   CD --> API
 ```
 
-| Container / serviço   | Responsabilidade                                                      |
-| --------------------- | --------------------------------------------------------------------- |
-| Dashboard             | Planejamento, mapa, telemetria, alertas, Física, Eletrônica e resumo. |
-| API Express no Render | Validação HTTP, coordenação dos casos de uso e respostas JSON.        |
-| Simulador             | Gera cenários e telemetria acadêmica.                                 |
-| Aiven for MySQL       | Estado durável de transportes, leituras, alertas, timeline e resumos. |
-| Repository em memória | Testes rápidos e determinísticos; não é banco de produção.            |
-| GitHub Actions        | Integração contínua e validações automatizadas.                       |
-| Render Auto Deploy    | Entrega contínua da branch `main` no serviço público.                 |
+| Container / serviço   | Responsabilidade                                                                 |
+| --------------------- | -------------------------------------------------------------------------------- |
+| Dashboard             | Planejamento, mapa, telemetria, alertas, Física, Eletrônica, logística e resumo. |
+| API Express no Render | Validação HTTP, regras, coordenação dos casos de uso e respostas JSON.           |
+| ESP32 / Wokwi         | Lê sensores, envia telemetria e aplica `digitalSignal`/perfil recebidos.         |
+| Simulador DEMO        | Gera telemetria acadêmica quando o modo não é IOT.                               |
+| Aiven for MySQL       | Estado durável de transportes, leituras, alertas, timeline e resumos.            |
+| Repository em memória | Testes rápidos e determinísticos; não é banco de produção.                       |
+| GitHub Actions        | Integração contínua e validações automatizadas.                                  |
+| Render Auto Deploy    | Entrega contínua da branch `main` no serviço público.                            |
 
 ## Componentes do backend
 
@@ -52,18 +56,33 @@ flowchart TB
   ROUTES --> SIMS[Simulation Service]
   ROUTES --> EXEC[ExecutionPlan Service]
   ROUTES --> PHYS[Physics Service]
+  ROUTES --> IOT[IotState Service]
+  ROUTES --> TEL[Telemetry Service]
   PLAN --> STRAT[Modal Planner Strategies]
   STRAT --> GROUND[GroundRouting Provider / Adapter]
   SIMS --> EXEC
-  SIMS --> TEL[Telemetry Service]
+  SIMS --> TEL
   TEL --> SUBJECT[AlertNotifier]
   SUBJECT --> OBS[TimelineAlertObserver]
   TEL --> REPO[Repository contract]
+  PHYS --> REPO
   OBS --> REPO
   REPO --> MYSQL[(MySQL)]
 ```
 
 O diagrama agrupa responsabilidades; não representa um componente para cada arquivo.
+
+## Responsabilidade do backend no IoT
+
+O ESP32 não recebe nem decide `execucao_id`. Ao receber telemetria física, `telemetryService` consulta o transporte e associa a leitura ao `execucao_atual_id` antes da persistência.
+
+Essa decisão server-side evita que um cliente antigo ou adulterado atribua leituras a outra execução. Gráficos, Física e resumo final consultam a telemetria pelo identificador da execução atual.
+
+A separação dos modos é deliberada:
+
+- **IOT:** sensores vêm do ESP32/Wokwi; cenários manuais da caixa ficam bloqueados;
+- **DEMO:** telemetria é gerada pelo simulador;
+- **ambos:** Condições Logísticas permanecem disponíveis ao operador e podem disparar reotimização.
 
 ## Sequência da reotimização
 
@@ -77,12 +96,13 @@ sequenceDiagram
   participant Execution as ExecutionPlanService
   participant Timeline as Repository/Timeline
 
-  Dashboard->>API: ocorrência e condições atuais
+  Operador->>Dashboard: ativa condição logística
+  Dashboard->>API: condições atuais
   API->>Simulation: recomendar(transporte, condições)
   Simulation->>Execution: snapshot atual
   Simulation->>Planning: recalcular da posição/isquemia atuais
   Planning-->>Simulation: plano factível selecionado
-  Simulation-->>Dashboard: recommendationId + resumo da recomendação
+  Simulation-->>Dashboard: recommendationId + resumo
   Dashboard-->>Operador: exibe plano e motivo
   Operador->>Dashboard: confirma aplicação
   Dashboard->>API: recommendationId
@@ -100,12 +120,11 @@ O navegador não é autoridade sobre custo, segmentos, geometria ou modal. A rec
 ## Camadas e fronteiras
 
 - **Routes:** adaptam HTTP, validam IDs/payloads e delegam casos de uso.
-- **Services:** regras de planejamento, simulação, execução, Física e telemetria.
+- **Services:** regras de planejamento, simulação, execução, Física, IoT e telemetria.
 - **Observers:** propagam efeitos secundários de alertas sem acoplar a regra à timeline.
 - **Repositories:** contrato implícito comum às implementações MySQL e memória.
 - **Config:** perfis de órgãos e premissas acadêmicas centralizadas.
-
-O simulador independente usa a API. O modo de demonstração embutido também pode coordenar serviços dentro do processo para manter uma execução simples; essa é uma escolha de MVP, não um microserviço.
+- **Firmware:** coleta e apresentação local; não replica regras do backend.
 
 ## Strategy
 
@@ -115,16 +134,16 @@ O Context é [`organPlanningService.calculate`](../src/services/organPlanningSer
 - `HelicopterTransportStrategy`;
 - `MultimodalAirTransportStrategy`.
 
-Contrato implícito: `plan({ origin, destination, locationProvider, conditions })` retorna uma alternativa ou lista de alternativas com `id`, `name`, `modal`, `modalCode`, `segments` e `requiredInfrastructure`. Testes contratuais verificam a forma comum. [`groundRoutingProvider.js`](../src/services/groundRoutingProvider.js) é um provider/adapter de roteamento terrestre, não a Strategy principal.
+Contrato implícito: `plan({ origin, destination, locationProvider, conditions })` retorna uma alternativa ou lista de alternativas com `id`, `name`, `modal`, `modalCode`, `segments` e `requiredInfrastructure`. Testes contratuais verificam a forma comum. [`groundRoutingProvider.js`](../src/services/groundRoutingProvider.js) é provider/adapter de roteamento terrestre, não a Strategy principal.
 
 ## Observer
 
-[`AlertNotifier`](../src/observers/alertNotifier.js) é Publisher/Subject; [`TimelineAlertObserver`](../src/observers/timelineAlertObserver.js) é Subscriber/Observer. `subscribe` registra o observador e `notify` publica uma ocorrência. Existe um único observer porque ele atende um efeito real; observers artificiais não foram adicionados.
+[`AlertNotifier`](../src/observers/alertNotifier.js) é Publisher/Subject; [`TimelineAlertObserver`](../src/observers/timelineAlertObserver.js) é Subscriber/Observer. `subscribe` registra o observador e `notify` publica uma ocorrência.
 
 ## SOLID — avaliação honesta
 
-- **SRP — parcial/forte:** Física, lógica digital, execução e providers são coesos; `simulationService` ainda é um orquestrador amplo por escolha de MVP.
-- **OCP — forte no planejamento:** modalities e observers podem ser estendidos sem reescrever seus consumidores.
+- **SRP — parcial/forte:** Física, IoT, lógica digital, execução e providers são coesos; `simulationService` ainda é um orquestrador amplo por escolha de MVP.
+- **OCP — forte no planejamento:** modalidades e observers podem ser estendidos sem reescrever seus consumidores.
 - **LSP — demonstrado no limite das Strategies:** todas atendem o mesmo contrato comportamental.
 - **ISP — não formalizado:** JavaScript/CommonJS usa contratos pequenos e implícitos; interfaces fictícias não foram criadas.
 - **DIP — parcial:** memória/MySQL são substituíveis e providers podem ser fornecidos ao planejamento, mas a composição principal ainda seleciona implementações concretas na inicialização.
@@ -132,8 +151,9 @@ Contrato implícito: `plan({ origin, destination, locationProvider, conditions }
 ## Trade-offs e limitações
 
 - `execution plan` e `recommendationId` ativos ficam em memória do processo e podem ser perdidos em reinício; dados persistidos no MySQL permanecem no Aiven;
-- o MVP usa uma única instância gratuita do Render e pode sofrer cold start após inatividade;
-- o Auto Deploy está configurado em `On Commit`: CI e CD partem do mesmo push, mas o deploy não espera obrigatoriamente a conclusão da CI;
+- o plano gratuito do Render pode sofrer cold start após inatividade;
+- o Auto Deploy está em `On Commit`: CI e CD partem do mesmo push, mas o deploy não espera obrigatoriamente a conclusão da CI;
+- o protótipo IoT é virtual no Wokwi, não hardware médico físico ou certificado;
 - rotas, custos, tempos, risco e disponibilidade são acadêmicos/simulados;
-- o serviço é uma demonstração acadêmica pública sem autenticação completa; não deve receber dados clínicos, pessoais ou operacionais sensíveis;
+- o serviço é uma demonstração acadêmica pública sem autenticação completa e não deve receber dados clínicos, pessoais ou operacionais sensíveis;
 - restrição de rede do banco, usuário de menor privilégio, rotação de credenciais, backup avançado e observabilidade são melhorias de hardening futuras.

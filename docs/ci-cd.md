@@ -13,7 +13,19 @@ O workflow em `.github/workflows/ci.yml` é executado em push e pull request. El
 7. teste de integração MySQL;
 8. build do Dockerfile.
 
-A CI do commit de preparação para cloud (`d67f134`) e a do commit que registrou o deploy (`3365233`) foram aprovadas no GitHub Actions.
+## Validação atual
+
+A **CI #84** foi concluída com sucesso em 31/08/2026 após a alteração que liberou Condições Logísticas no modo IOT sem reativar cenários artificiais da caixa.
+
+Nessa execução:
+
+- check, lint e Prettier: aprovados;
+- suíte Node: 108 descobertos, 107 aprovados, 0 falhas e 1 integração condicional ignorada nessa etapa;
+- coverage: 88,28% linhas/instruções, 79,00% branches e 93,71% funções;
+- Playwright: 5/5 fluxos E2E aprovados;
+- integração MySQL: aprovada no job dedicado;
+- build Docker: aprovado;
+- resultado final do workflow: `success`.
 
 ## CD implementado no Render
 
@@ -28,20 +40,28 @@ Fluxo atual:
 5. variáveis e segredos são injetados pelo ambiente do Render;
 6. o serviço inicia com `npm start`;
 7. o health check em `/api/health` valida API e banco;
-8. a aplicação fica disponível em `https://lifebox-expotech.onrender.com`.
+8. a aplicação fica disponível no serviço público atual.
 
-### Validação real do Auto Deploy
+**URL atual usada pelo firmware IoT:** `https://lifebox-expotech-iot-test.onrender.com`.
 
-O serviço estava no commit `d67f134`. Após o push do commit `3365233` (`docs: register production cloud deployment`), o Render atualizou automaticamente para esse commit sem uso de `Manual Deploy`. Isso valida o CD em produção.
+## Validação prática do Auto Deploy
+
+O Auto Deploy já havia sido validado na etapa Cloud inicial e continuou sendo usado durante a integração IoT. A PR #7 foi incorporada à `main` no commit `5db314d`, e o serviço público foi atualizado antes da validação manual do modo IOT + Condições Logísticas + reotimização.
+
+Esse fluxo demonstra entrega contínua real a partir da `main`.
 
 ## Relação entre CI e CD
 
 A configuração atual do Render é `On Commit`. Portanto, CI e CD são disparados pelo mesmo push, mas o deploy não fica obrigatoriamente bloqueado aguardando a conclusão da CI.
 
-Para a entrega acadêmica, isso demonstra CI e CD reais. Como evolução de engenharia, o projeto pode futuramente adotar um gate explícito de CI antes do deploy.
+Para a entrega acadêmica, isso demonstra CI e CD reais. Como evolução de engenharia, o projeto pode adotar um gate explícito de CI antes do deploy.
 
 ## Segredos
 
-Credenciais do Aiven não ficam em workflows públicos nem no repositório. `DB_PASSWORD` e a configuração TLS necessária são fornecidas ao serviço pelo ambiente do Render. O GitHub Actions usa apenas recursos de teste próprios da CI.
+Credenciais do Aiven não ficam em workflows públicos nem no repositório. `DB_PASSWORD`, `DB_SSL_CA` e demais valores sensíveis são fornecidos ao serviço pelo ambiente do Render. O GitHub Actions usa apenas recursos de teste próprios da CI.
+
+## Evidências
+
+A pasta [`evidencias/cloud`](evidencias/cloud/README.md) está preparada para receber capturas do Render, Aiven, GitHub Actions, health check e dashboard publicado sem exposição de segredos.
 
 **Status: CONCLUÍDO E VALIDADO.**
