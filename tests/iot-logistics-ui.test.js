@@ -26,7 +26,10 @@ test("modo IoT bloqueia apenas cenários da caixa", () => {
     updateIotControls,
     /\[data-scenario\], \[data-logistic\]/,
   );
-  assert.doesNotMatch(updateIotControls, /querySelectorAll\("\[data-logistic\]"\)/);
+  assert.doesNotMatch(
+    updateIotControls,
+    /querySelectorAll\("\[data-logistic\]"\)/,
+  );
   assert.match(
     updateIotControls,
     /Condições logísticas permanecem disponíveis para o operador/,
