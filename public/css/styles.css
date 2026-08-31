@@ -294,6 +294,12 @@ body {
   color: var(--muted);
   font-size: 12px;
 }
+
+.metric #temperature {
+  display: inline;
+  color: inherit;
+  font-size: inherit;
+}
 .metric strong {
   display: block;
   font-size: 27px;

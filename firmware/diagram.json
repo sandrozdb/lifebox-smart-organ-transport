@@ -3,75 +3,20 @@
   "author": "Sandro Ferreira",
   "editor": "wokwi",
   "parts": [
-    {
-      "type": "board-esp32-devkit-v1",
-      "id": "esp32",
-      "top": 0,
-      "left": 0,
-      "attrs": {}
-    },
-    {
-      "type": "wokwi-dht22",
-      "id": "dht",
-      "top": -105,
-      "left": 250,
-      "attrs": { "temperature": "4.2", "humidity": "58" }
-    },
-    {
-      "type": "wokwi-mpu6050",
-      "id": "mpu",
-      "top": 115,
-      "left": 250,
-      "attrs": {}
-    },
-    {
-      "type": "wokwi-gps",
-      "id": "gps",
-      "top": 235,
-      "left": 245,
-      "attrs": { "latitude": "-23.5505", "longitude": "-46.6333" }
-    },
-    {
-      "type": "board-ssd1306",
-      "id": "oled",
-      "top": -170,
-      "left": -230,
-      "attrs": { "i2cAddress": "0x3c" }
-    },
-    {
-      "type": "wokwi-led",
-      "id": "led",
-      "top": 90,
-      "left": -210,
-      "attrs": { "color": "red" }
-    },
-    {
-      "type": "wokwi-resistor",
-      "id": "r1",
-      "top": 145,
-      "left": -205,
-      "rotate": 90,
-      "attrs": { "value": "220" }
-    },
-    {
-      "type": "wokwi-buzzer",
-      "id": "buzzer",
-      "top": 210,
-      "left": -210,
-      "attrs": { "volume": "0.1" }
-    },
-    {
-      "type": "wokwi-potentiometer",
-      "id": "battery",
-      "top": 315,
-      "left": -120,
-      "attrs": { "value": "0.63" }
-    }
+    { "type": "board-esp32-devkit-v1", "id": "esp32", "top": 0, "left": 0, "attrs": {} },
+    { "type": "wokwi-dht22", "id": "dht", "top": -143.7, "left": 273, "attrs": { "temperature": "4.0", "humidity": "58" } },
+    { "type": "wokwi-mpu6050", "id": "mpu", "top": 291.82, "left": 136.72, "attrs": {} },
+    { "type": "chip-gps-neo6m", "id": "gps", "top": 231.42, "left": 302.4, "attrs": { "latitude": "-23.5505", "longitude": "-46.6333", "speedKmh": "40" } },
+    { "type": "board-ssd1306", "id": "oled", "top": 243.14, "left": -162.97, "attrs": { "i2cAddress": "0x3c" } },
+    { "type": "wokwi-led", "id": "led", "top": -13.2, "left": -313, "attrs": { "color": "red" } },
+    { "type": "wokwi-resistor", "id": "r1", "top": 129.6, "left": -326.95, "rotate": 90, "attrs": { "value": "220" } },
+    { "type": "wokwi-buzzer", "id": "buzzer", "top": -64.8, "left": -247.8, "attrs": { "volume": "0.1" } },
+    { "type": "wokwi-potentiometer", "id": "battery", "top": -164.5, "left": 19, "attrs": { "value": "0.63" } }
   ],
   "connections": [
     ["esp32:3V3", "dht:VCC", "red", []],
     ["esp32:GND.1", "dht:GND", "black", []],
-    ["esp32:D15", "dht:SDA", "green", []],
+    ["esp32:D14", "dht:SDA", "green", []],
     ["esp32:3V3", "mpu:VCC", "red", []],
     ["esp32:GND.1", "mpu:GND", "black", []],
     ["esp32:D21", "mpu:SDA", "blue", []],
@@ -80,9 +25,10 @@
     ["esp32:GND.1", "oled:GND", "black", []],
     ["esp32:D21", "oled:SDA", "blue", []],
     ["esp32:D22", "oled:SCL", "purple", []],
-    ["gps:TX", "esp32:RX2", "green", []],
     ["gps:VCC", "esp32:3V3", "red", []],
     ["gps:GND", "esp32:GND.1", "black", []],
+    ["gps:TX", "esp32:RX2", "green", []],
+    ["gps:RX", "esp32:TX2", "orange", []],
     ["esp32:D25", "led:A", "red", []],
     ["led:C", "r1:1", "black", []],
     ["r1:2", "esp32:GND.2", "black", []],
@@ -92,5 +38,6 @@
     ["battery:GND", "esp32:GND.2", "black", []],
     ["battery:SIG", "esp32:D34", "green", []]
   ],
+  "serialMonitor": { "display": "always", "collapse": false, "newline": "lf" },
   "dependencies": {}
 }

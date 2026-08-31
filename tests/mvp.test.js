@@ -1098,15 +1098,45 @@ test("API IoT valida, mantém e publica somente o perfil térmico compacto", asy
 });
 test("firmware exibe perfil sem substituir DHT nem decidir os atuadores", () => {
   const firmware = fs.readFileSync(
-    require.resolve("../firmware/esp32-example.ino"),
+    require.resolve("../firmware/sketch.ino"),
     "utf8",
   );
   assert.ok(firmware.includes('response["organ"]'));
+  assert.ok(firmware.includes('organ["code"]'));
+  assert.ok(firmware.includes('organ["referenceRangeC"]'));
+  assert.ok(firmware.includes('organ["targetTemperatureC"]'));
   assert.ok(firmware.includes('signal["ledOn"]'));
   assert.ok(firmware.includes('signal["buzzerOn"]'));
   assert.ok(firmware.includes("climate.temperature"));
-  assert.ok(firmware.includes('payload["temperatura"]=climate.temperature'));
+  assert.ok(
+    firmware.includes('payload["temperatura"] = climate.temperature'),
+  );
+  assert.ok(firmware.includes('if (backendMode != "IOT")'));
+  assert.ok(firmware.includes("bool waitForGps()"));
+  assert.ok(firmware.includes("void showDiagnostic("));
+  assert.ok(firmware.includes("void printHeartbeat()"));
+  assert.ok(firmware.includes("client.setInsecure()"));
+  assert.ok(firmware.includes("HTTPS Wokwi sem validacao de CA"));
+  assert.ok(firmware.includes('configTime(0, 0, "pool.ntp.org"'));
+  assert.ok(firmware.includes("getLocalTime(&utcTime"));
+  assert.ok(firmware.includes("year >= 2024 && year <= 2100"));
+  assert.ok(firmware.includes("!isValidUtcTime(utcTime)"));
+  assert.ok(
+    firmware.includes(
+      'strftime(timestamp, sizeof(timestamp), "%Y-%m-%dT%H:%M:%SZ"',
+    ),
+  );
+  assert.ok(firmware.includes('payload["timestamp"] = timestamp'));
+  assert.ok(!firmware.includes('payload["timestamp"] = String(millis())'));
+  assert.ok(
+    firmware.includes("[TELEMETRIA] BLOQUEADA: HORARIO UTC INVALIDO"),
+  );
+  assert.ok(firmware.includes("constexpr uint8_t DHT_PIN = 14"));
+  assert.ok(firmware.includes("GPS_RX_PIN = 16"));
+  assert.ok(firmware.includes("GPS_TX_PIN = 17"));
   assert.ok(!firmware.includes("organTargetTemperature;payload"));
+  assert.ok(!firmware.includes("temperatureCritical"));
+  assert.ok(!firmware.includes("impactCritical"));
 });
 test("cenário normal respeita a faixa de cada perfil de órgão sem alerta térmico", () => {
   for (const code of [
