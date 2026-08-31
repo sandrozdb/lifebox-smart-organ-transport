@@ -19,7 +19,7 @@ function criticalTemperature(profile, scenarioTick) {
 function generate(state) {
   state.tick += 1;
   const slow = state.scenario === "atraso",
-    profile = state.logistics?.organProfile;
+    profile = state.logistics?.organProfile || state.organProfile;
   state.progress =
     state.logistics?.totalProgress ??
     Math.min(1, state.progress + (slow ? 0.003 : 0.012));
@@ -33,12 +33,8 @@ function generate(state) {
   if (state.scenario === "temperatura")
     temperatura = criticalTemperature(profile, state.scenarioTick);
   if (state.scenario === "umidade")
-    umidade = Math.min(91, 58 + state.scenarioTick * 5);
-  if (
-    state.scenario === "impacto" &&
-    state.scenarioTick >= 1 &&
-    state.scenarioTick <= 3
-  ) {
+    umidade = Math.min(91, 72 + state.scenarioTick * 4);
+  if (state.scenario === "impacto") {
     impacto = 4.4;
     aceleracao = 4.8;
   }

@@ -151,7 +151,7 @@ async function start(id, executionId) {
     transporteId: id,
     executionId: currentExecutionId,
     tipoEvento: "TRANSPORTE_INICIADO",
-    descricao: "Transporte demonstrativo iniciado.",
+    descricao: "Transporte iniciado.",
     latitude: transport.latitude_origem,
     longitude: transport.longitude_origem,
   });
@@ -184,7 +184,7 @@ async function finish(id, snapshot) {
     executionId,
     tipoEvento: "TRANSPORTE_CONCLUIDO",
     descricao:
-      "Transporte demonstrativo concluído. Condições monitoradas e ocorrências registradas.",
+      "Transporte concluído. Condições monitoradas e ocorrências registradas.",
     latitude: transport.latitude_destino,
     longitude: transport.longitude_destino,
   });

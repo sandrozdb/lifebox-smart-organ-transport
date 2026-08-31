@@ -4,7 +4,9 @@ let transportId = 1,
   layers = {},
   trackingAnimationFrame,
   trackingPathLength = 0,
-  dismissedOverlayKey = null;
+  dismissedOverlayKey = null,
+  lastMetricReading = null,
+  activeTemperatureOrgan = null;
 const formatDate = (value) =>
   value
     ? new Intl.DateTimeFormat("pt-BR", {
@@ -55,9 +57,28 @@ function statusVisual(status) {
         : "NORMAL";
   element.className = `status-badge ${critical ? "critical" : attention ? "attention" : "normal"}`;
 }
-function updateMetrics(reading, transport) {
+function renderTemperatureRange(reading, organ) {
+  const card = $("#temperature-card"),
+    detail = $("#temperature-range-status"),
+    state = window.lifeBoxTemperatureRangeState?.(reading?.temperatura, organ);
+  card?.classList.toggle(
+    "temperature-out-of-range",
+    Boolean(state && state.position !== "within"),
+  );
+  const range = organ?.referenceRangeC || organ?.preservation?.referenceRangeC;
+  if (detail)
+    detail.textContent =
+      state?.text ||
+      (range
+        ? `Faixa de referência · ${organ.name} ${range.join("–")} °C`
+        : "Faixa térmica aguardando perfil");
+}
+function updateMetrics(reading, transport, organ = activeTemperatureOrgan) {
   if (!reading) return;
+  lastMetricReading = reading;
+  activeTemperatureOrgan = organ || activeTemperatureOrgan;
   $("#temperature").textContent = Number(reading.temperatura).toFixed(1);
+  renderTemperatureRange(reading, activeTemperatureOrgan);
   $("#humidity").textContent = Number(reading.umidade).toFixed(1);
   $("#impact").textContent = Number(reading.impacto).toFixed(2);
   $("#impact-label").textContent =
@@ -66,6 +87,10 @@ function updateMetrics(reading, transport) {
   $("#signal").textContent = Number(reading.sinal).toFixed(0);
   statusVisual(transport.status);
 }
+window.lifeBoxUpdateTemperatureProfile = (organ) => {
+  activeTemperatureOrgan = organ;
+  renderTemperatureRange(lastMetricReading, organ);
+};
 function updateExecutionMetrics(tracking) {
   const minutes = Math.max(
       0,
@@ -328,6 +353,25 @@ function updateSimulationControls(simulation, transport) {
     $("#sim-status").textContent = "Preparado";
   }
 }
+function updateIotControls(iot) {
+  const mode = iot.mode || "IOT";
+  window.lifeBoxIotMode = mode;
+  $("#iot-mode").value = mode;
+  syncSourceSelector();
+  $("#esp32-status").textContent = iot.online
+    ? "ESP32 ONLINE"
+    : "ESP32 OFFLINE";
+  $("#esp32-status").classList.toggle("online", Boolean(iot.online));
+  $("#telemetry-status").textContent =
+    mode === "IOT" ? "TELEMETRIA AO VIVO" : "TELEMETRIA DEMONSTRAÇÃO";
+  $(".scenario-controls").classList.toggle("mode-disabled", mode !== "DEMO");
+  $("#scenario-mode-message").hidden = mode === "DEMO";
+  document
+    .querySelectorAll("[data-scenario], [data-logistic]")
+    .forEach((control) => {
+      control.disabled = mode !== "DEMO";
+    });
+}
 window.lifeBoxSnapExecutionTracking = (tracking) => {
   if (!tracking?.current || !map) return;
   if (trackingAnimationFrame) {
@@ -509,7 +553,7 @@ async function refresh() {
       transports.find((item) => item.status !== "CONCLUIDO") || transports[0];
     transportId = transport.id;
     window.lifeBoxTransportId = transportId;
-    const [readings, alerts, events, tracking, simulation, physics, qa] =
+    const [readings, alerts, events, tracking, simulation, physics, qa, iot] =
       await Promise.all([
         api(`/api/transportes/${transportId}/leituras?limite=100`),
         api(`/api/transportes/${transportId}/alertas`),
@@ -518,8 +562,10 @@ async function refresh() {
         api("/api/simulacao/status"),
         api(`/api/fisica/${transportId}`),
         api(`/api/qualidade`),
+        api(`/api/iot/status`),
       ]);
     $("#transport-code").textContent = transport.codigo_transporte;
+    updateIotControls(iot);
     updateSimulationControls(simulation, transport);
     window.lifeBoxExecutionActive = Boolean(
       simulation.logistics && transport.status !== "CONCLUIDO",
@@ -535,13 +581,21 @@ async function refresh() {
           modal: simulation.logistics.modal,
         };
     }
-    updateMetrics(readings[0] || simulation.initialTelemetry, transport);
+    const activeReading =
+      iot.mode === "IOT"
+        ? iot.lastReading
+        : simulation.initialTelemetry || readings[0];
+    const activeOrgan =
+      simulation.logistics?.organProfile ||
+      iot.organ ||
+      window.lifeBoxActiveProfile;
+    updateMetrics(activeReading, transport, activeOrgan);
     updateTracking(window.lifeBoxExecutionTracking || tracking);
     drawCharts(readings);
     renderAlerts(alerts);
     renderTimeline(events);
     renderPresentationAlert(transport, alerts);
-    renderActuators(simulation.digitalSignal);
+    renderActuators(iot.digitalSignal || simulation.digitalSignal);
     renderPhysics(physics);
     renderQaStatus(qa);
     if (transport.status === "CONCLUIDO") await renderSummary();
@@ -587,6 +641,7 @@ document.addEventListener("click", async (event) => {
             rotaId: "LOGISTICS_PLAN",
             plan: window.lifeBoxCurrentPlan,
             result: window.lifeBoxPlanningResult,
+            mode: $("#iot-mode").value,
           }),
         },
       );
@@ -599,9 +654,6 @@ document.addEventListener("click", async (event) => {
         window.lifeBoxExecutionActive = false;
         window.lifeBoxActiveExecutionPlan = null;
         window.lifeBoxReoptimizationRecommendation = null;
-        document
-          .querySelectorAll("[data-logistic]")
-          .forEach((button) => (button.disabled = false));
       }
     }
     if (scenario)
@@ -762,6 +814,92 @@ if (projectDetails && finalSummary)
     "afterend",
     projectDetails.closest("section"),
   );
+function syncSourceSelector() {
+  const select = $("#iot-mode"),
+    button = $("#iot-mode-button");
+  if (!select || !button) return;
+  button.querySelector("span").textContent =
+    select.selectedOptions[0]?.textContent || "ESP32 / WOKWI";
+  document
+    .querySelectorAll("#iot-mode-options [role='option']")
+    .forEach((option) =>
+      option.setAttribute(
+        "aria-selected",
+        String(option.dataset.mode === select.value),
+      ),
+    );
+}
+function initSourceSelector() {
+  const select = $("#iot-mode"),
+    button = $("#iot-mode-button"),
+    list = $("#iot-mode-options"),
+    options = [...list.querySelectorAll("[role='option']")];
+  const close = (restoreFocus = false) => {
+    list.hidden = true;
+    button.setAttribute("aria-expanded", "false");
+    if (restoreFocus) button.focus();
+  };
+  const open = () => {
+    list.hidden = false;
+    button.setAttribute("aria-expanded", "true");
+    (
+      options.find((option) => option.dataset.mode === select.value) ||
+      options[0]
+    ).focus();
+  };
+  const choose = (option) => {
+    select.value = option.dataset.mode;
+    syncSourceSelector();
+    close(true);
+    select.dispatchEvent(new Event("change", { bubbles: true }));
+  };
+  button.addEventListener("click", () => (list.hidden ? open() : close()));
+  button.addEventListener("keydown", (event) => {
+    if (["Enter", " ", "ArrowDown"].includes(event.key)) {
+      event.preventDefault();
+      open();
+    } else if (event.key === "Escape") close();
+  });
+  options.forEach((option, index) => {
+    option.addEventListener("click", () => choose(option));
+    option.addEventListener("keydown", (event) => {
+      if (["Enter", " "].includes(event.key)) {
+        event.preventDefault();
+        choose(option);
+      } else if (event.key === "Escape") close(true);
+      else if (["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) {
+        event.preventDefault();
+        const target =
+          event.key === "Home"
+            ? 0
+            : event.key === "End"
+              ? options.length - 1
+              : (index +
+                  (event.key === "ArrowDown" ? 1 : -1) +
+                  options.length) %
+                options.length;
+        options[target].focus();
+      }
+    });
+  });
+  document.addEventListener("click", (event) => {
+    if (!event.target.closest(".source-select")) close();
+  });
+  syncSourceSelector();
+}
+initSourceSelector();
+$("#iot-mode").addEventListener("change", async (event) => {
+  try {
+    await api("/api/iot/mode", {
+      method: "PUT",
+      body: JSON.stringify({ mode: event.target.value }),
+    });
+    dismissedOverlayKey = null;
+    await refresh();
+  } catch (error) {
+    $("#action-feedback").textContent = error.message;
+  }
+});
 refresh();
 setInterval(refresh, 2000);
 window.addEventListener("resize", () => map?.invalidateSize());

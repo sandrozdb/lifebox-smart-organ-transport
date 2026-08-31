@@ -38,6 +38,7 @@ app.use("/api/transportes", require("./routes/transportes"));
 app.use("/api/telemetria", require("./routes/telemetria"));
 app.use("/api/alertas", require("./routes/alertas"));
 app.use("/api/simulacao", require("./routes/simulacao"));
+app.use("/api/iot", require("./routes/iot"));
 app.use("/api/otimizacao", require("./routes/otimizacao"));
 app.use("/api/planejamento", require("./routes/planejamento"));
 app.use("/api/fisica", require("./routes/fisica"));

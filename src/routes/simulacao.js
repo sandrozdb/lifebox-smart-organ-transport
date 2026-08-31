@@ -20,6 +20,7 @@ router.post("/start", async (req, res, next) => {
         req.body.rotaId,
         req.body.plan,
         req.body.result,
+        req.body.mode,
       ),
     );
   } catch (error) {
@@ -53,6 +54,19 @@ router.post("/reset", async (req, res, next) => {
     object(req.body);
     res.json(
       await service.reset(
+        positiveId(req.body.transporteId ?? 1, "transporteId"),
+      ),
+    );
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post("/finish", async (req, res, next) => {
+  try {
+    object(req.body);
+    res.json(
+      await service.finish(
         positiveId(req.body.transporteId ?? 1, "transporteId"),
       ),
     );

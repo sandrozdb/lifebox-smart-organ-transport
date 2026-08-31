@@ -15,6 +15,118 @@
   --brand-red-dark: #e20c16;
   --blue: #49a7ff;
 }
+.metric.temperature-out-of-range {
+  border-color: rgba(255, 83, 103, 0.72);
+  box-shadow:
+    inset 3px 0 0 var(--red),
+    0 0 22px rgba(255, 83, 103, 0.1);
+}
+.metric.temperature-out-of-range #temperature,
+.metric.temperature-out-of-range #temperature-range-status {
+  color: var(--red);
+}
+.iot-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin-left: auto;
+}
+.source-label {
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+}
+.iot-controls .mini-badge {
+  white-space: nowrap;
+}
+.iot-controls .mini-badge.online {
+  color: #38da8a;
+  border-color: rgba(56, 218, 138, 0.45);
+}
+.source-select {
+  position: relative;
+  min-width: 168px;
+}
+.source-select > select {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+.source-select > button {
+  width: 100%;
+  min-height: 42px;
+  padding: 0.55rem 2.25rem 0.55rem 0.8rem;
+  text-align: left;
+  background: #0d1b2a;
+  color: var(--text);
+  border: 1px solid rgba(114, 167, 196, 0.35);
+  border-radius: 10px;
+  font: inherit;
+  font-weight: 700;
+}
+.source-select > button::after {
+  content: "";
+  position: absolute;
+  right: 0.85rem;
+  top: 50%;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-right: 2px solid var(--technical);
+  border-bottom: 2px solid var(--technical);
+  transform: translateY(-70%) rotate(45deg);
+  transition: transform 0.16s ease;
+}
+.source-select > button[aria-expanded="true"] {
+  border-color: var(--technical);
+  box-shadow: 0 0 0 3px rgba(114, 167, 196, 0.12);
+}
+.source-select > button[aria-expanded="true"]::after {
+  transform: translateY(-25%) rotate(225deg);
+}
+.source-select > button:hover,
+.source-select > button:focus-visible {
+  border-color: var(--technical);
+  background: #102538;
+  outline: none;
+}
+.source-options {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  z-index: 1700;
+  padding: 6px;
+  border: 1px solid rgba(114, 167, 196, 0.4);
+  border-radius: 10px;
+  background: #081825;
+  box-shadow: 0 14px 30px #0009;
+}
+.source-options[hidden] {
+  display: none;
+}
+.source-options button {
+  display: block;
+  width: 100%;
+  padding: 0.65rem 0.75rem;
+  text-align: left;
+  background: transparent;
+  border-color: transparent;
+}
+.source-options button:hover,
+.source-options button:focus-visible {
+  background: #102a3e;
+  border-color: rgba(114, 167, 196, 0.3);
+  outline: none;
+  transform: none;
+}
+.source-options button[aria-selected="true"] {
+  color: #fff;
+  background: linear-gradient(90deg, rgba(255, 42, 47, 0.2), transparent);
+  border-color: rgba(255, 42, 47, 0.35);
+}
 * {
   box-sizing: border-box;
 }
@@ -181,6 +293,12 @@ body {
   display: block;
   color: var(--muted);
   font-size: 12px;
+}
+
+.metric #temperature {
+  display: inline;
+  color: inherit;
+  font-size: inherit;
 }
 .metric strong {
   display: block;
@@ -1283,6 +1401,21 @@ button.finish {
   border: 1px solid var(--line);
   border-radius: 10px;
   background: #081825;
+}
+.scenario-controls.mode-disabled .scenario-group {
+  opacity: 0.55;
+}
+.scenario-controls.mode-disabled button {
+  cursor: not-allowed;
+}
+.scenario-controls.mode-disabled button:hover {
+  border-color: var(--line);
+  transform: none;
+}
+.scenario-mode-message {
+  margin: 14px 0 0;
+  color: var(--muted);
+  font-size: 0.78rem;
 }
 .scenario-group .section-label {
   margin-top: 0;

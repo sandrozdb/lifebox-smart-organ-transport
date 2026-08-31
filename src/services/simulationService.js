@@ -9,6 +9,7 @@ const executionPlan = require("./executionPlanService");
 const { generate } = require("../../simulator/sensor-generator");
 const { SCENARIOS } = require("../../simulator/scenarios");
 const { httpError } = require("../utils/httpError");
+const iotState = require("./iotStateService");
 
 const RECOMMENDATION_TTL_MS = 5 * 60 * 1000;
 const recommendations = new Map();
@@ -38,6 +39,7 @@ function freshState(transporteId) {
     routeId: null,
     digitalSignal: { alertOutput: false, ledOn: false, buzzerOn: false },
     executionId: null,
+    organProfile: iotState.activeProfile(),
   };
 }
 
@@ -88,22 +90,29 @@ async function tick() {
     const now = Date.now();
     const elapsedRealSeconds = (now - (state.lastTickAt || now)) / 1000;
     state.lastTickAt = now;
-    state.logistics = executionPlan.advance(
-      state.transporteId,
-      elapsedRealSeconds,
-    );
-    const payload = generate(state);
-    const result = await telemetry.receive(payload);
-    state.digitalSignal = result.digitalSignal;
-    if (state.scenario === "sinal" && state.scenarioTick === 7) {
-      await repository.createEvento({
-        transporteId: state.transporteId,
-        executionId: state.executionId,
-        tipoEvento: "COMUNICACAO_RESTABELECIDA",
-        descricao: "Comunicação simulada restabelecida.",
-        latitude: payload.latitude,
-        longitude: payload.longitude,
-      });
+    if (executionPlan.get(state.transporteId)) {
+      state.logistics = executionPlan.advance(
+        state.transporteId,
+        elapsedRealSeconds,
+      );
+      state.progress = state.logistics.totalProgress;
+    }
+    if (iotState.snapshot().mode === iotState.MODES.DEMO) {
+      state.organProfile =
+        state.logistics?.organProfile || iotState.activeProfile();
+      const payload = generate(state);
+      const result = await telemetry.receive(payload);
+      state.digitalSignal = result.digitalSignal;
+      if (state.scenario === "sinal" && state.scenarioTick === 7) {
+        await repository.createEvento({
+          transporteId: state.transporteId,
+          executionId: state.executionId,
+          tipoEvento: "COMUNICACAO_RESTABELECIDA",
+          descricao: "Comunicação simulada restabelecida.",
+          latitude: payload.latitude,
+          longitude: payload.longitude,
+        });
+      }
     }
     if (state.progress >= 1) {
       const finalSnapshot = executionPlan.finish(state.transporteId);
@@ -115,7 +124,10 @@ async function tick() {
   }
 }
 
-async function start(transporteId = 1, rotaId, plan, result) {
+async function start(transporteId = 1, rotaId, plan, result, mode) {
+  // Mantém compatibilidade com clientes antigos que iniciam o simulador
+  // diretamente, sem passar primeiro pelo seletor do dashboard.
+  iotState.setMode(mode || iotState.MODES.DEMO);
   state.transporteId = Number(transporteId);
   if (!(await repository.getTransporte(state.transporteId)))
     throw httpError(404, "TRANSPORT_NOT_FOUND", "Transporte não encontrado.");
@@ -127,6 +139,8 @@ async function start(transporteId = 1, rotaId, plan, result) {
     );
   if (plan && result)
     state.logistics = executionPlan.freeze(state.transporteId, plan, result);
+  if (state.logistics?.organProfile)
+    iotState.setProfile(state.logistics.organProfile.code);
   state.routeId = String(rotaId);
   const started = await transportService.start(state.transporteId);
   state.executionId = started.execucao_atual_id;
@@ -301,9 +315,21 @@ async function reset(transporteId = state.transporteId) {
   return status();
 }
 
+async function finish(transporteId = state.transporteId) {
+  ensureExecution(transporteId);
+  const finalSnapshot = executionPlan.finish(transporteId);
+  state.progress = 1;
+  state.logistics = finalSnapshot;
+  await stop();
+  await transportService.finish(transporteId, finalSnapshot);
+  return status();
+}
+
 async function scenario(name, transporteId) {
   if (!SCENARIOS[name])
     throw httpError(422, "INVALID_SCENARIO", "Cenário inválido.");
+  iotState.setMode(iotState.MODES.DEMO);
+  iotState.setScenario(name);
   if (transporteId !== undefined) {
     const id = Number(transporteId);
     if (!(await repository.getTransporte(id)))
@@ -352,10 +378,16 @@ async function scenario(name, transporteId) {
 }
 
 function status() {
+  const profile = state.logistics?.organProfile || iotState.activeProfile();
+  const range = profile?.preservation?.referenceRangeC;
+  const target = Number(profile?.preservation?.targetTemperatureC);
+  const normalTemperature = range
+    ? Math.max(range[0], Math.min(range[1], target))
+    : initialTelemetry.temperatura;
   return {
     ...state,
     logistics: executionPlan.get(state.transporteId),
-    initialTelemetry,
+    initialTelemetry: { ...initialTelemetry, temperatura: normalTemperature },
     availableScenarios: Object.entries(SCENARIOS).map(([id, value]) => ({
       id,
       label: value.label,
@@ -368,6 +400,7 @@ module.exports = {
   resume,
   stop,
   reset,
+  finish,
   scenario,
   recommendReoptimization,
   applyReoptimization,

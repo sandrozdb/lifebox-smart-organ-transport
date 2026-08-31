@@ -257,6 +257,74 @@ test("calcula autonomia didática da bateria", () =>
 const simulation = require("../src/services/simulationService");
 const executionPlan = require("../src/services/executionPlanService");
 const organPlanning = require("../src/services/organPlanningService");
+const iotState = require("../src/services/iotStateService");
+test("execução IoT avança sem gerar telemetria simulada", async () => {
+  const demo = await repository.createTransporte({
+    codigo_transporte: "IOT-CONTROL-001",
+    identificador_caixa: "BOX-IOT-CONTROL",
+    tipo_orgao: "Dado de teste",
+    hospital_origem: "Origem",
+    hospital_destino: "Destino",
+    latitude_origem: 0,
+    longitude_origem: 0,
+    latitude_destino: 0,
+    longitude_destino: 1,
+  });
+  const result = {
+    origin: { name: "Origem", latitude: 0, longitude: 0 },
+    destination: { name: "Destino", latitude: 0, longitude: 1 },
+    consumedMinutes: 0,
+    profile: {
+      code: "HEART",
+      ischemia: { officialMaxMinutes: 240, operationalSafetyMarginMinutes: 30 },
+    },
+  };
+  const plan = {
+    id: "IOT-PLAN",
+    name: "Plano IoT",
+    modal: "TERRESTRE",
+    segments: [
+      {
+        from: "Origem",
+        to: "Destino",
+        modal: "TERRESTRE",
+        distanceKm: 10,
+        timeMin: 60,
+        origin: result.origin,
+        destination: result.destination,
+      },
+    ],
+  };
+  const readingsBefore = (await repository.getLeituras(demo.id)).length;
+  try {
+    const started = await simulation.start(
+      demo.id,
+      "LOGISTICS_PLAN",
+      plan,
+      result,
+      "IOT",
+    );
+    assert.equal(iotState.snapshot().mode, "IOT");
+    assert.equal(started.running, true);
+    await simulation.tick();
+    assert.equal(
+      (await repository.getLeituras(demo.id)).length,
+      readingsBefore,
+    );
+    assert.ok(simulation.status().logistics);
+    assert.equal(
+      (await repository.getTransporte(demo.id)).status,
+      "EM_ANDAMENTO",
+    );
+    assert.equal((await simulation.stop()).running, false);
+    assert.equal((await simulation.resume(demo.id)).running, true);
+    await simulation.finish(demo.id);
+    assert.equal((await repository.getTransporte(demo.id)).status, "CONCLUIDO");
+  } finally {
+    await simulation.reset(demo.id);
+    iotState.reset();
+  }
+});
 test("cenários de demonstração atualizam leituras, alertas e timeline", async () => {
   const demo = await repository.createTransporte({
     codigo_transporte: "CENARIOS-001",
@@ -462,7 +530,7 @@ test("reinício invalida rota e gera novas condições operacionais", async () =
     assert.equal(reset.progress, 0);
     assert.equal(reset.digitalSignal.alertOutput, false);
     assert.deepEqual(reset.initialTelemetry, {
-      temperatura: 4,
+      temperatura: 6,
       umidade: 58,
       impacto: 0.1,
       bateria: 100,
@@ -967,6 +1035,105 @@ const {
   criticalTemperature,
 } = require("../simulator/sensor-generator");
 const { getOrganProfile } = require("../src/config/organProfiles");
+const { profiles } = require("../src/config/organProfiles");
+const { temperatureRangeState } = require("../public/js/temperature-range");
+test("todos os perfis de órgão expõem faixa e alvo térmico válidos", () => {
+  for (const profile of profiles) {
+    const [minimum, maximum] = profile.preservation.referenceRangeC;
+    assert.ok(Number.isFinite(minimum) && Number.isFinite(maximum));
+    assert.ok(minimum < maximum);
+    assert.ok(
+      profile.preservation.targetTemperatureC >= minimum &&
+        profile.preservation.targetTemperatureC <= maximum,
+    );
+  }
+});
+test("estado visual térmico usa o perfil ativo para dentro, abaixo e acima", () => {
+  const kidney = getOrganProfile("KIDNEY"),
+    heart = getOrganProfile("HEART");
+  assert.deepEqual(temperatureRangeState(3.5, kidney), {
+    position: "within",
+    text: "✓ Dentro da faixa · Rim 0–4 °C",
+  });
+  assert.equal(
+    temperatureRangeState(-1, kidney).text,
+    "Abaixo da faixa de referência · Rim 0–4 °C",
+  );
+  assert.equal(
+    temperatureRangeState(9, heart).text,
+    "Acima da faixa de referência · Coração 4–8 °C",
+  );
+  assert.notEqual(
+    temperatureRangeState(4.6, kidney).position,
+    temperatureRangeState(4.6, heart).position,
+  );
+});
+test("API IoT valida, mantém e publica somente o perfil térmico compacto", async () => {
+  await simulation.reset();
+  const update = await fetch(`${base}/api/iot/profile`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ organCode: "KIDNEY" }),
+  });
+  assert.equal(update.status, 200);
+  const status = await (await fetch(`${base}/api/iot/status`)).json();
+  assert.deepEqual(status.organ, {
+    code: "KIDNEY",
+    name: "Rim",
+    referenceRangeC: [0, 4],
+    targetTemperatureC: 4,
+  });
+  assert.equal(status.organ.preservation, undefined);
+  const invalid = await fetch(`${base}/api/iot/profile`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ organCode: "INVALID" }),
+  });
+  assert.equal(invalid.status, 422);
+  await fetch(`${base}/api/iot/profile`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ organCode: "HEART" }),
+  });
+});
+test("firmware exibe perfil sem substituir DHT nem decidir os atuadores", () => {
+  const firmware = fs.readFileSync(
+    require.resolve("../firmware/sketch.ino"),
+    "utf8",
+  );
+  assert.ok(firmware.includes('response["organ"]'));
+  assert.ok(firmware.includes('organ["code"]'));
+  assert.ok(firmware.includes('organ["referenceRangeC"]'));
+  assert.ok(firmware.includes('organ["targetTemperatureC"]'));
+  assert.ok(firmware.includes('signal["ledOn"]'));
+  assert.ok(firmware.includes('signal["buzzerOn"]'));
+  assert.ok(firmware.includes("climate.temperature"));
+  assert.ok(firmware.includes('payload["temperatura"] = climate.temperature'));
+  assert.ok(firmware.includes('if (backendMode != "IOT")'));
+  assert.ok(firmware.includes("bool waitForGps()"));
+  assert.ok(firmware.includes("void showDiagnostic("));
+  assert.ok(firmware.includes("void printHeartbeat()"));
+  assert.ok(firmware.includes("client.setInsecure()"));
+  assert.ok(firmware.includes("HTTPS Wokwi sem validacao de CA"));
+  assert.ok(firmware.includes('configTime(0, 0, "pool.ntp.org"'));
+  assert.ok(firmware.includes("getLocalTime(&utcTime"));
+  assert.ok(firmware.includes("year >= 2024 && year <= 2100"));
+  assert.ok(firmware.includes("!isValidUtcTime(utcTime)"));
+  assert.ok(
+    firmware.includes(
+      'strftime(timestamp, sizeof(timestamp), "%Y-%m-%dT%H:%M:%SZ"',
+    ),
+  );
+  assert.ok(firmware.includes('payload["timestamp"] = timestamp'));
+  assert.ok(!firmware.includes('payload["timestamp"] = String(millis())'));
+  assert.ok(firmware.includes("[TELEMETRIA] BLOQUEADA: HORARIO UTC INVALIDO"));
+  assert.ok(firmware.includes("constexpr uint8_t DHT_PIN = 14"));
+  assert.ok(firmware.includes("GPS_RX_PIN = 16"));
+  assert.ok(firmware.includes("GPS_TX_PIN = 17"));
+  assert.ok(!firmware.includes("organTargetTemperature;payload"));
+  assert.ok(!firmware.includes("temperatureCritical"));
+  assert.ok(!firmware.includes("impactCritical"));
+});
 test("cenário normal respeita a faixa de cada perfil de órgão sem alerta térmico", () => {
   for (const code of [
     "HEART",
