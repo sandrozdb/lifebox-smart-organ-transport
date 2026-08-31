@@ -12,16 +12,16 @@ Grandeza física → sensor/módulo → ESP32 → JSON/HTTPS → API no Render
                                       OLED/LED/Buzzer ← digitalSignal
 ```
 
-| Componente | Grandeza/função | Interface usada no protótipo |
-| --- | --- | --- |
-| DHT22 | Temperatura e umidade | sinal digital no GPIO 14 |
-| MPU6050 | Aceleração nos três eixos | I2C, GPIO 21/22 |
-| GPS NEO-6M | Latitude, longitude e velocidade | UART, RX2/TX2 GPIO 16/17 |
-| ESP32 | Leitura, Wi-Fi e integração HTTPS | GPIO, ADC, I2C, UART e Wi-Fi |
-| Potenciômetro | Bateria simulada | ADC GPIO 34 |
-| OLED SSD1306 | Estado local | I2C, endereço `0x3C` |
-| LED | Alerta visual | GPIO 25 |
-| Buzzer | Alerta sonoro | GPIO 26 |
+| Componente    | Grandeza/função                   | Interface usada no protótipo |
+| ------------- | --------------------------------- | ---------------------------- |
+| DHT22         | Temperatura e umidade             | sinal digital no GPIO 14     |
+| MPU6050       | Aceleração nos três eixos         | I2C, GPIO 21/22              |
+| GPS NEO-6M    | Latitude, longitude e velocidade  | UART, RX2/TX2 GPIO 16/17     |
+| ESP32         | Leitura, Wi-Fi e integração HTTPS | GPIO, ADC, I2C, UART e Wi-Fi |
+| Potenciômetro | Bateria simulada                  | ADC GPIO 34                  |
+| OLED SSD1306  | Estado local                      | I2C, endereço `0x3C`         |
+| LED           | Alerta visual                     | GPIO 25                      |
+| Buzzer        | Alerta sonoro                     | GPIO 26                      |
 
 Entradas digitais representam estados discretos ou protocolos; entradas analógicas convertem tensão contínua pelo ADC. I2C permite compartilhar o barramento entre MPU6050 e OLED, enquanto UART é usada pelo GPS customizado.
 
@@ -37,14 +37,14 @@ Tabela verdade:
 
 | Transporte ativo | Temperatura crítica | Impacto crítico | ALERTA / LED / buzzer |
 | ---------------: | ------------------: | --------------: | --------------------: |
-| 0 | 0 | 0 | 0 |
-| 0 | 0 | 1 | 0 |
-| 0 | 1 | 0 | 0 |
-| 0 | 1 | 1 | 0 |
-| 1 | 0 | 0 | 0 |
-| 1 | 0 | 1 | 1 |
-| 1 | 1 | 0 | 1 |
-| 1 | 1 | 1 | 1 |
+| 0                | 0                   | 0               | 0                     |
+| 0                | 0                   | 1               | 0                     |
+| 0                | 1                   | 0               | 0                     |
+| 0                | 1                   | 1               | 0                     |
+| 1                | 0                   | 0               | 0                     |
+| 1                | 0                   | 1               | 1                     |
+| 1                | 1                   | 0               | 1                     |
+| 1                | 1                   | 1               | 1                     |
 
 ```mermaid
 flowchart LR
