@@ -4,7 +4,9 @@ let transportId = 1,
   layers = {},
   trackingAnimationFrame,
   trackingPathLength = 0,
-  dismissedOverlayKey = null;
+  dismissedOverlayKey = null,
+  lastMetricReading = null,
+  activeTemperatureOrgan = null;
 const formatDate = (value) =>
   value
     ? new Intl.DateTimeFormat("pt-BR", {
@@ -55,9 +57,28 @@ function statusVisual(status) {
         : "NORMAL";
   element.className = `status-badge ${critical ? "critical" : attention ? "attention" : "normal"}`;
 }
-function updateMetrics(reading, transport) {
+function renderTemperatureRange(reading, organ) {
+  const card = $("#temperature-card"),
+    detail = $("#temperature-range-status"),
+    state = window.lifeBoxTemperatureRangeState?.(reading?.temperatura, organ);
+  card?.classList.toggle(
+    "temperature-out-of-range",
+    Boolean(state && state.position !== "within"),
+  );
+  const range = organ?.referenceRangeC || organ?.preservation?.referenceRangeC;
+  if (detail)
+    detail.textContent =
+      state?.text ||
+      (range
+        ? `Faixa de referência · ${organ.name} ${range.join("–")} °C`
+        : "Faixa térmica aguardando perfil");
+}
+function updateMetrics(reading, transport, organ = activeTemperatureOrgan) {
   if (!reading) return;
+  lastMetricReading = reading;
+  activeTemperatureOrgan = organ || activeTemperatureOrgan;
   $("#temperature").textContent = Number(reading.temperatura).toFixed(1);
+  renderTemperatureRange(reading, activeTemperatureOrgan);
   $("#humidity").textContent = Number(reading.umidade).toFixed(1);
   $("#impact").textContent = Number(reading.impacto).toFixed(2);
   $("#impact-label").textContent =
@@ -66,6 +87,10 @@ function updateMetrics(reading, transport) {
   $("#signal").textContent = Number(reading.sinal).toFixed(0);
   statusVisual(transport.status);
 }
+window.lifeBoxUpdateTemperatureProfile = (organ) => {
+  activeTemperatureOrgan = organ;
+  renderTemperatureRange(lastMetricReading, organ);
+};
 function updateExecutionMetrics(tracking) {
   const minutes = Math.max(
       0,
@@ -330,6 +355,7 @@ function updateSimulationControls(simulation, transport) {
 }
 function updateIotControls(iot) {
   const mode = iot.mode || "IOT";
+  window.lifeBoxIotMode = mode;
   $("#iot-mode").value = mode;
   syncSourceSelector();
   $("#esp32-status").textContent = iot.online
@@ -559,7 +585,11 @@ async function refresh() {
       iot.mode === "IOT"
         ? iot.lastReading
         : simulation.initialTelemetry || readings[0];
-    updateMetrics(activeReading, transport);
+    const activeOrgan =
+      simulation.logistics?.organProfile ||
+      iot.organ ||
+      window.lifeBoxActiveProfile;
+    updateMetrics(activeReading, transport, activeOrgan);
     updateTracking(window.lifeBoxExecutionTracking || tracking);
     drawCharts(readings);
     renderAlerts(alerts);

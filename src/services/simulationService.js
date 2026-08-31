@@ -39,6 +39,7 @@ function freshState(transporteId) {
     routeId: null,
     digitalSignal: { alertOutput: false, ledOn: false, buzzerOn: false },
     executionId: null,
+    organProfile: iotState.activeProfile(),
   };
 }
 
@@ -97,6 +98,8 @@ async function tick() {
       state.progress = state.logistics.totalProgress;
     }
     if (iotState.snapshot().mode === iotState.MODES.DEMO) {
+      state.organProfile =
+        state.logistics?.organProfile || iotState.activeProfile();
       const payload = generate(state);
       const result = await telemetry.receive(payload);
       state.digitalSignal = result.digitalSignal;
@@ -136,6 +139,8 @@ async function start(transporteId = 1, rotaId, plan, result, mode) {
     );
   if (plan && result)
     state.logistics = executionPlan.freeze(state.transporteId, plan, result);
+  if (state.logistics?.organProfile)
+    iotState.setProfile(state.logistics.organProfile.code);
   state.routeId = String(rotaId);
   const started = await transportService.start(state.transporteId);
   state.executionId = started.execucao_atual_id;
@@ -373,10 +378,16 @@ async function scenario(name, transporteId) {
 }
 
 function status() {
+  const profile = state.logistics?.organProfile || iotState.activeProfile();
+  const range = profile?.preservation?.referenceRangeC;
+  const target = Number(profile?.preservation?.targetTemperatureC);
+  const normalTemperature = range
+    ? Math.max(range[0], Math.min(range[1], target))
+    : initialTelemetry.temperatura;
   return {
     ...state,
     logistics: executionPlan.get(state.transporteId),
-    initialTelemetry,
+    initialTelemetry: { ...initialTelemetry, temperatura: normalTemperature },
     availableScenarios: Object.entries(SCENARIOS).map(([id, value]) => ({
       id,
       label: value.label,

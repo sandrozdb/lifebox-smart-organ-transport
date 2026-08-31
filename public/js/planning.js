@@ -104,8 +104,25 @@
     const item = profile();
     if (!item) return;
     window.lifeBoxActiveProfile = item;
+    window.lifeBoxUpdateTemperatureProfile?.(item);
     $("#planning-profile").innerHTML =
       `<b>PERFIL DE PRESERVAÇÃO · ${item.name.toUpperCase()}</b><span>SCS</span><span>${item.preservation.referenceRangeC.join("–")} °C <em>CIENTÍFICO</em></span><span>Alvo acadêmico: ${item.preservation.targetTemperatureC} °C</span><span>Janela: ${item.ischemia.officialMaxMinutes} min <em>OFICIAL</em></span><span>Margem: ${item.ischemia.operationalSafetyMarginMinutes} min</span>`;
+  }
+  async function syncProfile() {
+    const item = profile();
+    if (!item) return;
+    await api("/api/iot/profile", {
+      method: "PUT",
+      body: JSON.stringify({ organCode: item.code }),
+    });
+    if (window.lifeBoxIotMode === "DEMO")
+      await api("/api/simulacao/cenario", {
+        method: "POST",
+        body: JSON.stringify({
+          cenario: "normal",
+          transporteId: window.lifeBoxTransportId,
+        }),
+      });
   }
   function science() {
     const item = profile(),
@@ -133,6 +150,9 @@
     syncPlanningSelects();
     $("#planning-description").textContent = activeScenario.description;
     renderProfile();
+    syncProfile().catch((error) => {
+      $("#action-feedback").textContent = error.message;
+    });
     clearLogisticButtons();
     calculate();
   }
@@ -574,7 +594,29 @@
       }
       setScenario();
     };
-    $("#planning-organ").onchange = renderProfile;
+    $("#planning-organ").onchange = async () => {
+      const previousCode = window.lifeBoxActiveProfile?.code;
+      if (window.lifeBoxExecutionActive) {
+        $("#planning-organ").value = previousCode;
+        syncPlanningSelects();
+        $("#action-feedback").textContent =
+          "O órgão da execução está congelado. Reinicie antes de alterá-lo.";
+        return;
+      }
+      renderProfile();
+      $("#planning-scenario").value = "normal";
+      syncPlanningSelects();
+      try {
+        await syncProfile();
+        $("#action-feedback").textContent =
+          "Perfil térmico atualizado; cenário normal restaurado.";
+      } catch (error) {
+        $("#planning-organ").value = previousCode;
+        syncPlanningSelects();
+        renderProfile();
+        $("#action-feedback").textContent = error.message;
+      }
+    };
     $("#planning-science").onclick = science;
     $("#planning-calculate").onclick = () => calculate();
     $("#planning-custom").onchange = custom;

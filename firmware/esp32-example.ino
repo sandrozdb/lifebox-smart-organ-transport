@@ -24,6 +24,8 @@ const char* DEVICE_ID="LIFEBOX-WOKWI-001";
 DHTesp dht; Adafruit_MPU6050 mpu; Adafruit_SSD1306 display(128,64,&Wire,-1);
 TinyGPSPlus gps; HardwareSerial gpsSerial(2);
 String backendMode="IOT", backendScenario="NORMAL";
+String organName="--";
+float organMinTemperature=NAN, organMaxTemperature=NAN, organTargetTemperature=NAN;
 bool alertOutput=false, mpuReady=false, oledReady=false;
 int transportId=0;
 uint32_t lastTelemetryAt=0, lastStateAt=0;
@@ -53,8 +55,10 @@ void applyDigitalSignal(JsonVariantConst signal){
 void drawStatus(float temperature,float humidity){
   if(!oledReady)return;
   display.clearDisplay();display.setTextColor(SSD1306_WHITE);display.setTextSize(1);display.setCursor(0,0);
-  display.printf("LIFEBOX %s\nMODO: %s\nCENARIO: %s\n",WiFi.isConnected()?"ONLINE":"OFFLINE",backendMode.c_str(),backendScenario.c_str());
-  display.printf("TEMP: %.1f C\nUMID: %.1f %%\nALERTA: %d",temperature,humidity,alertOutput?1:0);display.display();
+  display.printf("LIFEBOX %s\nMODO: %s\nORGAO: %.12s\n",WiFi.isConnected()?"ONLINE":"OFFLINE",backendMode.c_str(),organName.c_str());
+  display.printf("TEMP: %.1f C\n",temperature);
+  if(!isnan(organMinTemperature)&&!isnan(organMaxTemperature))display.printf("FAIXA: %.0f-%.0f C\n",organMinTemperature,organMaxTemperature);else display.println("FAIXA: --");
+  display.printf("ALERTA: %s",alertOutput?"SIM":"NAO");display.display();
 }
 bool beginRequest(HTTPClient& http,WiFiClientSecure& client,const String& path){
   if(WiFi.status()!=WL_CONNECTED)return false;
@@ -71,7 +75,9 @@ void readBackendState(){
   const String responseBody=http.getString();if(responseBody.length())Serial.println(responseBody);
   if(statusCode==HTTP_CODE_OK){JsonDocument response;if(deserializeJson(response,responseBody)==DeserializationError::Ok){
     backendMode=String((const char*)response["mode"]);backendMode.toUpperCase();backendScenario=String((const char*)response["scenario"]);backendScenario.toUpperCase();
-    const int associatedId=response["transportId"]|0;if(associatedId>0)transportId=associatedId;applyDigitalSignal(response["digitalSignal"]);}}
+    const int associatedId=response["transportId"]|0;if(associatedId>0)transportId=associatedId;
+    JsonObjectConst organ=response["organ"];if(!organ.isNull()){organName=String((const char*)organ["name"]);organName.toUpperCase();organMinTemperature=organ["referenceRangeC"][0].as<float>();organMaxTemperature=organ["referenceRangeC"][1].as<float>();organTargetTemperature=organ["targetTemperatureC"].as<float>();}
+    applyDigitalSignal(response["digitalSignal"]);}}
   http.end();
 }
 void sendTelemetry(){

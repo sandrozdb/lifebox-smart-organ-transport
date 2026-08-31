@@ -530,7 +530,7 @@ test("reinício invalida rota e gera novas condições operacionais", async () =
     assert.equal(reset.progress, 0);
     assert.equal(reset.digitalSignal.alertOutput, false);
     assert.deepEqual(reset.initialTelemetry, {
-      temperatura: 4,
+      temperatura: 6,
       umidade: 58,
       impacto: 0.1,
       bateria: 100,
@@ -1035,6 +1035,79 @@ const {
   criticalTemperature,
 } = require("../simulator/sensor-generator");
 const { getOrganProfile } = require("../src/config/organProfiles");
+const { profiles } = require("../src/config/organProfiles");
+const { temperatureRangeState } = require("../public/js/temperature-range");
+test("todos os perfis de órgão expõem faixa e alvo térmico válidos", () => {
+  for (const profile of profiles) {
+    const [minimum, maximum] = profile.preservation.referenceRangeC;
+    assert.ok(Number.isFinite(minimum) && Number.isFinite(maximum));
+    assert.ok(minimum < maximum);
+    assert.ok(
+      profile.preservation.targetTemperatureC >= minimum &&
+        profile.preservation.targetTemperatureC <= maximum,
+    );
+  }
+});
+test("estado visual térmico usa o perfil ativo para dentro, abaixo e acima", () => {
+  const kidney = getOrganProfile("KIDNEY"),
+    heart = getOrganProfile("HEART");
+  assert.deepEqual(temperatureRangeState(3.5, kidney), {
+    position: "within",
+    text: "✓ Dentro da faixa · Rim 0–4 °C",
+  });
+  assert.equal(
+    temperatureRangeState(-1, kidney).text,
+    "Abaixo da faixa de referência · Rim 0–4 °C",
+  );
+  assert.equal(
+    temperatureRangeState(9, heart).text,
+    "Acima da faixa de referência · Coração 4–8 °C",
+  );
+  assert.notEqual(
+    temperatureRangeState(4.6, kidney).position,
+    temperatureRangeState(4.6, heart).position,
+  );
+});
+test("API IoT valida, mantém e publica somente o perfil térmico compacto", async () => {
+  await simulation.reset();
+  const update = await fetch(`${base}/api/iot/profile`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ organCode: "KIDNEY" }),
+  });
+  assert.equal(update.status, 200);
+  const status = await (await fetch(`${base}/api/iot/status`)).json();
+  assert.deepEqual(status.organ, {
+    code: "KIDNEY",
+    name: "Rim",
+    referenceRangeC: [0, 4],
+    targetTemperatureC: 4,
+  });
+  assert.equal(status.organ.preservation, undefined);
+  const invalid = await fetch(`${base}/api/iot/profile`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ organCode: "INVALID" }),
+  });
+  assert.equal(invalid.status, 422);
+  await fetch(`${base}/api/iot/profile`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ organCode: "HEART" }),
+  });
+});
+test("firmware exibe perfil sem substituir DHT nem decidir os atuadores", () => {
+  const firmware = fs.readFileSync(
+    require.resolve("../firmware/esp32-example.ino"),
+    "utf8",
+  );
+  assert.ok(firmware.includes('response["organ"]'));
+  assert.ok(firmware.includes('signal["ledOn"]'));
+  assert.ok(firmware.includes('signal["buzzerOn"]'));
+  assert.ok(firmware.includes("climate.temperature"));
+  assert.ok(firmware.includes('payload["temperatura"]=climate.temperature'));
+  assert.ok(!firmware.includes("organTargetTemperature;payload"));
+});
 test("cenário normal respeita a faixa de cada perfil de órgão sem alerta térmico", () => {
   for (const code of [
     "HEART",

@@ -1,5 +1,6 @@
 const MODES = Object.freeze({ IOT: "IOT", DEMO: "DEMO" });
 const config = require("../config");
+const { getOrganProfile } = require("../config/organProfiles");
 
 const DEFAULT_SIGNAL = Object.freeze({
   transportActive: false,
@@ -21,7 +22,23 @@ function freshState() {
     transportId: null,
     lastReading: null,
     digitalSignal: { ...DEFAULT_SIGNAL },
+    organCode: "HEART",
   };
+}
+
+function activeProfile() {
+  return getOrganProfile(state.organCode);
+}
+
+function compactOrgan(profile = activeProfile()) {
+  return profile
+    ? {
+        code: profile.code,
+        name: profile.name,
+        referenceRangeC: [...profile.preservation.referenceRangeC],
+        targetTemperatureC: profile.preservation.targetTemperatureC,
+      }
+    : null;
 }
 
 function associatedTransportId(deviceId) {
@@ -39,13 +56,35 @@ function snapshot(deviceId) {
   const lastSeenMs = state.lastTelemetryAt
     ? Date.now() - new Date(state.lastTelemetryAt).getTime()
     : null;
+  const { organCode: _organCode, ...publicState } = state;
   const result = {
-    ...state,
+    ...publicState,
+    organ: compactOrgan(),
     online: lastSeenMs !== null && lastSeenMs <= 15000,
     telemetry: state.mode === MODES.IOT ? "LIVE" : "DEMO",
   };
   if (deviceId) result.transportId = associatedTransportId(deviceId);
   return result;
+}
+
+function setProfile(organCode, frozenProfile) {
+  const requested = getOrganProfile(organCode);
+  if (!requested)
+    throw Object.assign(new Error("Código de órgão inválido."), {
+      status: 422,
+      code: "INVALID_ORGAN_CODE",
+    });
+  if (frozenProfile && frozenProfile.code !== requested.code)
+    throw Object.assign(
+      new Error("O órgão da execução em andamento não pode ser alterado."),
+      { status: 409, code: "EXECUTION_ORGAN_LOCKED" },
+    );
+  const nextCode = (frozenProfile || requested).code,
+    changed = state.organCode !== nextCode;
+  state.organCode = nextCode;
+  state.scenario = "normal";
+  if (changed) state.digitalSignal = { ...DEFAULT_SIGNAL };
+  return snapshot();
 }
 
 function setMode(mode) {
@@ -90,6 +129,8 @@ module.exports = {
   snapshot,
   setMode,
   setScenario,
+  setProfile,
+  activeProfile,
   recordTelemetry,
   associatedTransportId,
   reset,

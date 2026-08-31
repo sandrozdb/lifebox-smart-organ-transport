@@ -69,7 +69,7 @@ async function receive(payload) {
       status: 404,
     });
   const execution = require("./executionPlanService").get(data.transporteId);
-  const profile = execution?.organProfile;
+  const profile = execution?.organProfile || iotState.activeProfile();
   const reading = await repository.createLeitura(data),
     issues = evaluate(data, profile),
     alerts = [];

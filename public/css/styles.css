@@ -15,6 +15,16 @@
   --brand-red-dark: #e20c16;
   --blue: #49a7ff;
 }
+.metric.temperature-out-of-range {
+  border-color: rgba(255, 83, 103, 0.72);
+  box-shadow:
+    inset 3px 0 0 var(--red),
+    0 0 22px rgba(255, 83, 103, 0.1);
+}
+.metric.temperature-out-of-range #temperature,
+.metric.temperature-out-of-range #temperature-range-status {
+  color: var(--red);
+}
 .iot-controls {
   display: flex;
   align-items: center;

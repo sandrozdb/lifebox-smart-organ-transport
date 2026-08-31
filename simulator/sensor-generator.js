@@ -19,7 +19,7 @@ function criticalTemperature(profile, scenarioTick) {
 function generate(state) {
   state.tick += 1;
   const slow = state.scenario === "atraso",
-    profile = state.logistics?.organProfile;
+    profile = state.logistics?.organProfile || state.organProfile;
   state.progress =
     state.logistics?.totalProgress ??
     Math.min(1, state.progress + (slow ? 0.003 : 0.012));
