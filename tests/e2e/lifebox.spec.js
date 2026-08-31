@@ -87,4 +87,3 @@ test("resumo final aparece após concluir", async ({ page }) => {
   });
   await expect(page.locator("#summary-grid")).not.toBeEmpty();
 });
-

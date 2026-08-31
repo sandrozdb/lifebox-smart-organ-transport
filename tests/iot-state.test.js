@@ -93,4 +93,3 @@ test("telemetria atualiza presença, leitura e sinal calculado pelo backend", ()
   assert.equal(state.digitalSignal.ledOn, true);
   assert.equal(state.digitalSignal.buzzerOn, true);
 });
-

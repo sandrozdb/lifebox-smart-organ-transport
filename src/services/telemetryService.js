@@ -119,4 +119,3 @@ async function receive(payload) {
   return { reading, alerts, status, digitalSignal };
 }
 module.exports = { receive, validate, alertNotifier };
-

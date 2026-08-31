@@ -25,4 +25,3 @@ O backend é a fonte de verdade. O ESP32 não decide se temperatura ou impacto s
 No Wokwi, os controles visuais dos componentes alteram as grandezas físicas simuladas. O cenário de demonstração do dashboard muda apenas o estado mostrado no OLED e não altera sensores.
 
 Para hardware físico, troque SSID/senha fora do repositório, calibre o divisor resistivo da bateria e revise os pinos conforme a placa. Nunca versionar credenciais.
-

@@ -39,7 +39,8 @@ async function api(path, options = {}) {
     ...options,
   });
   const data = await response.json();
-  if (!response.ok) throw new Error(data.error || data.erro || "Falha na operação");
+  if (!response.ok)
+    throw new Error(data.error || data.erro || "Falha na operação");
   return data;
 }
 function statusVisual(status) {
@@ -323,7 +324,9 @@ function updateSimulationControls(simulation, transport) {
     $("#sim-status").textContent = "Pausado";
   } else {
     const availablePlan =
-      window.lifeBoxCurrentPlan || window.lifeBoxPlanningResult?.selected || null;
+      window.lifeBoxCurrentPlan ||
+      window.lifeBoxPlanningResult?.selected ||
+      null;
     if (!window.lifeBoxCurrentPlan && availablePlan)
       window.lifeBoxCurrentPlan = availablePlan;
     start.disabled = !availablePlan;
@@ -597,14 +600,14 @@ document.addEventListener("click", async (event) => {
   if (!action && !scenario && !resolve) return;
   try {
     if (action) {
-    if (
-      action === "start" &&
-      !window.lifeBoxCurrentPlan &&
-      window.lifeBoxPlanningResult?.selected
-    )
-      window.lifeBoxCurrentPlan = window.lifeBoxPlanningResult.selected;
-    if (
-      action === "start" &&
+      if (
+        action === "start" &&
+        !window.lifeBoxCurrentPlan &&
+        window.lifeBoxPlanningResult?.selected
+      )
+        window.lifeBoxCurrentPlan = window.lifeBoxPlanningResult.selected;
+      if (
+        action === "start" &&
         !window.lifeBoxCanResume &&
         !window.lifeBoxCurrentPlan
       )
@@ -816,4 +819,3 @@ $("#iot-mode").addEventListener("change", async (event) => {
 refresh();
 setInterval(refresh, 2000);
 window.addEventListener("resize", () => map?.invalidateSize());
-

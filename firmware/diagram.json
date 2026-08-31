@@ -1,1 +1,96 @@
-{"version":1,"author":"Sandro Ferreira","editor":"wokwi","parts":[{"type":"board-esp32-devkit-v1","id":"esp32","top":0,"left":0,"attrs":{}},{"type":"wokwi-dht22","id":"dht","top":-105,"left":250,"attrs":{"temperature":"4.2","humidity":"58"}},{"type":"wokwi-mpu6050","id":"mpu","top":115,"left":250,"attrs":{}},{"type":"wokwi-gps","id":"gps","top":235,"left":245,"attrs":{"latitude":"-23.5505","longitude":"-46.6333"}},{"type":"board-ssd1306","id":"oled","top":-170,"left":-230,"attrs":{"i2cAddress":"0x3c"}},{"type":"wokwi-led","id":"led","top":90,"left":-210,"attrs":{"color":"red"}},{"type":"wokwi-resistor","id":"r1","top":145,"left":-205,"rotate":90,"attrs":{"value":"220"}},{"type":"wokwi-buzzer","id":"buzzer","top":210,"left":-210,"attrs":{"volume":"0.1"}},{"type":"wokwi-potentiometer","id":"battery","top":315,"left":-120,"attrs":{"value":"0.63"}}],"connections":[["esp32:3V3","dht:VCC","red",[]],["esp32:GND.1","dht:GND","black",[]],["esp32:D15","dht:SDA","green",[]],["esp32:3V3","mpu:VCC","red",[]],["esp32:GND.1","mpu:GND","black",[]],["esp32:D21","mpu:SDA","blue",[]],["esp32:D22","mpu:SCL","purple",[]],["esp32:3V3","oled:VCC","red",[]],["esp32:GND.1","oled:GND","black",[]],["esp32:D21","oled:SDA","blue",[]],["esp32:D22","oled:SCL","purple",[]],["gps:TX","esp32:RX2","green",[]],["gps:VCC","esp32:3V3","red",[]],["gps:GND","esp32:GND.1","black",[]],["esp32:D25","led:A","red",[]],["led:C","r1:1","black",[]],["r1:2","esp32:GND.2","black",[]],["esp32:D26","buzzer:1","orange",[]],["buzzer:2","esp32:GND.2","black",[]],["battery:VCC","esp32:3V3","red",[]],["battery:GND","esp32:GND.2","black",[]],["battery:SIG","esp32:D34","green",[]]],"dependencies":{}}
+{
+  "version": 1,
+  "author": "Sandro Ferreira",
+  "editor": "wokwi",
+  "parts": [
+    {
+      "type": "board-esp32-devkit-v1",
+      "id": "esp32",
+      "top": 0,
+      "left": 0,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-dht22",
+      "id": "dht",
+      "top": -105,
+      "left": 250,
+      "attrs": { "temperature": "4.2", "humidity": "58" }
+    },
+    {
+      "type": "wokwi-mpu6050",
+      "id": "mpu",
+      "top": 115,
+      "left": 250,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-gps",
+      "id": "gps",
+      "top": 235,
+      "left": 245,
+      "attrs": { "latitude": "-23.5505", "longitude": "-46.6333" }
+    },
+    {
+      "type": "board-ssd1306",
+      "id": "oled",
+      "top": -170,
+      "left": -230,
+      "attrs": { "i2cAddress": "0x3c" }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "led",
+      "top": 90,
+      "left": -210,
+      "attrs": { "color": "red" }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r1",
+      "top": 145,
+      "left": -205,
+      "rotate": 90,
+      "attrs": { "value": "220" }
+    },
+    {
+      "type": "wokwi-buzzer",
+      "id": "buzzer",
+      "top": 210,
+      "left": -210,
+      "attrs": { "volume": "0.1" }
+    },
+    {
+      "type": "wokwi-potentiometer",
+      "id": "battery",
+      "top": 315,
+      "left": -120,
+      "attrs": { "value": "0.63" }
+    }
+  ],
+  "connections": [
+    ["esp32:3V3", "dht:VCC", "red", []],
+    ["esp32:GND.1", "dht:GND", "black", []],
+    ["esp32:D15", "dht:SDA", "green", []],
+    ["esp32:3V3", "mpu:VCC", "red", []],
+    ["esp32:GND.1", "mpu:GND", "black", []],
+    ["esp32:D21", "mpu:SDA", "blue", []],
+    ["esp32:D22", "mpu:SCL", "purple", []],
+    ["esp32:3V3", "oled:VCC", "red", []],
+    ["esp32:GND.1", "oled:GND", "black", []],
+    ["esp32:D21", "oled:SDA", "blue", []],
+    ["esp32:D22", "oled:SCL", "purple", []],
+    ["gps:TX", "esp32:RX2", "green", []],
+    ["gps:VCC", "esp32:3V3", "red", []],
+    ["gps:GND", "esp32:GND.1", "black", []],
+    ["esp32:D25", "led:A", "red", []],
+    ["led:C", "r1:1", "black", []],
+    ["r1:2", "esp32:GND.2", "black", []],
+    ["esp32:D26", "buzzer:1", "orange", []],
+    ["buzzer:2", "esp32:GND.2", "black", []],
+    ["battery:VCC", "esp32:3V3", "red", []],
+    ["battery:GND", "esp32:GND.2", "black", []],
+    ["battery:SIG", "esp32:D34", "green", []]
+  ],
+  "dependencies": {}
+}

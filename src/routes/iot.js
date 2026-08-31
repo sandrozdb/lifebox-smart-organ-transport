@@ -21,4 +21,3 @@ router.put("/mode", async (req, res, next) => {
 });
 
 module.exports = router;
-

@@ -15,7 +15,42 @@
   --brand-red-dark: #e20c16;
   --blue: #49a7ff;
 }
-.iot-controls{display:flex;align-items:center;gap:.55rem;margin-left:auto}.iot-controls label{font-size:.68rem;letter-spacing:.12em;color:var(--muted)}.iot-controls select{min-width:150px;padding:.45rem .65rem;background:#0d1b2a;color:var(--text);border:1px solid rgba(114,167,196,.35);border-radius:8px}.iot-controls .mini-badge{white-space:nowrap}.iot-controls .mini-badge.online{color:#38da8a;border-color:rgba(56,218,138,.45)}.demo-panel.mode-disabled{opacity:.65}.demo-panel.mode-disabled::after{content:"Selecione SIMULADOR para usar os cenários";display:block;margin-top:.75rem;color:var(--muted);font-size:.78rem}
+.iot-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin-left: auto;
+}
+.iot-controls label {
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+}
+.iot-controls select {
+  min-width: 150px;
+  padding: 0.45rem 0.65rem;
+  background: #0d1b2a;
+  color: var(--text);
+  border: 1px solid rgba(114, 167, 196, 0.35);
+  border-radius: 8px;
+}
+.iot-controls .mini-badge {
+  white-space: nowrap;
+}
+.iot-controls .mini-badge.online {
+  color: #38da8a;
+  border-color: rgba(56, 218, 138, 0.45);
+}
+.demo-panel.mode-disabled {
+  opacity: 0.65;
+}
+.demo-panel.mode-disabled::after {
+  content: "Selecione SIMULADOR para usar os cenários";
+  display: block;
+  margin-top: 0.75rem;
+  color: var(--muted);
+  font-size: 0.78rem;
+}
 * {
   box-sizing: border-box;
 }

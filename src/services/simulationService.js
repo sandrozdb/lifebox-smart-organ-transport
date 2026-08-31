@@ -117,7 +117,13 @@ async function tick() {
   }
 }
 
-async function start(transporteId = 1, rotaId, plan, result, sourceMode = "DEMO") {
+async function start(
+  transporteId = 1,
+  rotaId,
+  plan,
+  result,
+  sourceMode = "DEMO",
+) {
   const requestedMode = String(sourceMode || "DEMO").toUpperCase();
   if (!Object.values(iotState.MODES).includes(requestedMode))
     throw httpError(422, "INVALID_IOT_MODE", "Modo deve ser IOT ou DEMO.");
