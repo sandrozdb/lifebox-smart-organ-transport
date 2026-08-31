@@ -68,6 +68,12 @@ async function receive(payload) {
     throw Object.assign(new Error("Transporte não encontrado."), {
       status: 404,
     });
+
+  // O backend é a fonte de verdade da execução ativa. O ESP32/Wokwi não
+  // precisa conhecer nem enviar execucao_id; cada leitura física é vinculada
+  // à execução corrente do transporte antes de persistir dados e alertas.
+  data.executionId = transport.execucao_atual_id || null;
+
   const execution = require("./executionPlanService").get(data.transporteId);
   const profile = execution?.organProfile || iotState.activeProfile();
   const reading = await repository.createLeitura(data),
