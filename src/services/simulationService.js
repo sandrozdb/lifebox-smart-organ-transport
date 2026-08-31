@@ -117,10 +117,11 @@ async function tick() {
   }
 }
 
-async function start(transporteId = 1, rotaId, plan, result) {
-  // Mantém compatibilidade com clientes antigos que iniciam o simulador
-  // diretamente, sem passar primeiro pelo seletor do dashboard.
-  iotState.setMode(iotState.MODES.DEMO);
+async function start(transporteId = 1, rotaId, plan, result, sourceMode = "DEMO") {
+  const requestedMode = String(sourceMode || "DEMO").toUpperCase();
+  if (!Object.values(iotState.MODES).includes(requestedMode))
+    throw httpError(422, "INVALID_IOT_MODE", "Modo deve ser IOT ou DEMO.");
+  iotState.setMode(requestedMode);
   state.transporteId = Number(transporteId);
   if (!(await repository.getTransporte(state.transporteId)))
     throw httpError(404, "TRANSPORT_NOT_FOUND", "Transporte não encontrado.");

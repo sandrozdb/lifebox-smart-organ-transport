@@ -39,7 +39,7 @@ async function api(path, options = {}) {
     ...options,
   });
   const data = await response.json();
-  if (!response.ok) throw new Error(data.erro || "Falha na operação");
+  if (!response.ok) throw new Error(data.error || data.erro || "Falha na operação");
   return data;
 }
 function statusVisual(status) {
@@ -322,7 +322,11 @@ function updateSimulationControls(simulation, transport) {
     pause.disabled = true;
     $("#sim-status").textContent = "Pausado";
   } else {
-    start.disabled = !window.lifeBoxCurrentPlan;
+    const availablePlan =
+      window.lifeBoxCurrentPlan || window.lifeBoxPlanningResult?.selected || null;
+    if (!window.lifeBoxCurrentPlan && availablePlan)
+      window.lifeBoxCurrentPlan = availablePlan;
+    start.disabled = !availablePlan;
     start.textContent = "▶ INICIAR TRANSPORTE";
     pause.disabled = true;
     $("#sim-status").textContent = "Preparado";
@@ -339,7 +343,7 @@ function updateIotControls(iot) {
     mode === "IOT" ? "TELEMETRIA AO VIVO" : "TELEMETRIA DEMONSTRAÇÃO";
   $(".demo-panel").classList.toggle("mode-disabled", mode !== "DEMO");
   document
-    .querySelectorAll(".demo-panel button, .demo-panel select")
+    .querySelectorAll(".scenario-group button, .finish-transport")
     .forEach((control) => {
       control.disabled = mode !== "DEMO";
     });
@@ -541,7 +545,7 @@ async function refresh() {
     updateSimulationControls(simulation, transport);
     if (iot.mode !== "DEMO")
       document
-        .querySelectorAll(".demo-panel button, .demo-panel select")
+        .querySelectorAll(".scenario-group button, .finish-transport")
         .forEach((control) => {
           control.disabled = true;
         });
@@ -593,8 +597,14 @@ document.addEventListener("click", async (event) => {
   if (!action && !scenario && !resolve) return;
   try {
     if (action) {
-      if (
-        action === "start" &&
+    if (
+      action === "start" &&
+      !window.lifeBoxCurrentPlan &&
+      window.lifeBoxPlanningResult?.selected
+    )
+      window.lifeBoxCurrentPlan = window.lifeBoxPlanningResult.selected;
+    if (
+      action === "start" &&
         !window.lifeBoxCanResume &&
         !window.lifeBoxCurrentPlan
       )
@@ -612,6 +622,7 @@ document.addEventListener("click", async (event) => {
           method: "POST",
           body: JSON.stringify({
             transporteId: transportId,
+            mode: $("#iot-mode").value,
             rotaId: "LOGISTICS_PLAN",
             plan: window.lifeBoxCurrentPlan,
             result: window.lifeBoxPlanningResult,

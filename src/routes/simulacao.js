@@ -20,6 +20,7 @@ router.post("/start", async (req, res, next) => {
         req.body.rotaId,
         req.body.plan,
         req.body.result,
+        req.body.mode,
       ),
     );
   } catch (error) {
