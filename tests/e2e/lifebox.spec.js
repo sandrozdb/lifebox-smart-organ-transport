@@ -27,6 +27,29 @@ test("normal: planejamento inicia e apresenta indicadores", async ({
   await expect(page.locator("#ischemia")).not.toHaveText("--");
 });
 
+test("IoT mantém ações operacionais e bloqueia apenas cenários", async ({
+  page,
+}) => {
+  await page.locator("#iot-mode").selectOption("IOT");
+  await expect(page.locator("#iot-mode-button")).toContainText("ESP32 / WOKWI");
+  await expect(page.locator("#scenario-mode-message")).toBeVisible();
+  await expect(page.locator('[data-scenario="impacto"]')).toBeDisabled();
+  await expect(page.locator('[data-logistic="traffic30"]')).toBeDisabled();
+  await expect(page.locator('[data-action="start"]')).toBeEnabled();
+  await expect(page.locator('[data-action="reset"]')).toBeEnabled();
+  await expect(page.locator('[data-action="finish"]')).toBeEnabled();
+  await page.locator('[data-action="start"]').click();
+  await expect(page.locator("#sim-status")).toContainText("Executando");
+  await expect(page.locator('[data-action="stop"]')).toBeEnabled();
+  await page.locator('[data-action="stop"]').click();
+  await expect(page.locator("#sim-status")).toContainText("Pausado");
+  await page.locator('[data-action="start"]').click();
+  await page.locator('[data-action="finish"]').click();
+  await expect(page.locator("#summary-section")).toBeVisible({
+    timeout: 10_000,
+  });
+});
+
 test("alerta crítico aciona saída digital, LED e buzzer", async ({ page }) => {
   await page.locator('[data-action="start"]').click();
   await page.locator('[data-scenario="impacto"]').click();
@@ -81,7 +104,7 @@ test("reotimização exige confirmação e termina como aplicada", async ({
 
 test("resumo final aparece após concluir", async ({ page }) => {
   await page.locator('[data-action="start"]').click();
-  await page.locator('[data-scenario="concluir"]').click();
+  await page.locator('[data-action="finish"]').click();
   await expect(page.locator("#summary-section")).toBeVisible({
     timeout: 10_000,
   });

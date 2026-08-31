@@ -83,29 +83,33 @@ function planningInput(snapshot, conditions = {}) {
 }
 
 async function tick() {
-  if (!state.running || iotState.snapshot().mode !== iotState.MODES.DEMO)
-    return;
+  if (!state.running) return;
   state.scenarioTick += 1;
   try {
     const now = Date.now();
     const elapsedRealSeconds = (now - (state.lastTickAt || now)) / 1000;
     state.lastTickAt = now;
-    state.logistics = executionPlan.advance(
-      state.transporteId,
-      elapsedRealSeconds,
-    );
-    const payload = generate(state);
-    const result = await telemetry.receive(payload);
-    state.digitalSignal = result.digitalSignal;
-    if (state.scenario === "sinal" && state.scenarioTick === 7) {
-      await repository.createEvento({
-        transporteId: state.transporteId,
-        executionId: state.executionId,
-        tipoEvento: "COMUNICACAO_RESTABELECIDA",
-        descricao: "Comunicação simulada restabelecida.",
-        latitude: payload.latitude,
-        longitude: payload.longitude,
-      });
+    if (executionPlan.get(state.transporteId)) {
+      state.logistics = executionPlan.advance(
+        state.transporteId,
+        elapsedRealSeconds,
+      );
+      state.progress = state.logistics.totalProgress;
+    }
+    if (iotState.snapshot().mode === iotState.MODES.DEMO) {
+      const payload = generate(state);
+      const result = await telemetry.receive(payload);
+      state.digitalSignal = result.digitalSignal;
+      if (state.scenario === "sinal" && state.scenarioTick === 7) {
+        await repository.createEvento({
+          transporteId: state.transporteId,
+          executionId: state.executionId,
+          tipoEvento: "COMUNICACAO_RESTABELECIDA",
+          descricao: "Comunicação simulada restabelecida.",
+          latitude: payload.latitude,
+          longitude: payload.longitude,
+        });
+      }
     }
     if (state.progress >= 1) {
       const finalSnapshot = executionPlan.finish(state.transporteId);
@@ -117,17 +121,10 @@ async function tick() {
   }
 }
 
-async function start(
-  transporteId = 1,
-  rotaId,
-  plan,
-  result,
-  sourceMode = "DEMO",
-) {
-  const requestedMode = String(sourceMode || "DEMO").toUpperCase();
-  if (!Object.values(iotState.MODES).includes(requestedMode))
-    throw httpError(422, "INVALID_IOT_MODE", "Modo deve ser IOT ou DEMO.");
-  iotState.setMode(requestedMode);
+async function start(transporteId = 1, rotaId, plan, result, mode) {
+  // Mantém compatibilidade com clientes antigos que iniciam o simulador
+  // diretamente, sem passar primeiro pelo seletor do dashboard.
+  iotState.setMode(mode || iotState.MODES.DEMO);
   state.transporteId = Number(transporteId);
   if (!(await repository.getTransporte(state.transporteId)))
     throw httpError(404, "TRANSPORT_NOT_FOUND", "Transporte não encontrado.");
@@ -313,6 +310,16 @@ async function reset(transporteId = state.transporteId) {
   return status();
 }
 
+async function finish(transporteId = state.transporteId) {
+  ensureExecution(transporteId);
+  const finalSnapshot = executionPlan.finish(transporteId);
+  state.progress = 1;
+  state.logistics = finalSnapshot;
+  await stop();
+  await transportService.finish(transporteId, finalSnapshot);
+  return status();
+}
+
 async function scenario(name, transporteId) {
   if (!SCENARIOS[name])
     throw httpError(422, "INVALID_SCENARIO", "Cenário inválido.");
@@ -340,7 +347,7 @@ async function scenario(name, transporteId) {
       descricao: "Cenário normal reativado.",
     });
   }
-  if (name === "bateria") state.battery = 25;
+  if (name === "bateria") state.battery = 40;
   if (name === "atraso")
     await repository.createEvento({
       transporteId: state.transporteId,
@@ -366,15 +373,10 @@ async function scenario(name, transporteId) {
 }
 
 function status() {
-  const currentTelemetry = iotState.snapshot();
-  const latestDemoReading =
-    currentTelemetry.mode === iotState.MODES.DEMO
-      ? currentTelemetry.lastReading
-      : null;
   return {
     ...state,
     logistics: executionPlan.get(state.transporteId),
-    initialTelemetry: latestDemoReading || initialTelemetry,
+    initialTelemetry,
     availableScenarios: Object.entries(SCENARIOS).map(([id, value]) => ({
       id,
       label: value.label,
@@ -387,6 +389,7 @@ module.exports = {
   resume,
   stop,
   reset,
+  finish,
   scenario,
   recommendReoptimization,
   applyReoptimization,

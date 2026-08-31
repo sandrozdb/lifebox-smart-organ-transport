@@ -257,6 +257,74 @@ test("calcula autonomia didática da bateria", () =>
 const simulation = require("../src/services/simulationService");
 const executionPlan = require("../src/services/executionPlanService");
 const organPlanning = require("../src/services/organPlanningService");
+const iotState = require("../src/services/iotStateService");
+test("execução IoT avança sem gerar telemetria simulada", async () => {
+  const demo = await repository.createTransporte({
+    codigo_transporte: "IOT-CONTROL-001",
+    identificador_caixa: "BOX-IOT-CONTROL",
+    tipo_orgao: "Dado de teste",
+    hospital_origem: "Origem",
+    hospital_destino: "Destino",
+    latitude_origem: 0,
+    longitude_origem: 0,
+    latitude_destino: 0,
+    longitude_destino: 1,
+  });
+  const result = {
+    origin: { name: "Origem", latitude: 0, longitude: 0 },
+    destination: { name: "Destino", latitude: 0, longitude: 1 },
+    consumedMinutes: 0,
+    profile: {
+      code: "HEART",
+      ischemia: { officialMaxMinutes: 240, operationalSafetyMarginMinutes: 30 },
+    },
+  };
+  const plan = {
+    id: "IOT-PLAN",
+    name: "Plano IoT",
+    modal: "TERRESTRE",
+    segments: [
+      {
+        from: "Origem",
+        to: "Destino",
+        modal: "TERRESTRE",
+        distanceKm: 10,
+        timeMin: 60,
+        origin: result.origin,
+        destination: result.destination,
+      },
+    ],
+  };
+  const readingsBefore = (await repository.getLeituras(demo.id)).length;
+  try {
+    const started = await simulation.start(
+      demo.id,
+      "LOGISTICS_PLAN",
+      plan,
+      result,
+      "IOT",
+    );
+    assert.equal(iotState.snapshot().mode, "IOT");
+    assert.equal(started.running, true);
+    await simulation.tick();
+    assert.equal(
+      (await repository.getLeituras(demo.id)).length,
+      readingsBefore,
+    );
+    assert.ok(simulation.status().logistics);
+    assert.equal(
+      (await repository.getTransporte(demo.id)).status,
+      "EM_ANDAMENTO",
+    );
+    assert.equal((await simulation.stop()).running, false);
+    assert.equal((await simulation.resume(demo.id)).running, true);
+    await simulation.finish(demo.id);
+    assert.equal((await repository.getTransporte(demo.id)).status, "CONCLUIDO");
+  } finally {
+    await simulation.reset(demo.id);
+    iotState.reset();
+  }
+});
 test("cenários de demonstração atualizam leituras, alertas e timeline", async () => {
   const demo = await repository.createTransporte({
     codigo_transporte: "CENARIOS-001",

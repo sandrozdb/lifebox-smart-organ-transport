@@ -62,6 +62,19 @@ router.post("/reset", async (req, res, next) => {
   }
 });
 
+router.post("/finish", async (req, res, next) => {
+  try {
+    object(req.body);
+    res.json(
+      await service.finish(
+        positiveId(req.body.transporteId ?? 1, "transporteId"),
+      ),
+    );
+  } catch (error) {
+    next(error);
+  }
+});
+
 router.post("/reotimizar/recomendar", async (req, res, next) => {
   try {
     object(req.body);

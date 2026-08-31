@@ -39,8 +39,7 @@ async function api(path, options = {}) {
     ...options,
   });
   const data = await response.json();
-  if (!response.ok)
-    throw new Error(data.error || data.erro || "Falha na operação");
+  if (!response.ok) throw new Error(data.erro || "Falha na operação");
   return data;
 }
 function statusVisual(status) {
@@ -323,13 +322,7 @@ function updateSimulationControls(simulation, transport) {
     pause.disabled = true;
     $("#sim-status").textContent = "Pausado";
   } else {
-    const availablePlan =
-      window.lifeBoxCurrentPlan ||
-      window.lifeBoxPlanningResult?.selected ||
-      null;
-    if (!window.lifeBoxCurrentPlan && availablePlan)
-      window.lifeBoxCurrentPlan = availablePlan;
-    start.disabled = !availablePlan;
+    start.disabled = !window.lifeBoxCurrentPlan;
     start.textContent = "▶ INICIAR TRANSPORTE";
     pause.disabled = true;
     $("#sim-status").textContent = "Preparado";
@@ -338,15 +331,17 @@ function updateSimulationControls(simulation, transport) {
 function updateIotControls(iot) {
   const mode = iot.mode || "IOT";
   $("#iot-mode").value = mode;
+  syncSourceSelector();
   $("#esp32-status").textContent = iot.online
     ? "ESP32 ONLINE"
     : "ESP32 OFFLINE";
   $("#esp32-status").classList.toggle("online", Boolean(iot.online));
   $("#telemetry-status").textContent =
     mode === "IOT" ? "TELEMETRIA AO VIVO" : "TELEMETRIA DEMONSTRAÇÃO";
-  $(".demo-panel").classList.toggle("mode-disabled", mode !== "DEMO");
+  $(".scenario-controls").classList.toggle("mode-disabled", mode !== "DEMO");
+  $("#scenario-mode-message").hidden = mode === "DEMO";
   document
-    .querySelectorAll(".scenario-group button, .finish-transport")
+    .querySelectorAll("[data-scenario], [data-logistic]")
     .forEach((control) => {
       control.disabled = mode !== "DEMO";
     });
@@ -546,12 +541,6 @@ async function refresh() {
     $("#transport-code").textContent = transport.codigo_transporte;
     updateIotControls(iot);
     updateSimulationControls(simulation, transport);
-    if (iot.mode !== "DEMO")
-      document
-        .querySelectorAll(".scenario-group button, .finish-transport")
-        .forEach((control) => {
-          control.disabled = true;
-        });
     window.lifeBoxExecutionActive = Boolean(
       simulation.logistics && transport.status !== "CONCLUIDO",
     );
@@ -602,12 +591,6 @@ document.addEventListener("click", async (event) => {
     if (action) {
       if (
         action === "start" &&
-        !window.lifeBoxCurrentPlan &&
-        window.lifeBoxPlanningResult?.selected
-      )
-        window.lifeBoxCurrentPlan = window.lifeBoxPlanningResult.selected;
-      if (
-        action === "start" &&
         !window.lifeBoxCanResume &&
         !window.lifeBoxCurrentPlan
       )
@@ -625,10 +608,10 @@ document.addEventListener("click", async (event) => {
           method: "POST",
           body: JSON.stringify({
             transporteId: transportId,
-            mode: $("#iot-mode").value,
             rotaId: "LOGISTICS_PLAN",
             plan: window.lifeBoxCurrentPlan,
             result: window.lifeBoxPlanningResult,
+            mode: $("#iot-mode").value,
           }),
         },
       );
@@ -641,9 +624,6 @@ document.addEventListener("click", async (event) => {
         window.lifeBoxExecutionActive = false;
         window.lifeBoxActiveExecutionPlan = null;
         window.lifeBoxReoptimizationRecommendation = null;
-        document
-          .querySelectorAll("[data-logistic]")
-          .forEach((button) => (button.disabled = false));
       }
     }
     if (scenario)
@@ -804,6 +784,80 @@ if (projectDetails && finalSummary)
     "afterend",
     projectDetails.closest("section"),
   );
+function syncSourceSelector() {
+  const select = $("#iot-mode"),
+    button = $("#iot-mode-button");
+  if (!select || !button) return;
+  button.querySelector("span").textContent =
+    select.selectedOptions[0]?.textContent || "ESP32 / WOKWI";
+  document
+    .querySelectorAll("#iot-mode-options [role='option']")
+    .forEach((option) =>
+      option.setAttribute(
+        "aria-selected",
+        String(option.dataset.mode === select.value),
+      ),
+    );
+}
+function initSourceSelector() {
+  const select = $("#iot-mode"),
+    button = $("#iot-mode-button"),
+    list = $("#iot-mode-options"),
+    options = [...list.querySelectorAll("[role='option']")];
+  const close = (restoreFocus = false) => {
+    list.hidden = true;
+    button.setAttribute("aria-expanded", "false");
+    if (restoreFocus) button.focus();
+  };
+  const open = () => {
+    list.hidden = false;
+    button.setAttribute("aria-expanded", "true");
+    (
+      options.find((option) => option.dataset.mode === select.value) ||
+      options[0]
+    ).focus();
+  };
+  const choose = (option) => {
+    select.value = option.dataset.mode;
+    syncSourceSelector();
+    close(true);
+    select.dispatchEvent(new Event("change", { bubbles: true }));
+  };
+  button.addEventListener("click", () => (list.hidden ? open() : close()));
+  button.addEventListener("keydown", (event) => {
+    if (["Enter", " ", "ArrowDown"].includes(event.key)) {
+      event.preventDefault();
+      open();
+    } else if (event.key === "Escape") close();
+  });
+  options.forEach((option, index) => {
+    option.addEventListener("click", () => choose(option));
+    option.addEventListener("keydown", (event) => {
+      if (["Enter", " "].includes(event.key)) {
+        event.preventDefault();
+        choose(option);
+      } else if (event.key === "Escape") close(true);
+      else if (["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) {
+        event.preventDefault();
+        const target =
+          event.key === "Home"
+            ? 0
+            : event.key === "End"
+              ? options.length - 1
+              : (index +
+                  (event.key === "ArrowDown" ? 1 : -1) +
+                  options.length) %
+                options.length;
+        options[target].focus();
+      }
+    });
+  });
+  document.addEventListener("click", (event) => {
+    if (!event.target.closest(".source-select")) close();
+  });
+  syncSourceSelector();
+}
+initSourceSelector();
 $("#iot-mode").addEventListener("change", async (event) => {
   try {
     await api("/api/iot/mode", {
