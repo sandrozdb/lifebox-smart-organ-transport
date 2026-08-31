@@ -1,13 +1,13 @@
 # Requisitos acadêmicos — LifeBox
 
-| Disciplina | Requisito | Implementação | Dashboard / operação | Evidência | Status |
-| --- | --- | --- | --- | --- | --- |
-| Eletrônica | Lógica digital | `digitalAlertLogic`, Logisim e atuadores ESP32/Wokwi | sinais 0/1, LED e buzzer | circuito + IoT | CONCLUÍDO |
-| Física | Cálculos dinâmicos | `physicsService` | análise por execução | testes + telemetria IoT | CONCLUÍDO |
-| Arquitetura | GoF, SOLID e componentes | Strategy, Observer e serviços | painel técnico compacto | `docs/architecture.md` | CONCLUÍDO |
-| PO | Otimização multimodal | planos, segmentos e reotimização | planejamento e mapa | testes + dashboard | CONCLUÍDO |
-| QA | Testes, CI e E2E | `node:test`, c8, Playwright e MySQL no CI | validações automatizadas | CI #84 + documentação | CONCLUÍDO |
-| Cloud | Publicação e DB gerenciado | Render + Aiven MySQL + TLS + variáveis seguras | deploy público e health | `docs/cloud.md` + checklist | CONCLUÍDO |
+| Disciplina  | Requisito                  | Implementação                                        | Dashboard / operação     | Evidência                   | Status    |
+| ----------- | -------------------------- | ---------------------------------------------------- | ------------------------ | --------------------------- | --------- |
+| Eletrônica  | Lógica digital             | `digitalAlertLogic`, Logisim e atuadores ESP32/Wokwi | sinais 0/1, LED e buzzer | circuito + IoT              | CONCLUÍDO |
+| Física      | Cálculos dinâmicos         | `physicsService`                                     | análise por execução     | testes + telemetria IoT     | CONCLUÍDO |
+| Arquitetura | GoF, SOLID e componentes   | Strategy, Observer e serviços                        | painel técnico compacto  | `docs/architecture.md`      | CONCLUÍDO |
+| PO          | Otimização multimodal      | planos, segmentos e reotimização                     | planejamento e mapa      | testes + dashboard          | CONCLUÍDO |
+| QA          | Testes, CI e E2E           | `node:test`, c8, Playwright e MySQL no CI            | validações automatizadas | CI #84 + documentação       | CONCLUÍDO |
+| Cloud       | Publicação e DB gerenciado | Render + Aiven MySQL + TLS + variáveis seguras       | deploy público e health  | `docs/cloud.md` + checklist | CONCLUÍDO |
 
 ## Integração IoT complementar
 
