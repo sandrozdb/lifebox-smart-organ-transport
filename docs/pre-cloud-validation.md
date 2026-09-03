@@ -1,5 +1,7 @@
 # Fechamento pré-cloud — validação de 29/08/2026
 
+> **Registro histórico.** Este documento descreve o estado do projeto em 29/08/2026. As referências a Cloud e Wokwi pendentes são históricas. Para o estado atual, consulte [IoT](iot.md), [Cloud](cloud.md) e o [README do firmware](../firmware/README.md).
+
 ## Escopo e base de publicação
 
 O dashboard permaneceu visualmente congelado. A única mudança funcional desta etapa foi a correção do fluxo de `recommendationId` em `public/js/planning.js`; os demais ajustes nos cinco arquivos apontados pelo Prettier foram exclusivamente de formatação automática.

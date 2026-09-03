@@ -1,0 +1,11 @@
+# Mantém arquivos de texto estáveis entre Windows, Linux e CI.
+* text=auto eol=lf
+
+# Binários não passam por normalização de fim de linha.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.pdf binary
+*.zip binary
