@@ -553,15 +553,30 @@ function renderQaStatus(qa) {
     ? `${qa.status} · ${formatDate(qa.validatedAt)}`
     : "PENDENTE";
 }
+function selectDashboardTransport(transports, iot) {
+  const fallback =
+    transports.find((item) => item.status !== "CONCLUIDO") || transports[0];
+  if (
+    iot.mode !== "IOT" ||
+    iot.transportId === null ||
+    iot.transportId === undefined
+  )
+    return fallback;
+  return (
+    transports.find((item) => item.id === Number(iot.transportId)) || fallback
+  );
+}
 async function refresh() {
   try {
-    const transports = await api("/api/transportes");
+    const [transports, iot] = await Promise.all([
+      api("/api/transportes"),
+      api("/api/iot/status"),
+    ]);
     if (!transports.length) return;
-    const transport =
-      transports.find((item) => item.status !== "CONCLUIDO") || transports[0];
+    const transport = selectDashboardTransport(transports, iot);
     transportId = transport.id;
     window.lifeBoxTransportId = transportId;
-    const [readings, alerts, events, tracking, simulation, physics, qa, iot] =
+    const [readings, alerts, events, tracking, simulation, physics, qa] =
       await Promise.all([
         api(`/api/transportes/${transportId}/leituras?limite=100`),
         api(`/api/transportes/${transportId}/alertas`),
@@ -570,7 +585,6 @@ async function refresh() {
         api("/api/simulacao/status"),
         api(`/api/fisica/${transportId}`),
         api(`/api/qualidade`),
-        api(`/api/iot/status`),
       ]);
     $("#transport-code").textContent = transport.codigo_transporte;
     updateIotControls(iot);
