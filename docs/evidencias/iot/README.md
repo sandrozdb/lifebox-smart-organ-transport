@@ -20,7 +20,7 @@ Esta pasta está **pronta para receber as capturas reais da integração ESP32/W
 
 Use preferencialmente 1920×1080, zoom 100% e a aplicação pública atual:
 
-`https://lifebox-expotech-iot-test.onrender.com`
+`https://lifebox-expotech.onrender.com`
 
 Projeto Wokwi:
 

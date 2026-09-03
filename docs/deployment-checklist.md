@@ -7,7 +7,7 @@ Status acadêmico da etapa Cloud: **CONCLUÍDO**. Os itens abertos abaixo são m
 - [x] Backend Node.js publicado com `npm start`.
 - [x] `PORT` fornecida pelo ambiente Render.
 - [x] Dashboard e API servidos pelo mesmo Express.
-- [x] URL HTTPS pública atual: `https://lifebox-expotech-iot-test.onrender.com`.
+- [x] URL HTTPS pública atual: `https://lifebox-expotech.onrender.com`.
 - [x] Firmware ESP32/Wokwi apontando para o mesmo backend público.
 
 ## B. Banco MySQL gerenciado

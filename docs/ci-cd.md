@@ -42,7 +42,7 @@ Fluxo atual:
 7. o health check em `/api/health` valida API e banco;
 8. a aplicação fica disponível no serviço público atual.
 
-**URL atual usada pelo firmware IoT:** `https://lifebox-expotech-iot-test.onrender.com`.
+**URL atual usada pelo firmware IoT:** `https://lifebox-expotech.onrender.com`.
 
 ## Validação prática do Auto Deploy
 

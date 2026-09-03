@@ -12,12 +12,12 @@ Aiven for MySQL
 
 **Status: CONCLUÍDA E VALIDADA.** O backend atualmente usado pelo firmware IoT está publicado em:
 
-- aplicação: https://lifebox-expotech-iot-test.onrender.com
-- health check: https://lifebox-expotech-iot-test.onrender.com/api/health
+- aplicação: https://lifebox-expotech.onrender.com
+- health check: https://lifebox-expotech.onrender.com/api/health
 
 O serviço está conectado ao Aiven for MySQL, com persistência por execução, TLS com validação de CA e Auto Deploy do Render a partir da branch `main`.
 
-A documentação antiga usava `https://lifebox-expotech.onrender.com` durante a primeira etapa Cloud. O fluxo IoT oficial e o firmware atual usam `https://lifebox-expotech-iot-test.onrender.com`; por isso esta é a referência pública adotada na documentação final.
+Durante a validação IoT foi utilizado um endereço temporário de testes. Após a validação do serviço definitivo, o fluxo IoT oficial, o firmware e a documentação final passaram a adotar `https://lifebox-expotech.onrender.com` como referência pública.
 
 ## Implementado e validado
 
@@ -50,7 +50,7 @@ Configuração do Web Service:
 - start: `npm start`;
 - health check path: `/api/health`;
 - Auto Deploy: `On Commit`;
-- serviço público atual: https://lifebox-expotech-iot-test.onrender.com.
+- serviço público atual: https://lifebox-expotech.onrender.com.
 
 O plano gratuito pode entrar em inatividade. A primeira requisição após um período ocioso pode sofrer cold start. Isso não apaga os dados persistidos no Aiven.
 

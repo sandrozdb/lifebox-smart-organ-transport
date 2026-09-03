@@ -5,7 +5,7 @@ Esta pasta contém todos os arquivos necessários para executar o dispositivo Li
 **Status: integração concluída e validada com o backend público.**
 
 - Wokwi: https://wokwi.com/projects/473749722940837889
-- Backend atual: https://lifebox-expotech-iot-test.onrender.com
+- Backend atual: https://lifebox-expotech.onrender.com
 - Documentação IoT: [`../docs/iot.md`](../docs/iot.md)
 
 ## Como abrir no Wokwi
@@ -61,7 +61,7 @@ Dashboard → Render → /api/iot/status → ESP32 → OLED
                    digitalSignal → LED/Buzzer
 ```
 
-O ESP32 envia telemetria ao backend público atual em `https://lifebox-expotech-iot-test.onrender.com`. O backend persiste as leituras no Aiven e disponibiliza o estado ao dashboard. Na direção inversa, o dispositivo consulta `/api/iot/status` para obter modo, transporte, perfil térmico do órgão e `digitalSignal`.
+O ESP32 envia telemetria ao backend público atual em `https://lifebox-expotech.onrender.com`. O backend persiste as leituras no Aiven e disponibiliza o estado ao dashboard. Na direção inversa, o dispositivo consulta `/api/iot/status` para obter modo, transporte, perfil térmico do órgão e `digitalSignal`.
 
 ## Fonte de verdade
 

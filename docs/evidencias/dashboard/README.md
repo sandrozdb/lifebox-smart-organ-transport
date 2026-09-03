@@ -33,7 +33,7 @@ O catálogo geral está em [`../README.md`](../README.md). As novas capturas fin
 
 O projeto atual já superou a baseline acima:
 
-- deploy público atual: `https://lifebox-expotech-iot-test.onrender.com`;
+- deploy público atual: `https://lifebox-expotech.onrender.com`;
 - backend: Render Web Service / Docker;
 - banco: Aiven for MySQL gerenciado via TLS;
 - IoT: ESP32/Wokwi integrado ao backend público;

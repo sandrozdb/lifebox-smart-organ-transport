@@ -35,7 +35,7 @@ constexpr uint32_t NTP_SYNC_TIMEOUT_MS = 5000;
 const char *WIFI_SSID = "Wokwi-GUEST";
 const char *WIFI_PASSWORD = "";
 const char *API_BASE_URL =
-    "https://lifebox-expotech-iot-test.onrender.com";
+    "https://lifebox-expotech.onrender.com";
 const char *DEVICE_ID = "LIFEBOX-WOKWI-001";
 
 DHTesp dht;
