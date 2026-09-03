@@ -25,7 +25,8 @@ test("estado IoT inicia seguro e sem telemetria artificial", async () => {
   assert.equal(state.online, false);
   assert.equal(state.lastReading, null);
   assert.equal(state.digitalSignal.alertOutput, false);
-  assert.equal(state.transportId, null);
+  assert.equal(state.deviceId, null);
+  assert.equal(state.transportId, 2);
 });
 
 test("backend informa o transporte associado ao dispositivo", async () => {
@@ -34,6 +35,14 @@ test("backend informa o transporte associado ao dispositivo", async () => {
   );
   const state = await response.json();
   assert.equal(state.transportId, 2);
+});
+
+test("backend não associa dispositivo diferente do configurado", async () => {
+  const response = await fetch(
+    `${baseUrl}/api/iot/status?deviceId=OUTRO-DISPOSITIVO`,
+  );
+  const state = await response.json();
+  assert.equal(state.transportId, null);
 });
 
 test("backend rejeita transporte diferente da associação do dispositivo", async () => {
@@ -75,6 +84,10 @@ test("dashboard alterna para demonstração e volta ao IoT", async () => {
   const state = await iot.json();
   assert.equal(state.mode, "IOT");
   assert.equal(state.scenario, "normal");
+  assert.equal(state.online, false);
+  assert.equal(state.deviceId, null);
+  assert.equal(state.lastReading, null);
+  assert.equal(state.transportId, 2);
   assert.equal(state.digitalSignal.alertOutput, false);
 });
 
