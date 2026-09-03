@@ -38,9 +38,10 @@ Este checklist separa o que já foi validado tecnicamente do que ainda precisa a
 - [x] Evidência do padrão Strategy.
 - [x] Evidência do padrão Observer.
 - [x] Avaliação SOLID documentada.
-- [x] Tabela verdade/regra da lógica digital.
-- [x] Circuito Logisim funcional.
-- [x] Estados do Logisim documentados.
+- [x] Regra combinacional de geração de `EVENTO_CRITICO` documentada.
+- [x] Circuito Logisim sequencial com D Flip-Flop funcional.
+- [x] Tabela de estados e reset assíncrono documentados.
+- [x] Quatro evidências visuais atuais do Flip-Flop adicionadas.
 
 ## Qualidade
 
@@ -71,7 +72,7 @@ Este checklist separa o que já foi validado tecnicamente do que ainda precisa a
 
 - [x] 20 capturas pré-cloud preservadas.
 - [x] Evidência antiga de Cloud marcada explicitamente como histórica.
-- [x] Circuito Logisim e capturas eletrônicas preservados.
+- [x] Circuito Logisim sequencial e quatro capturas eletrônicas atuais preservados.
 
 ## Estado atual
 

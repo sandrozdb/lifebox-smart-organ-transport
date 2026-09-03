@@ -41,6 +41,7 @@
       <a name="facing" val="west"/>
       <a name="type" val="output"/>
     </tool>
+    <tool lib="0" name="Clock"/>
     <sep/>
     <tool lib="1" name="NOT Gate"/>
     <tool lib="1" name="AND Gate"/>
@@ -54,63 +55,96 @@
   </toolbar>
   <circuit name="main">
     <a name="circuit" val="main"/>
-    <a name="clabel" val="LifeBox 2050 - Logica Digital de Alerta"/>
+    <a name="clabel" val="LifeBox 2050 - Memoria Sequencial de Alerta"/>
     <a name="clabelfont" val="SansSerif bold 18"/>
     <a name="clabelup" val="north"/>
     <a name="simulationFrequency" val="1.0"/>
-    <comp lib="0" loc="(1190,360)" name="Pin">
+    <comp lib="0" loc="(1350,420)" name="Pin">
       <a name="appearance" val="classic"/>
       <a name="label" val="ALERTA"/>
       <a name="labelloc" val="east"/>
       <a name="type" val="output"/>
     </comp>
-    <comp lib="0" loc="(1190,420)" name="Pin">
+    <comp lib="0" loc="(1350,480)" name="Pin">
       <a name="appearance" val="classic"/>
       <a name="label" val="LED"/>
       <a name="labelloc" val="east"/>
       <a name="type" val="output"/>
     </comp>
-    <comp lib="0" loc="(1190,480)" name="Pin">
+    <comp lib="0" loc="(1350,540)" name="Pin">
       <a name="appearance" val="classic"/>
       <a name="label" val="BUZZER"/>
       <a name="labelloc" val="east"/>
       <a name="type" val="output"/>
     </comp>
-    <comp lib="0" loc="(370,300)" name="Pin">
+    <comp lib="0" loc="(260,260)" name="Pin">
       <a name="appearance" val="classic"/>
       <a name="label" val="TRANSPORTE_ATIVO"/>
     </comp>
-    <comp lib="0" loc="(370,420)" name="Pin">
+    <comp lib="0" loc="(260,380)" name="Pin">
       <a name="appearance" val="classic"/>
       <a name="label" val="TEMPERATURA_CRITICA"/>
     </comp>
-    <comp lib="0" loc="(370,500)" name="Pin">
+    <comp lib="0" loc="(260,460)" name="Pin">
       <a name="appearance" val="classic"/>
       <a name="label" val="IMPACTO_CRITICO"/>
     </comp>
-    <comp lib="1" loc="(690,460)" name="OR Gate">
+    <comp lib="0" loc="(260,600)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="RESET"/>
+    </comp>
+    <comp lib="0" loc="(950,440)" name="Clock">
+      <a name="appearance" val="classic"/>
+      <a name="labelloc" val="south"/>
+    </comp>
+    <comp lib="1" loc="(600,420)" name="OR Gate">
       <a name="label" val="CONDICAO_CRITICA"/>
     </comp>
-    <comp lib="1" loc="(890,360)" name="AND Gate">
-      <a name="label" val="ALERTA_ATIVO"/>
+    <comp lib="1" loc="(800,300)" name="AND Gate">
+      <a name="label" val="EVENTO_CRITICO"/>
     </comp>
-    <wire from="(1010,360)" to="(1010,420)"/>
-    <wire from="(1010,360)" to="(1190,360)"/>
-    <wire from="(1010,420)" to="(1010,480)"/>
-    <wire from="(1010,420)" to="(1190,420)"/>
-    <wire from="(1010,480)" to="(1190,480)"/>
-    <wire from="(370,300)" to="(810,300)"/>
-    <wire from="(370,420)" to="(610,420)"/>
-    <wire from="(370,500)" to="(610,500)"/>
-    <wire from="(610,420)" to="(610,440)"/>
-    <wire from="(610,440)" to="(640,440)"/>
-    <wire from="(610,480)" to="(610,500)"/>
-    <wire from="(610,480)" to="(640,480)"/>
-    <wire from="(690,460)" to="(790,460)"/>
-    <wire from="(790,380)" to="(790,460)"/>
-    <wire from="(790,380)" to="(840,380)"/>
-    <wire from="(810,300)" to="(810,340)"/>
-    <wire from="(810,340)" to="(840,340)"/>
-    <wire from="(890,360)" to="(1010,360)"/>
+    <comp lib="1" loc="(960,400)" name="OR Gate">
+      <a name="label" val="D"/>
+    </comp>
+    <comp lib="5" loc="(1040,390)" name="D Flip-Flop">
+      <a name="appearance" val="logisim_evolution"/>
+      <a name="label" val="MEMORIA_DE_ALERTA"/>
+    </comp>
+    <wire from="(1060,450)" to="(1060,600)"/>
+    <wire from="(1090,400)" to="(1140,400)"/>
+    <wire from="(1140,180)" to="(1140,400)"/>
+    <wire from="(1140,400)" to="(1210,400)"/>
+    <wire from="(1210,400)" to="(1210,460)"/>
+    <wire from="(1210,400)" to="(1360,400)"/>
+    <wire from="(1210,460)" to="(1210,520)"/>
+    <wire from="(1210,460)" to="(1360,460)"/>
+    <wire from="(1210,520)" to="(1360,520)"/>
+    <wire from="(1350,420)" to="(1360,420)"/>
+    <wire from="(1350,480)" to="(1360,480)"/>
+    <wire from="(1350,540)" to="(1360,540)"/>
+    <wire from="(1360,400)" to="(1360,420)"/>
+    <wire from="(1360,460)" to="(1360,480)"/>
+    <wire from="(1360,520)" to="(1360,540)"/>
+    <wire from="(260,260)" to="(720,260)"/>
+    <wire from="(260,380)" to="(530,380)"/>
+    <wire from="(260,460)" to="(530,460)"/>
+    <wire from="(260,600)" to="(1060,600)"/>
+    <wire from="(530,380)" to="(530,400)"/>
+    <wire from="(530,400)" to="(550,400)"/>
+    <wire from="(530,440)" to="(530,460)"/>
+    <wire from="(530,440)" to="(550,440)"/>
+    <wire from="(600,420)" to="(700,420)"/>
+    <wire from="(700,320)" to="(700,420)"/>
+    <wire from="(700,320)" to="(750,320)"/>
+    <wire from="(720,260)" to="(720,280)"/>
+    <wire from="(720,280)" to="(750,280)"/>
+    <wire from="(800,300)" to="(860,300)"/>
+    <wire from="(860,300)" to="(860,380)"/>
+    <wire from="(860,380)" to="(910,380)"/>
+    <wire from="(910,420)" to="(930,420)"/>
+    <wire from="(930,180)" to="(1140,180)"/>
+    <wire from="(930,180)" to="(930,420)"/>
+    <wire from="(950,440)" to="(1030,440)"/>
+    <wire from="(960,400)" to="(1030,400)"/>
   </circuit>
 </project>
