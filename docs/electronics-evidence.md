@@ -1,62 +1,92 @@
 # Evidências — Eletrônica Digital
 
-A lógica combinacional validada no Logisim Evolution 4.1.0 e implementada no software é:
+O circuito [`electronics/lifebox-alert-logic.circ`](../electronics/lifebox-alert-logic.circ) foi validado manualmente no Logisim Evolution 4.1.0 como uma extensão sequencial acadêmica da detecção de eventos críticos.
+
+## Escopo e distinção entre software e Logisim
+
+O backend e o Wokwi continuam usando a regra **combinacional** atual:
 
 ```text
-ALERTA = TRANSPORTE_ATIVO AND (TEMPERATURA_CRITICA OR IMPACTO_CRITICO)
+CONDICAO_CRITICA = TEMPERATURA_CRITICA OR IMPACTO_CRITICO
+EVENTO_CRITICO = TRANSPORTE_ATIVO AND CONDICAO_CRITICA
 ```
 
-O fluxo no MVP é: **sensor/simulação → software → comparação com o perfil do órgão → sinal booleano `TEMPERATURA_CRITICA` → lógica digital → LED/buzzer**. O circuito recebe apenas sinais `0` ou `1`; a comparação da temperatura é responsabilidade do software.
+Nesse fluxo, LED e buzzer acompanham a condição crítica atual e desligam quando ela normaliza. O backend não implementa Flip-Flop.
 
-- Alertas **digitais**: temperatura crítica e impacto crítico; acionam LED e buzzer.
-- Alertas **operacionais**: umidade, bateria, sinal, atraso e reotimização; são registrados e exibidos, mas não entram na equação digital.
+No Logisim, a mesma detecção é encaminhada para uma memória D Flip-Flop:
 
-A porta **OR** representa a condição crítica de temperatura ou impacto. A porta **AND** bloqueia a saída quando o transporte não está ativo. A mesma regra está em [`src/services/digitalAlertLogic.js`](../src/services/digitalAlertLogic.js); o circuito é [`electronics/lifebox-alert-logic.circ`](../electronics/lifebox-alert-logic.circ).
+```text
+D = Q OR EVENTO_CRITICO
 
-## Tabela verdade
+Com RESET = 1:
+Q = 0 imediatamente
 
-| TRANSPORTE_ATIVO | TEMPERATURA_CRITICA | IMPACTO_CRITICO | ALERTA / LED / BUZZER |
-| ---------------: | ------------------: | --------------: | --------------------: |
-|                0 |                   0 |               0 |                     0 |
-|                0 |                   0 |               1 |                     0 |
-|                0 |                   1 |               0 |                     0 |
-|                0 |                   1 |               1 |                     0 |
-|                1 |                   0 |               0 |                     0 |
-|                1 |                   0 |               1 |                     1 |
-|                1 |                   1 |               0 |                     1 |
-|                1 |                   1 |               1 |                     1 |
+Na borda de subida do CLOCK, com RESET = 0:
+Q(n+1) = D
+
+ALERTA = Q
+LED = Q
+BUZZER = Q
+```
+
+Assim, `Q` mantém o alerta após a normalização até que `RESET` seja acionado.
+
+## A. Tabela combinacional — geração de `EVENTO_CRITICO`
+
+| TRANSPORTE_ATIVO | TEMPERATURA_CRITICA | IMPACTO_CRITICO | CONDICAO_CRITICA | EVENTO_CRITICO |
+| ---------------: | ------------------: | --------------: | ---------------: | -------------: |
+|                0 |                   0 |               0 |                0 |              0 |
+|                0 |                   0 |               1 |                1 |              0 |
+|                0 |                   1 |               0 |                1 |              0 |
+|                0 |                   1 |               1 |                1 |              0 |
+|                1 |                   0 |               0 |                0 |              0 |
+|                1 |                   0 |               1 |                1 |              1 |
+|                1 |                   1 |               0 |                1 |              1 |
+|                1 |                   1 |               1 |                1 |              1 |
+
+## B. Tabela de estados — D Flip-Flop
+
+| RESET | Q atual | EVENTO_CRITICO | CLOCK | Q próximo |
+| ----: | ------: | -------------: | :---: | --------: |
+|     1 |       X |              X |   X   |         0 |
+|     0 |       0 |              0 |   ↑   |         0 |
+|     0 |       0 |              1 |   ↑   |         1 |
+|     0 |       1 |              0 |   ↑   |         1 |
+|     0 |       1 |              1 |   ↑   |         1 |
+
+`X` significa valor irrelevante; `↑` é a borda de subida do clock. `RESET` é assíncrono, portanto limpa `Q` sem aguardar uma borda.
 
 ## 1. Estado normal
 
-Transporte inativo e nenhuma condição crítica. ALERTA, LED e BUZZER permanecem desligados.
+Com `Q = 0` e sem evento crítico, ALERTA, LED e BUZZER permanecem desligados.
 
-![Estado normal](evidencias/eletronica/01-estado-normal.png)
+![Estado normal](evidencias/eletronica/01-estado-normal-flipflop.png)
 
-## 2. Temperatura crítica
+## 2. Evento crítico memorizado
 
-Transporte ativo e temperatura fora da faixa de referência do órgão selecionado: ALERTA, LED e BUZZER são ativados.
+Temperatura crítica com transporte ativo gera `EVENTO_CRITICO = 1`. Na borda de subida seguinte do CLOCK, o D Flip-Flop armazena `Q = 1` e ativa ALERTA, LED e BUZZER.
 
-![Temperatura crítica](evidencias/eletronica/02-temperatura-critica.png)
+![Evento crítico memorizado](evidencias/eletronica/02-evento-critico-memorizado.png)
 
-## 3. Impacto crítico
+## 3. Alerta mantido após normalização
 
-Transporte ativo e impacto crítico: ALERTA, LED e BUZZER são ativados.
+Após a temperatura retornar ao normal, `EVENTO_CRITICO` volta a `0`, mas a realimentação `D = Q OR EVENTO_CRITICO` mantém `Q = 1`. ALERTA, LED e BUZZER continuam ativos.
 
-![Impacto crítico](evidencias/eletronica/03-impacto-critico.png)
+![Alerta mantido após normalização](evidencias/eletronica/03-alerta-mantido-apos-normalizacao.png)
 
-## 4. Transporte inativo
+## 4. Reset assíncrono
 
-Mesmo com entradas críticas, a saída permanece em `0` quando `TRANSPORTE_ATIVO = 0`.
+Com `RESET = 1`, o D Flip-Flop limpa `Q` imediatamente, sem novo CLOCK, e desliga ALERTA, LED e BUZZER.
 
-![Transporte inativo](evidencias/eletronica/04-transporte-inativo.png)
+![Reset do Flip-Flop](evidencias/eletronica/04-reset-flipflop.png)
 
-## Evidências concluídas
+## Validação manual concluída
 
-- [x] Circuito compatível com Logisim Evolution 4.1.0.
-- [x] Lógica sem valores de erro (`E`).
-- [x] Estado normal demonstrado.
-- [x] Temperatura crítica acionando LED e buzzer.
-- [x] Impacto crítico acionando LED e buzzer.
-- [x] Transporte inativo bloqueando o alerta.
-- [x] Tabela verdade completa conferida.
-- [x] Comparação realizada com `src/services/digitalAlertLogic.js`.
+- [x] Estado inicial com `Q = 0`.
+- [x] Temperatura crítica com transporte ativo gerando `EVENTO_CRITICO = 1`.
+- [x] Borda de subida do CLOCK armazenando `Q = 1`.
+- [x] Normalização de temperatura sem limpar `Q`.
+- [x] ALERTA, LED e BUZZER permanecendo em `1` enquanto `Q = 1`.
+- [x] `RESET = 1` limpando `Q` imediatamente, sem novo CLOCK.
+- [x] Circuito validado manualmente no Logisim Evolution 4.1.0.
+- [x] Comparação documentada com `src/services/digitalAlertLogic.js`, sem atribuir o Flip-Flop ao backend/Wokwi.
