@@ -57,7 +57,7 @@ Este checklist separa o que já foi validado tecnicamente do que ainda precisa a
 ## Cloud
 
 - [x] Backend público no Render.
-- [x] URL atual `https://lifebox-expotech-iot-test.onrender.com`.
+- [x] URL atual `https://lifebox-expotech.onrender.com`.
 - [x] `GET /api/health` público respondendo.
 - [x] Aiven for MySQL conectado via TLS/CA.
 - [x] Persistência validada após redeploy.

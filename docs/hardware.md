@@ -61,7 +61,7 @@ Sensores → ESP32 → HTTPS → Render/Express → Aiven MySQL
                          ESP32 OLED/LED/Buzzer
 ```
 
-O firmware usa `WiFiClientSecure` para comunicação HTTPS com o backend atual em `https://lifebox-expotech-iot-test.onrender.com`.
+O firmware usa `WiFiClientSecure` para comunicação HTTPS com o backend atual em `https://lifebox-expotech.onrender.com`.
 
 ## O que já foi validado
 

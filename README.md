@@ -10,8 +10,8 @@
 
 LifeBox é um sistema acadêmico de apoio à decisão, rastreabilidade e monitoramento IoT para transporte de órgãos. O projeto integra planejamento multimodal com Pesquisa Operacional, execução rastreável, reotimização confirmada pelo operador, telemetria física simulada por ESP32/Wokwi, Física, Eletrônica Digital, MySQL gerenciado e infraestrutura em nuvem em uma única demonstração verificável.
 
-**Deploy público atual:** https://lifebox-expotech-iot-test.onrender.com  
-**Health check:** https://lifebox-expotech-iot-test.onrender.com/api/health  
+**Deploy público atual:** https://lifebox-expotech.onrender.com
+**Health check:** https://lifebox-expotech.onrender.com/api/health
 **Wokwi público:** https://wokwi.com/projects/473749722940837889
 
 ## Status atual
@@ -127,7 +127,7 @@ A validação atual inclui testes específicos para vínculo da telemetria IoT �
 
 ## Render + Aiven
 
-O backend público usado pelo firmware IoT está em https://lifebox-expotech-iot-test.onrender.com, publicado como Web Service Docker no Render. O banco de produção acadêmica é um **Aiven for MySQL** gerenciado. A comunicação Render → Aiven usa TLS com validação de CA; credenciais e certificado ficam em variáveis do ambiente do provedor e não são versionados.
+O backend público usado pelo firmware IoT está em https://lifebox-expotech.onrender.com, publicado como Web Service Docker no Render. O banco de produção acadêmica é um **Aiven for MySQL** gerenciado. A comunicação Render → Aiven usa TLS com validação de CA; credenciais e certificado ficam em variáveis do ambiente do provedor e não são versionados.
 
 O banco `lifebox_db` mantém transportes, leituras, alertas, eventos de rastreabilidade e resumos por execução. A persistência após redeploy foi validada, assim como o Auto Deploy do Render a partir da branch `main`.
 

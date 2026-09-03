@@ -5,8 +5,8 @@
 **CONCLUÍDA E VALIDADA.** A LifeBox possui um dispositivo ESP32 executado no Wokwi Web, conectado pela internet ao backend público no Render e ao banco Aiven for MySQL.
 
 - Wokwi: https://wokwi.com/projects/473749722940837889
-- Backend público atual: https://lifebox-expotech-iot-test.onrender.com
-- Health check: https://lifebox-expotech-iot-test.onrender.com/api/health
+- Backend público atual: https://lifebox-expotech.onrender.com
+- Health check: https://lifebox-expotech.onrender.com/api/health
 - Firmware: [`../firmware`](../firmware/README.md)
 
 ## Fluxo real do protótipo

@@ -2,7 +2,7 @@
 
 Bases disponíveis:
 
-- pública atual: `https://lifebox-expotech-iot-test.onrender.com/api`;
+- pública atual: `https://lifebox-expotech.onrender.com/api`;
 - local: `http://localhost:3000/api`.
 
 Payloads são JSON. Erros seguem:
@@ -22,7 +22,7 @@ A URL pública é uma demonstração acadêmica. Não envie dados clínicos, pes
 | `GET /health`    | Verificar API e, com driver MySQL, conexão. | `200`; `503 SERVICE_UNAVAILABLE`.                       |
 | `GET /qualidade` | Último resultado de QA publicado.           | `200`; baseline versionado quando não há arquivo local. |
 
-Health público: `https://lifebox-expotech-iot-test.onrender.com/api/health`.
+Health público: `https://lifebox-expotech.onrender.com/api/health`.
 
 ## IoT
 

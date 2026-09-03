@@ -18,7 +18,7 @@ flowchart LR
 
 O operador calcula planos, acompanha a execução, altera condições logísticas e confirma reotimizações. O ESP32/Wokwi envia telemetria ambiental e física, enquanto o backend permanece como fonte de verdade para criticidade, execução, regras digitais e decisão logística.
 
-O deploy público atualmente usado pelo firmware está em `https://lifebox-expotech-iot-test.onrender.com`. A persistência usa Aiven for MySQL com TLS e validação de CA.
+O deploy público atualmente usado pelo firmware está em `https://lifebox-expotech.onrender.com`. A persistência usa Aiven for MySQL com TLS e validação de CA.
 
 ## C4 Level 2 — Container
 

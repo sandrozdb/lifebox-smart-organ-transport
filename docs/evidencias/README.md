@@ -15,8 +15,8 @@ As imagens históricas continuam válidas para demonstrar PO, Física, Eletrôni
 
 ## Ambiente atual
 
-- Dashboard/Backend: `https://lifebox-expotech-iot-test.onrender.com`
-- Health check: `https://lifebox-expotech-iot-test.onrender.com/api/health`
+- Dashboard/Backend: `https://lifebox-expotech.onrender.com`
+- Health check: `https://lifebox-expotech.onrender.com/api/health`
 - Wokwi: `https://wokwi.com/projects/473749722940837889`
 - Banco: Aiven for MySQL com TLS/CA
 - CI: GitHub Actions; CI #84 verde em 31/08/2026

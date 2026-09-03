@@ -13,7 +13,7 @@ Esta pasta está **pronta para receber as capturas reais do Render, Aiven e GitH
 | `03-render-environment-keys.png` | nomes das variáveis configuradas, sem mostrar valores sensíveis. | VALIDADO | PENDENTE |
 | `04-aiven-service-overview.png` | serviço MySQL ativo no Aiven, sem senha exposta. | VALIDADO | PENDENTE |
 | `05-aiven-database.png` | banco `lifebox_db`/serviço gerenciado ou visão equivalente. | VALIDADO | PENDENTE |
-| `06-health-check-publico.png` | `https://lifebox-expotech-iot-test.onrender.com/api/health` respondendo com sucesso. | VALIDADO | PENDENTE |
+| `06-health-check-publico.png` | `https://lifebox-expotech.onrender.com/api/health` respondendo com sucesso. | VALIDADO | PENDENTE |
 | `07-github-actions-ci84.png` | CI #84 verde ou uma execução verde mais recente. | VALIDADO | PENDENTE |
 | `08-dashboard-publico.png` | dashboard aberto pela URL pública atual. | VALIDADO | PENDENTE |
 
@@ -23,8 +23,8 @@ Salve as imagens diretamente nesta pasta usando **exatamente os nomes acima**. D
 
 ## URLs de referência
 
-- Dashboard/Backend: `https://lifebox-expotech-iot-test.onrender.com`
-- Health check: `https://lifebox-expotech-iot-test.onrender.com/api/health`
+- Dashboard/Backend: `https://lifebox-expotech.onrender.com`
+- Health check: `https://lifebox-expotech.onrender.com/api/health`
 - Repositório: `sandrozdb/lifebox-smart-organ-transport`
 
 ## Checklist de segurança antes do commit

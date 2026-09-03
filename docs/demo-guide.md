@@ -4,7 +4,7 @@
 
 Abra alguns minutos antes:
 
-- dashboard público: `https://lifebox-expotech-iot-test.onrender.com`;
+- dashboard público: `https://lifebox-expotech.onrender.com`;
 - Wokwi: `https://wokwi.com/projects/473749722940837889`.
 
 Como o Render usa plano gratuito, aguarde o cold start se o serviço estiver inativo. Confirme `/api/health`, deixe o Wokwi conectado e verifique o dispositivo como online no dashboard.
@@ -41,7 +41,7 @@ No DEMO, os cenários manuais de temperatura, impacto, umidade, bateria e sinal 
 
 ## Evidência rápida de Cloud
 
-Abra `https://lifebox-expotech-iot-test.onrender.com/api/health` para demonstrar o backend público e a conexão com o banco.
+Abra `https://lifebox-expotech.onrender.com/api/health` para demonstrar o backend público e a conexão com o banco.
 
 Para a apresentação final, as pastas de captura estão preparadas em:
 

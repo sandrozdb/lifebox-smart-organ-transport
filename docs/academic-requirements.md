@@ -28,7 +28,7 @@ Detalhes em [`iot.md`](iot.md) e [`../firmware/README.md`](../firmware/README.md
 
 ## Cloud validada
 
-O backend atualmente usado pelo firmware está publicado em `https://lifebox-expotech-iot-test.onrender.com`, com banco Aiven for MySQL gerenciado, conexão TLS com CA, variáveis de ambiente fora do repositório, persistência validada e Auto Deploy do Render a partir da branch `main`.
+O backend atualmente usado pelo firmware está publicado em `https://lifebox-expotech.onrender.com`, com banco Aiven for MySQL gerenciado, conexão TLS com CA, variáveis de ambiente fora do repositório, persistência validada e Auto Deploy do Render a partir da branch `main`.
 
 O GitHub Actions permanece responsável pela CI. No modo atual `On Commit`, CI e deploy são disparados pelo mesmo push e não formam um gate sequencial obrigatório; essa limitação está documentada em `docs/ci-cd.md`.
 
