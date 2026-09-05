@@ -53,6 +53,7 @@ function associatedTransportId(deviceId) {
 }
 
 function snapshot(deviceId) {
+  const associationDeviceId = deviceId || config.iot.deviceId || null;
   const lastSeenMs = state.lastTelemetryAt
     ? Date.now() - new Date(state.lastTelemetryAt).getTime()
     : null;
@@ -63,7 +64,8 @@ function snapshot(deviceId) {
     online: lastSeenMs !== null && lastSeenMs <= 15000,
     telemetry: state.mode === MODES.IOT ? "LIVE" : "DEMO",
   };
-  if (deviceId) result.transportId = associatedTransportId(deviceId);
+  if (associationDeviceId)
+    result.transportId = associatedTransportId(associationDeviceId);
   return result;
 }
 
