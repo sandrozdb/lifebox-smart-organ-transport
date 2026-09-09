@@ -3,15 +3,25 @@
 Este diretório reúne duas camadas de evidência:
 
 1. **baseline histórica pré-cloud**, com 20 capturas reais do dashboard feitas em 29/08/2026;
-2. **pacote final IoT + Cloud**, com pastas e nomes já preparados para receber as novas capturas reais.
+2. **pacote final IoT + Cloud**, com nove evidências IoT e oito evidências Cloud concluídas.
 
 As imagens históricas continuam válidas para demonstrar PO, Física, Eletrônica, arquitetura, QA, rastreabilidade, alertas e reotimização. A captura antiga `20-cloud-status.png` representa propositalmente o estado anterior ao deploy e não deve ser usada como prova do ambiente atual.
 
-## Pacote final — pronto para upload
+## Pacote final
 
 - [IoT / Wokwi](iot/README.md): ESP32, telemetria, gráficos, Física, logística, reotimização e resumo final.
 - [Cloud](cloud/README.md): Render, Aiven, health check, CI e dashboard público.
-- [Checklist geral](../evidence-checklist.md): estado de cada frente e capturas ainda não versionadas.
+- [Eletrônica / Flip-Flop](eletronica/README.md): circuito Logisim sequencial e evidências acadêmicas existentes.
+- [Checklist geral](../evidence-checklist.md): estado de cada frente e pendências visuais restantes.
+
+### Destaques
+
+| IoT | Cloud |
+| --- | --- |
+| [![ESP32 online](iot/02-esp32-online-dashboard.png)](iot/02-esp32-online-dashboard.png) | [![Render Live](cloud/01-render-service-live.png)](cloud/01-render-service-live.png) |
+| [![Telemetria IoT](iot/03-telemetria-iot.png)](iot/03-telemetria-iot.png) | [![Health check](cloud/06-health-check-publico.png)](cloud/06-health-check-publico.png) |
+| [![Reotimização IoT](iot/07-reotimizacao-iot.png)](iot/07-reotimizacao-iot.png) | [![CI final #138](cloud/07-github-actions-ci84.png)](cloud/07-github-actions-ci84.png) |
+| [![Resumo final IoT](iot/08-resumo-final-iot.png)](iot/08-resumo-final-iot.png) | Cloud 8/8 |
 
 ## Ambiente atual
 
@@ -19,7 +29,9 @@ As imagens históricas continuam válidas para demonstrar PO, Física, Eletrôni
 - Health check: `https://lifebox-expotech.onrender.com/api/health`
 - Wokwi: `https://wokwi.com/projects/473749722940837889`
 - Banco: Aiven for MySQL com TLS/CA
-- CI: GitHub Actions; CI #84 verde em 31/08/2026
+- `main`: `7d3ce046836ff2266701e48e6ec9666b7dba555a`
+- CI: GitHub Actions `#147 SUCCESS`
+- Pacotes finais: IoT `9/9`; Cloud `8/8`
 
 ## Baseline pré-cloud — 20 capturas
 
@@ -80,7 +92,7 @@ Essa imagem **não representa o estado atual**. Para a prova atual de Cloud, use
 - [16 — Execução normal](dashboard/16-resumo-final-normal.png)
 - [17 — Execução com ocorrências](dashboard/17-resumo-final-ocorrencias.png)
 
-## Estado final já validado, aguardando apenas captura
+## Estado final validado e documentado
 
 - [x] ESP32/Wokwi conectado ao Render.
 - [x] Telemetria IoT persistida no Aiven.
@@ -93,8 +105,8 @@ Essa imagem **não representa o estado atual**. Para a prova atual de Cloud, use
 - [x] Render público e health check funcionando.
 - [x] Aiven for MySQL conectado via TLS.
 - [x] CI/CD validados.
-- [ ] Capturas finais IoT adicionadas em `docs/evidencias/iot/`.
-- [ ] Capturas finais Cloud adicionadas em `docs/evidencias/cloud/`.
+- [x] Capturas finais IoT adicionadas em `docs/evidencias/iot/` (9/9).
+- [x] Capturas finais Cloud adicionadas em `docs/evidencias/cloud/`.
 
 ## Metadados da baseline histórica
 
@@ -106,6 +118,6 @@ Essa imagem **não representa o estado atual**. Para a prova atual de Cloud, use
 
 ## Validação atual
 
-A CI #84 terminou verde em 31/08/2026. A suíte Node descobriu 108 testes, com 107 aprovados, 0 falhas e 1 integração condicional ignorada nessa etapa; o Playwright aprovou 5/5 fluxos E2E. O fechamento atual também foi validado manualmente no dashboard público com Wokwi ativo.
+A referência atual é a `main` no commit `7d3ce046836ff2266701e48e6ec9666b7dba555a`, validada pela CI `#147 SUCCESS`. O pacote visual final contém nove evidências IoT e oito evidências Cloud.
 
 Documentação consolidada: [`../iot.md`](../iot.md), [`../cloud.md`](../cloud.md), [`../ci-cd.md`](../ci-cd.md), [`../deployment-checklist.md`](../deployment-checklist.md) e [`../testing-and-qa.md`](../testing-and-qa.md).

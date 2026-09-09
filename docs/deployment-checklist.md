@@ -50,7 +50,7 @@ Status acadêmico da etapa Cloud: **CONCLUÍDO**. Os itens abertos abaixo são m
 - [x] GitHub Actions executa `npm ci`.
 - [x] GitHub Actions executa check/lint/formatação/testes/cobertura/E2E.
 - [x] Integração MySQL e build Docker fazem parte do workflow.
-- [x] CI #84 aprovada em 31/08/2026.
+- [x] CI `#147 SUCCESS` na `main` `7d3ce046836ff2266701e48e6ec9666b7dba555a`.
 - [x] Testes cobrem vínculo da telemetria IoT à execução.
 - [x] Testes cobrem Condições Logísticas disponíveis no modo IOT.
 - [x] Playwright atualizado para o comportamento final IOT.
@@ -98,7 +98,7 @@ Status acadêmico da etapa Cloud: **CONCLUÍDO**. Os itens abertos abaixo são m
 - [x] Auto Deploy/CD documentado e validado.
 - [x] Pastas e nomes finais de evidências IoT preparados.
 - [x] Pastas e nomes finais de evidências Cloud preparados.
-- [ ] Subir capturas finais do Wokwi/IoT em `docs/evidencias/iot/`.
-- [ ] Subir capturas finais do Render/Aiven/CI em `docs/evidencias/cloud/`.
+- [x] Capturas finais do Wokwi/IoT adicionadas em `docs/evidencias/iot/` (9/9).
+- [x] Subir capturas finais do Render/Aiven/CI em `docs/evidencias/cloud/`.
 
-As duas últimas pendências são apenas upload de material visual. O sistema e a infraestrutura correspondentes já foram validados.
+Pacote visual final concluído: IoT `9/9` e Cloud `8/8`.
