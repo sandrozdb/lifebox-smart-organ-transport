@@ -13,7 +13,7 @@
     "lint": "eslint src simulator scripts tests public/js eslint.config.js playwright.config.js",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "e2e": "playwright test",
+    "e2e": "node scripts/run-e2e.js",
     "e2e:install": "playwright install chromium",
     "setup-db": "node scripts/setup-db.js"
   },
