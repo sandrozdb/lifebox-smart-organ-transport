@@ -1,6 +1,6 @@
 # Evidências finais — Cloud
 
-Esta pasta está **pronta para receber as capturas reais do Render, Aiven e GitHub Actions**. A infraestrutura já foi validada; os arquivos abaixo são apenas o pacote visual final para GitHub, slides e relatório.
+Esta pasta contém o **pacote final de oito capturas do Render, Aiven e GitHub Actions**. Status do pacote: **Cloud 8/8**.
 
 > Antes de subir qualquer imagem, confira se senha, certificado CA, connection string completa, tokens ou outros valores sensíveis não aparecem na captura.
 
@@ -8,14 +8,14 @@ Esta pasta está **pronta para receber as capturas reais do Render, Aiven e GitH
 
 | Arquivo | O que deve aparecer | Status do sistema | Upload |
 | --- | --- | --- | --- |
-| `01-render-service-live.png` | Web Service no Render com status Live e nome do serviço. | VALIDADO | PENDENTE |
-| `02-render-deploy-main.png` | deploy recente da branch `main`, preferencialmente com commit visível. | VALIDADO | PENDENTE |
-| `03-render-environment-keys.png` | nomes das variáveis configuradas, sem mostrar valores sensíveis. | VALIDADO | PENDENTE |
-| `04-aiven-service-overview.png` | serviço MySQL ativo no Aiven, sem senha exposta. | VALIDADO | PENDENTE |
-| `05-aiven-database.png` | banco `lifebox_db`/serviço gerenciado ou visão equivalente. | VALIDADO | PENDENTE |
-| `06-health-check-publico.png` | `https://lifebox-expotech.onrender.com/api/health` respondendo com sucesso. | VALIDADO | PENDENTE |
-| `07-github-actions-ci84.png` | CI #84 verde ou uma execução verde mais recente. | VALIDADO | PENDENTE |
-| `08-dashboard-publico.png` | dashboard aberto pela URL pública atual. | VALIDADO | PENDENTE |
+| `01-render-service-live.png` | Web Service oficial `lifebox-expotech` no Render com status Live. | VALIDADO | OK |
+| `02-render-deploy-main.png` | deploy concluído da branch `main`, no commit `646145a`. | VALIDADO | OK |
+| `03-render-environment-keys.png` | nomes das variáveis configuradas, com valores ocultos pela interface. | VALIDADO | OK |
+| `04-aiven-service-overview.png` | serviço MySQL ativo no Aiven, sem senha exposta. | VALIDADO | OK |
+| `05-aiven-database.png` | bancos `defaultdb` e `lifebox_db` no serviço gerenciado. | VALIDADO | OK |
+| `06-health-check-publico.png` | `https://lifebox-expotech.onrender.com/api/health` respondendo com sucesso. | VALIDADO | OK |
+| `07-github-actions-ci84.png` | CI final #138 verde no commit `646145a` (nome físico preservado). | VALIDADO | OK |
+| `08-dashboard-publico.png` | dashboard aberto pela URL pública atual. | VALIDADO | OK |
 
 ## Como subir
 
@@ -29,13 +29,13 @@ Salve as imagens diretamente nesta pasta usando **exatamente os nomes acima**. D
 
 ## Checklist de segurança antes do commit
 
-- [ ] nenhum `DB_PASSWORD` visível;
-- [ ] nenhum conteúdo de `DB_SSL_CA` visível;
-- [ ] nenhuma connection string completa com senha;
-- [ ] nenhum token/chave de API;
-- [ ] dados pessoais removidos quando não forem necessários;
-- [ ] status do Render e Aiven legíveis;
-- [ ] nome do banco/serviço pode aparecer, mas credenciais não.
+- [x] nenhum valor de `DB_PASSWORD` visível;
+- [x] nenhum conteúdo de `DB_SSL_CA` visível;
+- [x] nenhuma connection string completa com senha;
+- [x] nenhum token/chave de API;
+- [x] dados pessoais desnecessários ausentes;
+- [x] status do Render e Aiven legíveis;
+- [x] nome do banco/serviço aparece sem credenciais.
 
 ## O que essas evidências comprovam
 
@@ -51,3 +51,5 @@ O conjunto final demonstra:
 8. dashboard realmente acessível pela internet.
 
 Documentação relacionada: [`../../cloud.md`](../../cloud.md), [`../../ci-cd.md`](../../ci-cd.md) e [`../../deployment-checklist.md`](../../deployment-checklist.md).
+
+Referência atual da aplicação: `main` em `7d3ce046836ff2266701e48e6ec9666b7dba555a`, com CI `#147 SUCCESS`.

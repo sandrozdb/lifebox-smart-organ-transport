@@ -30,7 +30,7 @@ Este checklist separa o que já foi validado tecnicamente do que ainda precisa a
 - [x] Condições Logísticas disponíveis no modo IOT.
 - [x] Reotimização e troca de rota funcionando durante IOT.
 - [x] Pasta `docs/evidencias/iot/` preparada com nomes finais.
-- [ ] Subir as capturas finais IoT usando o padrão da pasta.
+- [x] Capturas finais IoT adicionadas usando o padrão da pasta (9/9).
 
 ## Fundamentos acadêmicos
 
@@ -45,8 +45,7 @@ Este checklist separa o que já foi validado tecnicamente do que ainda precisa a
 
 ## Qualidade
 
-- [x] `npm test` cobriu 108 testes na CI #84.
-- [x] 107 aprovados, 0 falhas e 1 integração condicional ignorada nessa etapa.
+- [x] CI `#147 SUCCESS` na `main` `7d3ce046836ff2266701e48e6ec9666b7dba555a`.
 - [x] 5/5 cenários E2E aprovados.
 - [x] Workflow de CI verde no GitHub.
 - [x] Integração MySQL na CI.
@@ -66,7 +65,7 @@ Este checklist separa o que já foi validado tecnicamente do que ainda precisa a
 - [x] CI/CD documentado em `docs/ci-cd.md`.
 - [x] Checklist de deploy atualizado em `docs/deployment-checklist.md`.
 - [x] Pasta `docs/evidencias/cloud/` preparada com nomes finais.
-- [ ] Subir as capturas finais Render/Aiven/CI/health usando o padrão da pasta.
+- [x] Subir as capturas finais Render/Aiven/CI/health usando o padrão da pasta.
 
 ## Evidências históricas
 
@@ -76,7 +75,7 @@ Este checklist separa o que já foi validado tecnicamente do que ainda precisa a
 
 ## Estado atual
 
-**Sistema, IoT, Cloud e requisitos acadêmicos principais estão concluídos e validados.** As únicas pendências deste checklist são os uploads das novas capturas finais para enriquecer GitHub, slides e relatório.
+**Sistema, IoT, Cloud e requisitos acadêmicos principais estão concluídos e validados.** O pacote visual final contém IoT `9/9` e Cloud `8/8`. As evidências finais incluem gráficos com telemetria real, análise física, condição logística e reotimização com ESP32 ONLINE, resumo da execução concluída e atuadores acionados no Wokwi.
 
 Use:
 

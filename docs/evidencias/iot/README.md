@@ -1,20 +1,22 @@
 # Evidências finais — IoT / Wokwi
 
-Esta pasta está **pronta para receber as capturas reais da integração ESP32/Wokwi**. O fluxo já foi validado; as imagens abaixo servem para fechar o GitHub, apresentação e relatório.
+Esta pasta contém o **pacote final de nove capturas da integração ESP32/Wokwi** para GitHub, apresentação e relatório.
+
+Status do pacote: **IoT 9/9**.
 
 ## Padrão de arquivos
 
 | Arquivo | O que deve aparecer | Status do sistema | Upload |
 | --- | --- | --- | --- |
-| `01-wokwi-dispositivo.png` | ESP32 e componentes do projeto Wokwi em execução. | VALIDADO | PENDENTE |
-| `02-esp32-online-dashboard.png` | dashboard no modo IOT com ESP32 ONLINE. | VALIDADO | PENDENTE |
-| `03-telemetria-iot.png` | temperatura, umidade, impacto, bateria, sinal e GPS recebidos do Wokwi. | VALIDADO | PENDENTE |
-| `04-graficos-iot.png` | gráficos de telemetria preenchidos durante a execução IOT. | VALIDADO | PENDENTE |
-| `05-fisica-iot.png` | Análise Física usando leituras da execução IoT. | VALIDADO | PENDENTE |
-| `06-condicao-logistica-iot.png` | condição logística ativa durante IOT, com sensores ainda vindos do ESP32. | VALIDADO | PENDENTE |
-| `07-reotimizacao-iot.png` | recomendação/aplicação de novo plano em modo IOT. | VALIDADO | PENDENTE |
-| `08-resumo-final-iot.png` | resumo final com telemetria/ocorrências da execução IOT. | VALIDADO | PENDENTE |
-| `09-atuadores-wokwi.png` | LED/buzzer/OLED reagindo ao `digitalSignal`, se quiser incluir a prova de Eletrônica. | VALIDADO | PENDENTE |
+| `01-wokwi-dispositivo.png` | ESP32 e componentes do projeto Wokwi em execução. | VALIDADO | OK |
+| `02-esp32-online-dashboard.png` | dashboard no modo IOT com ESP32 ONLINE. | VALIDADO | OK |
+| `03-telemetria-iot.png` | temperatura, umidade, impacto, bateria, sinal e GPS recebidos do Wokwi. | VALIDADO | OK |
+| `04-graficos-iot.png` | gráficos com telemetria real durante a execução IOT. | VALIDADO | OK |
+| `05-fisica-iot.png` | análise física da execução IoT. | VALIDADO | OK |
+| `06-condicao-logistica-iot.png` | condição logística durante IOT com ESP32 ONLINE. | VALIDADO | OK |
+| `07-reotimizacao-iot.png` | reotimização recomendada em modo IOT com ESP32 ONLINE. | VALIDADO | OK |
+| `08-resumo-final-iot.png` | resumo final da execução concluída. | VALIDADO | OK |
+| `09-atuadores-wokwi.png` | atuadores do Wokwi acionados. | VALIDADO | OK |
 
 ## Como capturar
 
@@ -57,8 +59,11 @@ Não inclua em capturas:
 - certificados;
 - tokens.
 
-## Depois do upload
+## Referência de fechamento
 
-Salve as imagens nesta pasta com **exatamente os nomes definidos acima**. Depois, altere a coluna `Upload` de `PENDENTE` para `OK` e, se desejar, inclua miniaturas no catálogo geral em [`../README.md`](../README.md).
+- `main`: `7d3ce046836ff2266701e48e6ec9666b7dba555a`
+- CI: `#147 SUCCESS`
+- Pacote IoT: `9/9`
+- Pacote Cloud: `8/8`
 
 Documentação relacionada: [`../../iot.md`](../../iot.md), [`../../../firmware/README.md`](../../../firmware/README.md) e [`../../testing-and-qa.md`](../../testing-and-qa.md).
