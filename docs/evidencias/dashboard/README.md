@@ -4,7 +4,7 @@ Esta pasta contém 20 capturas reais da baseline visual recapturada em 29/08/202
 
 As capturas 01–19 continuam documentando operação, PO, multimodalidade, alertas, reotimização, Física, Eletrônica, arquitetura e QA. A captura 20 registra o **estado pré-cloud** e é mantida como evidência histórica do ponto de partida antes da publicação no Render/Aiven.
 
-O catálogo geral está em [`../README.md`](../README.md). As novas capturas finais devem ser adicionadas em [`../iot/`](../iot/README.md) e [`../cloud/`](../cloud/README.md).
+O catálogo geral está em [`../README.md`](../README.md). Os pacotes finais já estão concluídos em [`../iot/`](../iot/README.md) e [`../cloud/`](../cloud/README.md).
 
 ## Arquivos
 
@@ -33,14 +33,17 @@ O catálogo geral está em [`../README.md`](../README.md). As novas capturas fin
 
 O projeto atual já superou a baseline acima:
 
-- deploy público atual: `https://lifebox-expotech.onrender.com`;
+- deploy público: `https://lifebox-expotech.onrender.com`;
 - backend: Render Web Service / Docker;
 - banco: Aiven for MySQL gerenciado via TLS;
 - IoT: ESP32/Wokwi integrado ao backend público;
 - telemetria IoT: vinculada à execução ativa e persistida;
 - Física e gráficos: funcionando com dados IoT;
 - logística: Condições Logísticas e reotimização funcionando no modo IOT;
-- CI: GitHub Actions; CI #84 verde;
+- baseline funcional: `1a2dbd7e85bdce0def0d02ff3b5b68257cb11fb2`;
+- CI da baseline: **GitHub Actions #152 SUCCESS**;
+- E2E: **5/5**;
+- evidências finais: IoT **9/9** e Cloud **8/8**;
 - CD: Auto Deploy do Render a partir de `main`.
 
 Veja [`../../iot.md`](../../iot.md), [`../../cloud.md`](../../cloud.md), [`../../ci-cd.md`](../../ci-cd.md) e [`../../deployment-checklist.md`](../../deployment-checklist.md).
