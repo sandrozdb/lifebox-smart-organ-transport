@@ -9,10 +9,10 @@ As imagens históricas continuam válidas para demonstrar PO, Física, Eletrôni
 
 ## Pacote final
 
-- [IoT / Wokwi](iot/README.md): ESP32, telemetria, gráficos, Física, logística, reotimização e resumo final.
-- [Cloud](cloud/README.md): Render, Aiven, health check, CI e dashboard público.
-- [Eletrônica / Flip-Flop](eletronica/README.md): circuito Logisim sequencial e evidências acadêmicas existentes.
-- [Checklist geral](../evidence-checklist.md): estado de cada frente e pendências visuais restantes.
+- [IoT / Wokwi](iot/README.md): ESP32, telemetria, gráficos, Física, logística, reotimização e resumo final — **9/9**.
+- [Cloud](cloud/README.md): Render, Aiven, health check, CI e dashboard público — **8/8**.
+- [Eletrônica / Flip-Flop](eletronica/README.md): circuito Logisim sequencial e quatro evidências acadêmicas — **4/4**.
+- [Checklist geral](../evidence-checklist.md): estado final das frentes acadêmicas e técnicas.
 
 ### Destaques
 
@@ -20,18 +20,24 @@ As imagens históricas continuam válidas para demonstrar PO, Física, Eletrôni
 | --- | --- |
 | [![ESP32 online](iot/02-esp32-online-dashboard.png)](iot/02-esp32-online-dashboard.png) | [![Render Live](cloud/01-render-service-live.png)](cloud/01-render-service-live.png) |
 | [![Telemetria IoT](iot/03-telemetria-iot.png)](iot/03-telemetria-iot.png) | [![Health check](cloud/06-health-check-publico.png)](cloud/06-health-check-publico.png) |
-| [![Reotimização IoT](iot/07-reotimizacao-iot.png)](iot/07-reotimizacao-iot.png) | [![CI final #138](cloud/07-github-actions-ci84.png)](cloud/07-github-actions-ci84.png) |
+| [![Reotimização IoT](iot/07-reotimizacao-iot.png)](iot/07-reotimizacao-iot.png) | [![Captura de CI verde](cloud/07-github-actions-ci84.png)](cloud/07-github-actions-ci84.png) |
 | [![Resumo final IoT](iot/08-resumo-final-iot.png)](iot/08-resumo-final-iot.png) | Cloud 8/8 |
 
-## Ambiente atual
+> O arquivo físico `07-github-actions-ci84.png` mantém seu nome histórico. A captura documenta uma execução verde anterior; a baseline funcional final do projeto avançou posteriormente para a **CI #152**.
+
+## Ambiente e baseline funcional
 
 - Dashboard/Backend: `https://lifebox-expotech.onrender.com`
 - Health check: `https://lifebox-expotech.onrender.com/api/health`
 - Wokwi: `https://wokwi.com/projects/473749722940837889`
 - Banco: Aiven for MySQL com TLS/CA
-- `main`: `7d3ce046836ff2266701e48e6ec9666b7dba555a`
-- CI: GitHub Actions `#147 SUCCESS`
-- Pacotes finais: IoT `9/9`; Cloud `8/8`
+- baseline funcional: `1a2dbd7e85bdce0def0d02ff3b5b68257cb11fb2`
+- CI da baseline: GitHub Actions **#152 SUCCESS**
+- testes: **110 total / 109 pass / 1 skip / 0 fail**
+- E2E: **5/5**
+- pacotes finais: IoT `9/9`; Cloud `8/8`; Eletrônica/Logisim `4/4`
+
+Alterações posteriores exclusivamente documentais podem gerar novas execuções da workflow sem alterar essa referência funcional.
 
 ## Baseline pré-cloud — 20 capturas
 
@@ -105,8 +111,9 @@ Essa imagem **não representa o estado atual**. Para a prova atual de Cloud, use
 - [x] Render público e health check funcionando.
 - [x] Aiven for MySQL conectado via TLS.
 - [x] CI/CD validados.
-- [x] Capturas finais IoT adicionadas em `docs/evidencias/iot/` (9/9).
-- [x] Capturas finais Cloud adicionadas em `docs/evidencias/cloud/`.
+- [x] Capturas finais IoT adicionadas (**9/9**).
+- [x] Capturas finais Cloud adicionadas (**8/8**).
+- [x] Evidências Logisim adicionadas (**4/4**).
 
 ## Metadados da baseline histórica
 
@@ -116,8 +123,8 @@ Essa imagem **não representa o estado atual**. Para a prova atual de Cloud, use
 | 18–19 | recorte focal nativo | PNG nativo | 100% |
 | 20 | recorte focal nativo | PNG nativo | 100% |
 
-## Validação atual
+## Validação funcional de referência
 
-A referência atual é a `main` no commit `7d3ce046836ff2266701e48e6ec9666b7dba555a`, validada pela CI `#147 SUCCESS`. O pacote visual final contém nove evidências IoT e oito evidências Cloud.
+A referência funcional de fechamento é o commit `1a2dbd7e85bdce0def0d02ff3b5b68257cb11fb2`, validado pela **CI #152 SUCCESS**.
 
 Documentação consolidada: [`../iot.md`](../iot.md), [`../cloud.md`](../cloud.md), [`../ci-cd.md`](../ci-cd.md), [`../deployment-checklist.md`](../deployment-checklist.md) e [`../testing-and-qa.md`](../testing-and-qa.md).
