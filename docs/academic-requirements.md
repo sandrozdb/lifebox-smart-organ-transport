@@ -1,13 +1,13 @@
 # Requisitos acadêmicos — LifeBox
 
-| Disciplina | Requisito | Implementação | Dashboard / operação | Evidência | Status |
-| --- | --- | --- | --- | --- | --- |
-| Eletrônica | Lógica digital | detecção combinacional no software + extensão sequencial no Logisim | sinais 0/1, LED e buzzer | circuito D Flip-Flop + Wokwi + quatro capturas | CONCLUÍDO |
-| Física | Cálculos dinâmicos | `physicsService` | análise por execução | testes + telemetria IoT | CONCLUÍDO |
-| Arquitetura | GoF, SOLID e componentes | Strategy, Observer e serviços | painel técnico compacto | `docs/architecture.md` | CONCLUÍDO |
-| PO | Otimização multimodal | planos, segmentos e reotimização | planejamento e mapa | testes + dashboard | CONCLUÍDO |
-| QA | Testes, CI e E2E | `node:test`, c8, Playwright e MySQL no CI | validações automatizadas | CI #152 + documentação | CONCLUÍDO |
-| Cloud | Publicação e DB gerenciado | Render + Aiven MySQL + TLS + variáveis seguras | deploy público e health | `docs/cloud.md` + checklist | CONCLUÍDO |
+Todas as frentes obrigatórias da entrega estão concluídas:
+
+- **Eletrônica:** lógica digital combinacional no software, ESP32/Wokwi com LED e buzzer e extensão sequencial com D Flip-Flop no Logisim; evidências: Wokwi + quatro capturas do circuito.
+- **Física:** cálculos dinâmicos no `physicsService`, alimentados pela execução atual; evidências: testes + telemetria IoT.
+- **Arquitetura:** C4 Context/Container, Strategy, Observer, serviços e avaliação SOLID; evidência: `docs/architecture.md`.
+- **Pesquisa Operacional:** planejamento multimodal, restrições e reotimização; evidências: testes, planejamento e mapa.
+- **QA:** `node:test`, c8, Playwright e MySQL na CI; evidência: CI #152 + documentação.
+- **Cloud:** Render + Aiven MySQL + TLS + variáveis seguras; evidências: deploy público, health check e checklist.
 
 Na Eletrônica, o backend/Wokwi permanece combinacional: `EVENTO_CRITICO = TRANSPORTE_ATIVO AND (TEMPERATURA_CRITICA OR IMPACTO_CRITICO)`. O circuito Logisim é uma extensão sequencial acadêmica com D Flip-Flop, que memoriza o evento até `RESET`; essa memória não foi atribuída ao backend, firmware ou atuadores do protótipo IoT.
 
