@@ -1,13 +1,13 @@
 # Checklist de deploy — Render + Aiven
 
-Status acadêmico da etapa Cloud: **CONCLUÍDO**. Os itens abertos abaixo são melhorias de hardening/operabilidade ou capturas visuais adicionais; não bloqueiam o requisito de backend público + banco gerenciado + variáveis seguras + CI/CD + integração IoT.
+Status acadêmico da etapa Cloud: **CONCLUÍDO**. Os itens abertos abaixo são melhorias de hardening/operabilidade para um cenário além da demonstração acadêmica; não bloqueiam o requisito de backend público + banco gerenciado + variáveis seguras + CI/CD + integração IoT.
 
 ## A. Aplicação
 
 - [x] Backend Node.js publicado com `npm start`.
 - [x] `PORT` fornecida pelo ambiente Render.
 - [x] Dashboard e API servidos pelo mesmo Express.
-- [x] URL HTTPS pública atual: `https://lifebox-expotech.onrender.com`.
+- [x] URL HTTPS pública: `https://lifebox-expotech.onrender.com`.
 - [x] Firmware ESP32/Wokwi apontando para o mesmo backend público.
 
 ## B. Banco MySQL gerenciado
@@ -50,10 +50,14 @@ Status acadêmico da etapa Cloud: **CONCLUÍDO**. Os itens abertos abaixo são m
 - [x] GitHub Actions executa `npm ci`.
 - [x] GitHub Actions executa check/lint/formatação/testes/cobertura/E2E.
 - [x] Integração MySQL e build Docker fazem parte do workflow.
-- [x] CI `#147 SUCCESS` na `main` `7d3ce046836ff2266701e48e6ec9666b7dba555a`.
+- [x] Baseline funcional `1a2dbd7e85bdce0def0d02ff3b5b68257cb11fb2` validada pela **CI #152 SUCCESS**.
+- [x] Suíte Node: 110 testes; 109 aprovados; 0 falhas; 1 skip condicional.
+- [x] Cobertura c8: 88,28% linhas/instruções; 79,08% branches; 93,71% funções.
+- [x] Playwright: 5/5 E2E aprovados.
+- [x] Integração MySQL dedicada: 1/1 aprovada.
+- [x] Build Docker aprovado.
 - [x] Testes cobrem vínculo da telemetria IoT à execução.
 - [x] Testes cobrem Condições Logísticas disponíveis no modo IOT.
-- [x] Playwright atualizado para o comportamento final IOT.
 
 ## G. CD no Render
 
@@ -61,8 +65,7 @@ Status acadêmico da etapa Cloud: **CONCLUÍDO**. Os itens abertos abaixo são m
 - [x] Auto Deploy configurado como `On Commit`.
 - [x] Variáveis e credenciais mantidas fora do repositório.
 - [x] Deploy executado sem credenciais no código ou workflow público.
-- [x] Auto Deploy validado durante a etapa Cloud.
-- [x] Commit `5db314d` da PR #7 publicado antes da validação manual final do IOT.
+- [x] Auto Deploy validado durante a etapa Cloud e integração IoT.
 - [x] Health check pós-deploy confirmado.
 
 ## H. Integração IoT
@@ -96,9 +99,9 @@ Status acadêmico da etapa Cloud: **CONCLUÍDO**. Os itens abertos abaixo são m
 - [x] Banco gerenciado conectado e persistência comprovada.
 - [x] GitHub Actions/CI documentado.
 - [x] Auto Deploy/CD documentado e validado.
-- [x] Pastas e nomes finais de evidências IoT preparados.
-- [x] Pastas e nomes finais de evidências Cloud preparados.
-- [x] Capturas finais do Wokwi/IoT adicionadas em `docs/evidencias/iot/` (9/9).
-- [x] Subir capturas finais do Render/Aiven/CI em `docs/evidencias/cloud/`.
+- [x] Capturas finais do Wokwi/IoT adicionadas em `docs/evidencias/iot/` (**9/9**).
+- [x] Capturas finais do Render/Aiven/CI/health/dashboard adicionadas em `docs/evidencias/cloud/` (**8/8**).
 
-Pacote visual final concluído: IoT `9/9` e Cloud `8/8`.
+## Estado final
+
+Pacote visual final concluído: **IoT 9/9** e **Cloud 8/8**. A referência funcional de fechamento é o commit `1a2dbd7e85bdce0def0d02ff3b5b68257cb11fb2`, validado pela **CI #152 SUCCESS**. Novas execuções de CI decorrentes apenas de atualização documental não substituem essa baseline funcional.

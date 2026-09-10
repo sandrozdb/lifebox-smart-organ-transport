@@ -5,7 +5,7 @@
 **CONCLUÍDA E VALIDADA.** A LifeBox possui um dispositivo ESP32 executado no Wokwi Web, conectado pela internet ao backend público no Render e ao banco Aiven for MySQL.
 
 - Wokwi: https://wokwi.com/projects/473749722940837889
-- Backend público atual: https://lifebox-expotech.onrender.com
+- Backend público: https://lifebox-expotech.onrender.com
 - Health check: https://lifebox-expotech.onrender.com/api/health
 - Firmware: [`../firmware`](../firmware/README.md)
 
@@ -104,12 +104,10 @@ ALERTA = TRANSPORTE_ATIVO AND (TEMPERATURA_CRITICA OR IMPACTO_CRITICO)
 
 ## Endpoints IoT
 
-| Método | Endpoint                       | Uso                            |
-| ------ | ------------------------------ | ------------------------------ |
-| `GET`  | `/api/iot/status?deviceId=...` | estado consultado pelo ESP32   |
-| `PUT`  | `/api/iot/mode`                | alterna `IOT` / `DEMO`         |
-| `PUT`  | `/api/iot/profile`             | publica perfil térmico ativo   |
-| `POST` | `/api/telemetria`              | recebe leitura física/simulada |
+- `GET /api/iot/status?deviceId=...` — estado consultado pelo ESP32.
+- `PUT /api/iot/mode` — alterna `IOT` / `DEMO`.
+- `PUT /api/iot/profile` — publica o perfil térmico ativo.
+- `POST /api/telemetria` — recebe leitura física/simulada.
 
 ## Persistência no Aiven
 
@@ -119,20 +117,22 @@ Credenciais do Aiven e certificado CA não ficam no GitHub. O Render recebe essa
 
 ## Validação automatizada
 
-A CI inclui regressões específicas para:
+A baseline funcional final está no commit `1a2dbd7e85bdce0def0d02ff3b5b68257cb11fb2`, validado pela **CI #152** em 09/09/2026. Entre as regressões específicas cobertas estão:
 
 - vínculo de telemetria IoT à execução ativa;
 - rejeição de `executionId` arbitrário vindo do dispositivo;
+- associação do dispositivo ao transporte configurado;
+- dashboard priorizando o transporte associado no modo IOT;
 - modo IOT sem telemetria artificial;
 - disponibilidade das Condições Logísticas no modo IOT;
 - preservação dos cenários da caixa como exclusivos do DEMO;
 - fluxo E2E do dashboard em IOT.
 
-A CI #84 terminou verde em 31/08/2026.
+O Playwright aprovou **5/5 fluxos E2E** na baseline final.
 
 ## Evidências visuais
 
-A pasta [`evidencias/iot`](evidencias/iot/README.md) já contém o padrão de nomes e o roteiro de capturas finais. Basta adicionar as imagens reais usando os nomes definidos para que o catálogo final fique organizado.
+O pacote final de IoT está concluído em [`evidencias/iot`](evidencias/iot/README.md), com **9/9 capturas**: dispositivo Wokwi, ESP32 online, telemetria, gráficos, Física, condição logística, reotimização, resumo final e atuadores.
 
 ## Limite do protótipo
 

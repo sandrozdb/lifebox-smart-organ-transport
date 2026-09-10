@@ -13,19 +13,21 @@ O workflow em `.github/workflows/ci.yml` é executado em push e pull request. El
 7. teste de integração MySQL;
 8. build do Dockerfile.
 
-## Validação atual
+## Baseline funcional de fechamento
 
-A **CI #84** foi concluída com sucesso em 31/08/2026 após a alteração que liberou Condições Logísticas no modo IOT sem reativar cenários artificiais da caixa.
+A referência funcional final é o commit `1a2dbd7e85bdce0def0d02ff3b5b68257cb11fb2`, validado pela **CI #152** em 09/09/2026.
 
 Nessa execução:
 
 - check, lint e Prettier: aprovados;
-- suíte Node: 108 descobertos, 107 aprovados, 0 falhas e 1 integração condicional ignorada nessa etapa;
-- coverage: 88,28% linhas/instruções, 79,00% branches e 93,71% funções;
-- Playwright: 5/5 fluxos E2E aprovados;
-- integração MySQL: aprovada no job dedicado;
+- suíte Node: **110 testes**, **109 aprovados**, **0 falhas** e **1 integração condicional ignorada** durante `npm test`;
+- coverage c8: **88,28% linhas/instruções**, **79,08% branches** e **93,71% funções**;
+- Playwright: **5/5 fluxos E2E** aprovados;
+- integração MySQL dedicada: **1/1 aprovada**;
 - build Docker: aprovado;
 - resultado final do workflow: `success`.
+
+O badge do README acompanha a execução mais recente da workflow. A CI #152 permanece documentada como baseline funcional porque alterações posteriores podem ser somente de documentação e não alteram o comportamento do MVP.
 
 ## CD implementado no Render
 
@@ -40,13 +42,13 @@ Fluxo atual:
 5. variáveis e segredos são injetados pelo ambiente do Render;
 6. o serviço inicia com `npm start`;
 7. o health check em `/api/health` valida API e banco;
-8. a aplicação fica disponível no serviço público atual.
+8. a aplicação fica disponível no serviço público.
 
-**URL atual usada pelo firmware IoT:** `https://lifebox-expotech.onrender.com`.
+**URL usada pelo firmware IoT:** `https://lifebox-expotech.onrender.com`.
 
 ## Validação prática do Auto Deploy
 
-O Auto Deploy já havia sido validado na etapa Cloud inicial e continuou sendo usado durante a integração IoT. A PR #7 foi incorporada à `main` no commit `5db314d`, e o serviço público foi atualizado antes da validação manual do modo IOT + Condições Logísticas + reotimização.
+O Auto Deploy foi validado em commits reais durante a etapa Cloud e continuou ativo durante a integração final de IoT, vínculo de execução, condições logísticas e reotimização.
 
 Esse fluxo demonstra entrega contínua real a partir da `main`.
 
@@ -62,6 +64,6 @@ Credenciais do Aiven não ficam em workflows públicos nem no repositório. `DB_
 
 ## Evidências
 
-A pasta [`evidencias/cloud`](evidencias/cloud/README.md) está preparada para receber capturas do Render, Aiven, GitHub Actions, health check e dashboard publicado sem exposição de segredos.
+O pacote final de Cloud está concluído em [`evidencias/cloud`](evidencias/cloud/README.md), com **8/8 capturas** de Render, Aiven, GitHub Actions, health check e dashboard publicado, sem exposição de segredos.
 
 **Status: CONCLUÍDO E VALIDADO.**

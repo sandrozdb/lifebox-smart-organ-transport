@@ -10,7 +10,7 @@ Render Web Service (Node.js + Express)
 Aiven for MySQL
 ```
 
-**Status: CONCLUÍDA E VALIDADA.** O backend atualmente usado pelo firmware IoT está publicado em:
+**Status: CONCLUÍDA E VALIDADA.** O backend usado pelo firmware IoT está publicado em:
 
 - aplicação: https://lifebox-expotech.onrender.com
 - health check: https://lifebox-expotech.onrender.com/api/health
@@ -87,13 +87,13 @@ Mais detalhes em [`database.md`](database.md) e [`iot.md`](iot.md).
 
 ## CI/CD validado
 
-A CI #84 foi concluída com sucesso em 31/08/2026 após a integração das Condições Logísticas ao modo IOT. O workflow validou formatação, suíte Node, cobertura, 5 fluxos Playwright E2E, integração MySQL e build Docker.
+A baseline funcional final está no commit `1a2dbd7e85bdce0def0d02ff3b5b68257cb11fb2`, validado pela **CI #152** em 09/09/2026. O workflow aprovou check, lint, formatação, **110 testes / 109 pass / 1 skip / 0 falhas**, cobertura, **5/5 E2E**, integração MySQL dedicada e build Docker.
 
 O Render permanece configurado com Auto Deploy `On Commit`. CI e deploy são disparados pelo mesmo push; o deploy não aguarda obrigatoriamente a CI terminar. Essa limitação está documentada em [`ci-cd.md`](ci-cd.md).
 
 ## Evidências visuais
 
-A pasta [`evidencias/cloud`](evidencias/cloud/README.md) está preparada para receber as capturas finais de Render, Aiven, health check, CI e dashboard público sem expor segredos.
+O pacote final está concluído em [`evidencias/cloud`](evidencias/cloud/README.md), com **8/8 capturas** cobrindo Render, Aiven, health check, CI e dashboard público sem exposição de segredos.
 
 ## Melhorias operacionais futuras
 

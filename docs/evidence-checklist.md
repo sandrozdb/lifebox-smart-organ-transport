@@ -1,6 +1,6 @@
 # Checklist de Evidências Acadêmicas
 
-Este checklist separa o que já foi validado tecnicamente do que ainda precisa apenas de captura visual final.
+Este checklist registra o estado final da entrega acadêmica e das evidências versionadas.
 
 ## MVP e operação
 
@@ -29,8 +29,7 @@ Este checklist separa o que já foi validado tecnicamente do que ainda precisa a
 - [x] Cenários manuais da caixa bloqueados no modo IOT.
 - [x] Condições Logísticas disponíveis no modo IOT.
 - [x] Reotimização e troca de rota funcionando durante IOT.
-- [x] Pasta `docs/evidencias/iot/` preparada com nomes finais.
-- [x] Capturas finais IoT adicionadas usando o padrão da pasta (9/9).
+- [x] Capturas finais IoT adicionadas usando o padrão da pasta (**9/9**).
 
 ## Fundamentos acadêmicos
 
@@ -41,16 +40,19 @@ Este checklist separa o que já foi validado tecnicamente do que ainda precisa a
 - [x] Regra combinacional de geração de `EVENTO_CRITICO` documentada.
 - [x] Circuito Logisim sequencial com D Flip-Flop funcional.
 - [x] Tabela de estados e reset assíncrono documentados.
-- [x] Quatro evidências visuais atuais do Flip-Flop adicionadas.
+- [x] Quatro evidências visuais atuais do Flip-Flop adicionadas (**4/4**).
 
 ## Qualidade
 
-- [x] CI `#147 SUCCESS` na `main` `7d3ce046836ff2266701e48e6ec9666b7dba555a`.
+- [x] Baseline funcional no commit `1a2dbd7e85bdce0def0d02ff3b5b68257cb11fb2`.
+- [x] GitHub Actions **CI #152 SUCCESS**.
+- [x] 110 testes descobertos; 109 aprovados; 0 falhas; 1 skip condicional.
+- [x] Cobertura c8: 88,28% linhas/instruções; 79,08% branches; 93,71% funções.
 - [x] 5/5 cenários E2E aprovados.
-- [x] Workflow de CI verde no GitHub.
-- [x] Integração MySQL na CI.
-- [x] Build Docker na CI.
+- [x] Integração MySQL dedicada aprovada.
+- [x] Build Docker aprovado.
 - [x] Teste de vínculo IoT → execução ativa.
+- [x] Teste de associação dispositivo → transporte.
 - [x] Teste de Condições Logísticas no modo IOT.
 
 ## Cloud
@@ -64,8 +66,7 @@ Este checklist separa o que já foi validado tecnicamente do que ainda precisa a
 - [x] Auto Deploy do Render validado a partir da `main`.
 - [x] CI/CD documentado em `docs/ci-cd.md`.
 - [x] Checklist de deploy atualizado em `docs/deployment-checklist.md`.
-- [x] Pasta `docs/evidencias/cloud/` preparada com nomes finais.
-- [x] Subir as capturas finais Render/Aiven/CI/health usando o padrão da pasta.
+- [x] Capturas finais Render/Aiven/CI/health/dashboard adicionadas (**8/8**).
 
 ## Evidências históricas
 
@@ -73,12 +74,15 @@ Este checklist separa o que já foi validado tecnicamente do que ainda precisa a
 - [x] Evidência antiga de Cloud marcada explicitamente como histórica.
 - [x] Circuito Logisim sequencial e quatro capturas eletrônicas atuais preservados.
 
-## Estado atual
+## Estado final
 
-**Sistema, IoT, Cloud e requisitos acadêmicos principais estão concluídos e validados.** O pacote visual final contém IoT `9/9` e Cloud `8/8`. As evidências finais incluem gráficos com telemetria real, análise física, condição logística e reotimização com ESP32 ONLINE, resumo da execução concluída e atuadores acionados no Wokwi.
+**Sistema, IoT, Cloud e requisitos acadêmicos principais estão concluídos e validados.** O pacote visual final contém IoT `9/9`, Cloud `8/8` e Eletrônica/Logisim `4/4`.
+
+A referência funcional de fechamento é a `main` no commit `1a2dbd7e85bdce0def0d02ff3b5b68257cb11fb2`, validada pela **CI #152 SUCCESS**. Atualizações posteriores de documentação podem gerar novas execuções de CI sem alterar essa baseline funcional.
 
 Use:
 
 - `docs/evidencias/iot/README.md` para as capturas IoT;
 - `docs/evidencias/cloud/README.md` para Render/Aiven/CI;
+- `docs/evidencias/eletronica/README.md` para Logisim;
 - `docs/evidencias/README.md` como catálogo geral.

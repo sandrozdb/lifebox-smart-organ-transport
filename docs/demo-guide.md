@@ -1,37 +1,77 @@
-# Demo acadêmica — aproximadamente 3 minutos
+# Demo ExpoTech — aproximadamente 6 a 8 minutos
 
-## Preparação
+## Montagem recomendada
 
-Abra alguns minutos antes:
+A apresentação principal usa duas telas e dispensa slides:
 
-- dashboard público: `https://lifebox-expotech.onrender.com`;
-- Wokwi: `https://wokwi.com/projects/473749722940837889`.
+- **notebook:** dashboard público da LifeBox em `https://lifebox-expotech.onrender.com`;
+- **monitor/TV:** projeto Wokwi em `https://wokwi.com/projects/473749722940837889`, preferencialmente em tela cheia.
 
-Como o Render usa plano gratuito, aguarde o cold start se o serviço estiver inativo. Confirme `/api/health`, deixe o Wokwi conectado e verifique o dispositivo como online no dashboard.
+Abra tudo alguns minutos antes. Como o Render usa plano gratuito, aguarde eventual cold start, confirme `https://lifebox-expotech.onrender.com/api/health`, deixe o Wokwi conectado e verifique o dispositivo como **ONLINE** no dashboard.
 
-Use **Reiniciar**, selecione órgão/origem/destino ou um cenário conhecido, calcule o plano e confirme ausência de recomendação pendente. O projeto é acadêmico e não certifica preservação clínica.
+Também mantenha o relatório técnico e as evidências baixados localmente como plano B.
 
 ## Roteiro principal — IOT
 
-- **0:00–0:20 — problema e LifeBox:** transporte exige tempo, rastreabilidade, controle ambiental e reação a eventos logísticos.
-- **0:20–0:40 — arquitetura:** mostre rapidamente ESP32/Wokwi → HTTPS → Render → Aiven → Dashboard.
-- **0:40–1:00 — perfil e PO:** mostre órgão, faixa térmica, isquemia, margem, alternativas e plano ótimo.
-- **1:00–1:25 — telemetria real do protótipo:** inicie a execução e mostre ESP32 ONLINE, temperatura, umidade, impacto, bateria, sinal e GPS vindos do Wokwi.
-- **1:25–1:45 — gráficos e Física:** mostre que as leituras da execução IoT alimentam gráficos e a Análise Física.
-- **1:45–2:15 — condição logística + reotimização:** ative `Trânsito intenso` ou `Transporte terrestre indisponível`, mostre a recomendação e confirme o novo plano.
-- **2:15–2:35 — separação IOT/DEMO:** destaque que cenários artificiais da caixa ficam bloqueados em IOT, mas Condições Logísticas continuam disponíveis porque são eventos externos ao dispositivo.
-- **2:35–2:50 — resumo final:** finalize e mostre telemetria, ocorrências, logística e resumo isolados por execução.
-- **2:50–3:00 — QA e Cloud:** cite CI #84 verde, 5/5 E2E, Render Docker, Aiven MySQL/TLS e Auto Deploy da `main`.
+### 0:00–0:30 — problema e proposta
 
-## Demonstração da eletrônica
+Apresente a LifeBox como um protótipo acadêmico para monitoramento, rastreabilidade e apoio à decisão no transporte de órgãos, integrando IoT, Pesquisa Operacional, Física, Eletrônica, arquitetura e Cloud.
 
-Se houver alguns segundos adicionais, mostre o LED/buzzer no Wokwi ou o circuito Logisim. A regra permanece no backend:
+### 0:30–1:15 — Wokwi / dispositivo
+
+No monitor/TV, mostre o circuito inteiro: ESP32, DHT22, MPU6050, GPS NEO-6M, bateria/ADC, OLED, LED e buzzer. Explique que o ESP32 coleta dados e envia telemetria por HTTPS ao backend público.
+
+### 1:15–2:15 — dashboard e telemetria
+
+No notebook, mostre o dispositivo **ONLINE** e a telemetria da execução: temperatura, umidade, impacto/aceleração, bateria, sinal, GPS e velocidade. Destaque que o backend associa a leitura à execução ativa e permanece como fonte de verdade.
+
+### 2:15–2:50 — gráficos e Física
+
+Mostre os gráficos da execução e abra a Análise Física. Cite ΔT, `Q = m·c·ΔT`, aceleração resultante, `P = V·I`, `E = P·t` e autonomia. Os cálculos usam os dados da execução atual e parâmetros didáticos configurados no projeto.
+
+### 2:50–4:10 — alerta IoT ao vivo
+
+No Wokwi, provoque uma temperatura fora da faixa configurada. Mostre no dashboard a condição crítica e, no monitor/TV, o LED e o buzzer acionados pelo `digitalSignal` devolvido pelo backend.
+
+Regra do protótipo IoT:
 
 ```text
-ATIVO AND (TEMP_CRÍTICA OR IMPACTO_CRÍTICO)
+ALERTA = TRANSPORTE_ATIVO AND (TEMPERATURA_CRITICA OR IMPACTO_CRITICO)
 ```
 
-O ESP32 apenas aplica o `digitalSignal` devolvido pelo servidor.
+Depois normalize a temperatura e mostre os atuadores desligando. Explique que essa lógica é combinacional. O D Flip-Flop do Logisim é uma extensão sequencial acadêmica separada e não representa o comportamento atual do backend/Wokwi.
+
+### 4:10–5:40 — condição logística e Pesquisa Operacional
+
+No dashboard, ative **Transporte terrestre indisponível**. Mostre que o plano terrestre deixa o conjunto factível e que o backend reotimiza a partir do estado atual.
+
+Apresente a recomendação alternativa e destaque que a aplicação depende de confirmação explícita do operador. Posição, histórico, tempo e isquemia já consumidos são preservados.
+
+### 5:40–6:30 — resumo final
+
+Finalize a execução e mostre o resumo com os agregados de telemetria, ocorrências, alertas, bateria, sinal e indicadores logísticos da viagem atual.
+
+### 6:30–7:15 — Cloud, arquitetura e QA
+
+Explique o fluxo:
+
+```text
+ESP32/Wokwi → HTTPS → Render/Express → Aiven MySQL
+                            ↓
+                  Dashboard + regras + Física
+```
+
+Cite C4, Strategy, Observer e SOLID. A baseline funcional final foi validada na **CI #152** com **110 testes / 109 aprovados / 1 skip / 0 falhas**, **5/5 E2E**, integração MySQL e build Docker aprovados.
+
+Se houver tempo, abra `/api/health` para comprovar backend público e banco disponível.
+
+### 7:15–8:00 — fechamento e perguntas
+
+Encerre reforçando que a LifeBox integra estado físico do transporte, rastreabilidade e otimização logística em uma única plataforma acadêmica de apoio à decisão.
+
+## Frase de fechamento sugerida
+
+> A proposta da LifeBox não é apenas monitorar uma caixa. É integrar o estado físico do transporte, rastreabilidade e otimização logística em uma única plataforma de apoio à decisão.
 
 ## DEMO como plano B
 
@@ -39,19 +79,16 @@ O modo DEMO continua disponível e usa o mesmo planejamento, reotimização, Fí
 
 No DEMO, os cenários manuais de temperatura, impacto, umidade, bateria e sinal podem ser usados para mostrar rapidamente alertas críticos. No IOT, esses estados devem ser provocados pelos sensores do Wokwi.
 
-## Evidência rápida de Cloud
-
-Abra `https://lifebox-expotech.onrender.com/api/health` para demonstrar o backend público e a conexão com o banco.
-
-Para a apresentação final, as pastas de captura estão preparadas em:
-
-- [`evidencias/iot`](evidencias/iot/README.md);
-- [`evidencias/cloud`](evidencias/cloud/README.md).
-
 ## Plano B sem internet
 
-Se o Render, Wokwi ou tiles OSM não estiverem acessíveis, use a execução local e as evidências versionadas em [`docs/evidencias`](evidencias/README.md). Continue demonstrando PO, isquemia, Física, alertas, reotimização e arquitetura a partir das capturas.
+Se Render, Wokwi ou tiles do OpenStreetMap não estiverem acessíveis, use as evidências versionadas em [`docs/evidencias`](evidencias/README.md) e o relatório técnico salvo localmente. Continue demonstrando PO, isquemia, Física, alertas, reotimização, arquitetura e Cloud a partir das capturas.
+
+Pacotes finais disponíveis:
+
+- [`evidencias/iot`](evidencias/iot/README.md) — IoT `9/9`;
+- [`evidencias/cloud`](evidencias/cloud/README.md) — Cloud `8/8`;
+- [`evidencias/eletronica`](evidencias/eletronica/README.md) — Logisim e Flip-Flop.
 
 ## Modelo legado
 
-O modelo A/B/C de score ponderado permanece apenas para compatibilidade/histórico nos endpoints `/api/otimizacao`. Ele não faz parte da demo principal. A PO atual é o planejamento multimodal em `/api/planejamento`.
+O modelo A/B/C de score ponderado permanece apenas para compatibilidade/histórico nos endpoints `/api/otimizacao`. Ele não faz parte da demonstração principal. A PO atual é o planejamento multimodal em `/api/planejamento`.
