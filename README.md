@@ -10,28 +10,28 @@
 
 LifeBox é um sistema acadêmico de apoio à decisão, rastreabilidade e monitoramento IoT para transporte de órgãos. O projeto integra planejamento multimodal com Pesquisa Operacional, execução rastreável, reotimização confirmada pelo operador, telemetria física simulada por ESP32/Wokwi, Física, Eletrônica Digital, MySQL gerenciado e infraestrutura em nuvem em uma única demonstração verificável.
 
-**Deploy público:** https://lifebox-expotech.onrender.com  
-**Health check:** https://lifebox-expotech.onrender.com/api/health  
-**Wokwi:** https://wokwi.com/projects/473749722940837889  
-**Relatório técnico:** [LifeBox — Relatório Técnico — ExpoTech 2026.2](https://drive.google.com/file/d/1QynkaTLEhogxJ3Zx2oLrSgxc0kLJ3rbX/view?usp=drivesdk)
+## Links principais
+
+- **Deploy público:** https://lifebox-expotech.onrender.com
+- **Health check:** https://lifebox-expotech.onrender.com/api/health
+- **Wokwi:** https://wokwi.com/projects/473749722940837889
+- **Relatório técnico:** [LifeBox — Relatório Técnico — ExpoTech 2026.2](https://drive.google.com/file/d/1QynkaTLEhogxJ3Zx2oLrSgxc0kLJ3rbX/view?usp=drivesdk)
 
 ## Status da entrega
 
 **MVP acadêmico concluído e validado de ponta a ponta.** O ESP32/Wokwi envia telemetria ao backend público no Render; o backend vincula cada leitura à execução ativa, persiste no Aiven for MySQL e atualiza dashboard, gráficos, Física, alertas, atuadores, reotimização e resumo final.
 
-| Área | Tecnologia / estado |
-| --- | --- |
-| Backend | Node.js 20 / Express em Docker no Render |
-| IoT | ESP32/Wokwi, DHT22, MPU6050, GPS NEO-6M, OLED, LED e buzzer |
-| Banco | Aiven for MySQL gerenciado, persistência por execução e TLS/CA |
-| Frontend e mapa | HTML, CSS, JavaScript, Leaflet / OpenStreetMap |
-| Pesquisa Operacional | planejamento multimodal, restrições e reotimização confirmada |
-| Física | análise dinâmica da execução com telemetria vinculada |
-| Eletrônica | lógica combinacional no backend/Wokwi + extensão sequencial no Logisim |
-| Arquitetura | C4 Context/Container, Strategy, Observer e SOLID |
-| QA | `node:test`, c8, Playwright, MySQL integration e Docker build |
-| CI/CD | GitHub Actions + Auto Deploy do Render na `main` |
-| Cloud | HTTPS público + Render + Aiven MySQL + segredos fora do repositório |
+- **Backend:** Node.js 20 / Express em Docker no Render.
+- **IoT:** ESP32/Wokwi, DHT22, MPU6050, GPS NEO-6M, OLED, LED e buzzer.
+- **Banco:** Aiven for MySQL gerenciado, persistência por execução e TLS/CA.
+- **Frontend e mapa:** HTML, CSS, JavaScript, Leaflet / OpenStreetMap.
+- **Pesquisa Operacional:** planejamento multimodal, restrições e reotimização confirmada.
+- **Física:** análise dinâmica da execução com telemetria vinculada.
+- **Eletrônica:** lógica combinacional no backend/Wokwi + extensão sequencial no Logisim.
+- **Arquitetura:** C4 Context/Container, Strategy, Observer e SOLID.
+- **QA:** `node:test`, c8, Playwright, integração MySQL e build Docker.
+- **CI/CD:** GitHub Actions + Auto Deploy do Render na `main`.
+- **Cloud:** HTTPS público + Render + Aiven MySQL + segredos fora do repositório.
 
 **Pacote final de evidências:** IoT `9/9` · Cloud `8/8` · Eletrônica/Logisim `4/4`.
 
@@ -92,14 +92,12 @@ A arquitetura C4, sequência da reotimização, Strategy, Observer, SOLID e trad
 
 ## Disciplinas integradas
 
-| Frente | Implementação | Evidência principal |
-| --- | --- | --- |
-| Pesquisa Operacional | plano multimodal, restrições e reotimização | planejamento, mapa e `docs/operations-research.md` |
-| Física | cálculos didáticos da execução atual | Análise Física + `docs/physics.md` |
-| Eletrônica | lógica digital, ESP32/Wokwi e Logisim | atuadores + `docs/electronics.md` |
-| Arquitetura | C4, Strategy, Observer e SOLID | `docs/architecture.md` |
-| QA | check, lint, coverage, E2E, MySQL e Docker | `docs/testing-and-qa.md` |
-| Cloud | Render + Aiven + TLS + CI/CD | `docs/cloud.md` e evidências Cloud |
+- **Pesquisa Operacional:** plano multimodal, restrições e reotimização; evidências em planejamento, mapa e `docs/operations-research.md`.
+- **Física:** cálculos didáticos da execução atual; evidências na Análise Física e em `docs/physics.md`.
+- **Eletrônica:** lógica digital, ESP32/Wokwi e Logisim; evidências nos atuadores e em `docs/electronics.md`.
+- **Arquitetura:** C4, Strategy, Observer e SOLID; detalhes em `docs/architecture.md`.
+- **QA:** check, lint, coverage, E2E, MySQL e Docker; detalhes em `docs/testing-and-qa.md`.
+- **Cloud:** Render + Aiven + TLS + CI/CD; detalhes em `docs/cloud.md` e nas evidências Cloud.
 
 Veja também [requisitos acadêmicos](docs/academic-requirements.md).
 
