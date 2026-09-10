@@ -13,7 +13,7 @@ LifeBox é um sistema acadêmico de apoio à decisão, rastreabilidade e monitor
 **Deploy público:** https://lifebox-expotech.onrender.com  
 **Health check:** https://lifebox-expotech.onrender.com/api/health  
 **Wokwi:** https://wokwi.com/projects/473749722940837889  
-**Relatório técnico:** [LifeBox — Relatório Técnico — ExpoTech 2026.2](docs/LifeBox-Relatorio-Tecnico-ExpoTech-2026.2.pdf)
+**Relatório técnico:** [LifeBox — Relatório Técnico — ExpoTech 2026.2](https://drive.google.com/file/d/1QynkaTLEhogxJ3Zx2oLrSgxc0kLJ3rbX/view?usp=drivesdk)
 
 ## Status da entrega
 
@@ -159,7 +159,7 @@ simulator/   telemetria e cenários DEMO
 database/    schema MySQL
 electronics/ circuito Logisim
 firmware/    ESP32/Wokwi, sensores e atuadores
-docs/        documentação técnica, relatório e evidências
+docs/        documentação técnica e evidências
 tests/       testes unitários, integração e E2E
 ```
 
