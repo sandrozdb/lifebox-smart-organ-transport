@@ -1,25 +1,25 @@
 # Evidências finais — Cloud
 
-Esta pasta contém o **pacote final de oito capturas do Render, Aiven e GitHub Actions**. Status do pacote: **Cloud 8/8**.
+Esta pasta contém o **pacote final de oito capturas do Render, Aiven e GitHub Actions**.
 
-> Antes de subir qualquer imagem, confira se senha, certificado CA, connection string completa, tokens ou outros valores sensíveis não aparecem na captura.
+Status do pacote: **Cloud 8/8 — CONCLUÍDO**.
 
-## Padrão de arquivos
+> As capturas foram selecionadas sem expor senha, certificado CA, connection string completa, tokens ou outros valores sensíveis.
 
-| Arquivo | O que deve aparecer | Status do sistema | Upload |
-| --- | --- | --- | --- |
-| `01-render-service-live.png` | Web Service oficial `lifebox-expotech` no Render com status Live. | VALIDADO | OK |
-| `02-render-deploy-main.png` | deploy concluído da branch `main`, no commit `646145a`. | VALIDADO | OK |
-| `03-render-environment-keys.png` | nomes das variáveis configuradas, com valores ocultos pela interface. | VALIDADO | OK |
-| `04-aiven-service-overview.png` | serviço MySQL ativo no Aiven, sem senha exposta. | VALIDADO | OK |
-| `05-aiven-database.png` | bancos `defaultdb` e `lifebox_db` no serviço gerenciado. | VALIDADO | OK |
-| `06-health-check-publico.png` | `https://lifebox-expotech.onrender.com/api/health` respondendo com sucesso. | VALIDADO | OK |
-| `07-github-actions-ci84.png` | CI final #138 verde no commit `646145a` (nome físico preservado). | VALIDADO | OK |
-| `08-dashboard-publico.png` | dashboard aberto pela URL pública atual. | VALIDADO | OK |
+## Arquivos
 
-## Como subir
+| Arquivo | O que aparece | Status |
+| --- | --- | --- |
+| `01-render-service-live.png` | Web Service oficial `lifebox-expotech` no Render com status Live | VALIDADO |
+| `02-render-deploy-main.png` | snapshot de deploy concluído da branch `main` no commit `646145a` | VALIDADO |
+| `03-render-environment-keys.png` | nomes das variáveis configuradas, com valores ocultos pela interface | VALIDADO |
+| `04-aiven-service-overview.png` | serviço MySQL ativo no Aiven, sem senha exposta | VALIDADO |
+| `05-aiven-database.png` | bancos `defaultdb` e `lifebox_db` no serviço gerenciado | VALIDADO |
+| `06-health-check-publico.png` | health check público respondendo com sucesso | VALIDADO |
+| `07-github-actions-ci84.png` | snapshot histórico de CI verde (#138 no commit `646145a`; nome físico preservado) | VALIDADO |
+| `08-dashboard-publico.png` | dashboard aberto pela URL pública | VALIDADO |
 
-Salve as imagens diretamente nesta pasta usando **exatamente os nomes acima**. Depois do upload, atualize apenas a coluna `Upload` de `PENDENTE` para `OK`.
+Os arquivos `02-render-deploy-main.png` e `07-github-actions-ci84.png` registram snapshots reais de etapas anteriores do fechamento Cloud. Eles continuam válidos como prova visual daquele deploy/CI. A baseline funcional final avançou posteriormente para o commit `1a2dbd7e85bdce0def0d02ff3b5b68257cb11fb2`, validado pela **CI #152 SUCCESS**.
 
 ## URLs de referência
 
@@ -27,7 +27,7 @@ Salve as imagens diretamente nesta pasta usando **exatamente os nomes acima**. D
 - Health check: `https://lifebox-expotech.onrender.com/api/health`
 - Repositório: `sandrozdb/lifebox-smart-organ-transport`
 
-## Checklist de segurança antes do commit
+## Checklist de segurança
 
 - [x] nenhum valor de `DB_PASSWORD` visível;
 - [x] nenhum conteúdo de `DB_SSL_CA` visível;
@@ -50,6 +50,13 @@ O conjunto final demonstra:
 7. CI automatizada no GitHub Actions;
 8. dashboard realmente acessível pela internet.
 
-Documentação relacionada: [`../../cloud.md`](../../cloud.md), [`../../ci-cd.md`](../../ci-cd.md) e [`../../deployment-checklist.md`](../../deployment-checklist.md).
+## Referência funcional de fechamento
 
-Referência atual da aplicação: `main` em `7d3ce046836ff2266701e48e6ec9666b7dba555a`, com CI `#147 SUCCESS`.
+- baseline: `1a2dbd7e85bdce0def0d02ff3b5b68257cb11fb2`
+- CI: **#152 SUCCESS**
+- pacote Cloud: **8/8**
+- pacote IoT: **9/9**
+
+Alterações posteriores exclusivamente documentais podem gerar novas execuções de CI sem alterar essa baseline funcional.
+
+Documentação relacionada: [`../../cloud.md`](../../cloud.md), [`../../ci-cd.md`](../../ci-cd.md) e [`../../deployment-checklist.md`](../../deployment-checklist.md).
