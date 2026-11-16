@@ -7,6 +7,12 @@ Este diretório reúne duas camadas de evidência:
 
 As imagens históricas continuam válidas para demonstrar PO, Física, Eletrônica, arquitetura, QA, rastreabilidade, alertas e reotimização. A captura antiga `20-cloud-status.png` representa propositalmente o estado anterior ao deploy e não deve ser usada como prova do ambiente atual.
 
+## Vídeo pitch — apresentação do protótipo
+
+Assista à apresentação do LifeBox, incluindo a motivação, o circuito ESP32/Wokwi, o dashboard de monitoramento e o planejamento logístico com Pesquisa Operacional:
+
+- **[Assistir ao vídeo pitch no YouTube](https://youtu.be/vHY02qPTlms)**
+
 ## Pacote final
 
 - [IoT / Wokwi](iot/README.md): ESP32, telemetria, gráficos, Física, logística, reotimização e resumo final — **9/9**.
