@@ -1,5 +1,9 @@
 # Demo ExpoTech — aproximadamente 6 a 8 minutos
 
+## Vídeo pitch gravado
+
+A apresentação em vídeo do projeto está disponível no YouTube: **[LifeBox — vídeo pitch](https://youtu.be/vHY02qPTlms)**. O vídeo complementa a demonstração interativa descrita abaixo.
+
 ## Montagem recomendada
 
 A apresentação principal usa duas telas e dispensa slides:
