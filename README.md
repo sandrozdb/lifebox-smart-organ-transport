@@ -12,6 +12,7 @@ LifeBox é um sistema acadêmico de apoio à decisão, rastreabilidade e monitor
 
 ## Links principais
 
+- **Vídeo pitch (YouTube):** https://youtu.be/vHY02qPTlms
 - **Deploy público:** https://lifebox-expotech.onrender.com
 - **Health check:** https://lifebox-expotech.onrender.com/api/health
 - **Wokwi:** https://wokwi.com/projects/473749722940837889
