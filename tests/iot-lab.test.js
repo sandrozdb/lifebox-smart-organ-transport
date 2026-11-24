@@ -16,7 +16,7 @@ test("dashboard links to the three-mode IoT lab page", () => {
     assert.match(lab, new RegExp(`id="panel-${mode}"`));
   }
   assert.match(lab, /VALORES SIMULADOS/);
-  assert.match(lab, /telemetria online será integrada depois/);
+  assert.match(lab, /telemetria online será\s+integrada depois/);
 });
 
 test("physical ESP32 firmware keeps both potentiometers on ADC1", () => {
