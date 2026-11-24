@@ -1,0 +1,35 @@
+name: Format ExpoTech IoT lab (temporary)
+on:
+  push:
+    branches:
+      - feature/expotech-esp32-real-iot-lab
+    paths:
+      - .github/workflows/format-expotech.yml
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Apply Prettier to new files
+        run: npx prettier --write firmware-real/README.md public/css/iot-lab.css public/iot-lab.html public/js/iot-lab.js
+      - name: Commit formatted assets
+        shell: bash
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add firmware-real/README.md public/css/iot-lab.css public/iot-lab.html public/js/iot-lab.js
+            git commit -m "style(iot): format new ExpoTech lab assets"
+            git push origin HEAD:feature/expotech-esp32-real-iot-lab
+          fi
