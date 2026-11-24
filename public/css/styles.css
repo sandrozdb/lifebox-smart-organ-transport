@@ -39,17 +39,22 @@
 .iot-controls .mini-badge {
   white-space: nowrap;
 }
-.iot-controls > a.mini-badge {
-  color: #eaf7ff;
-  text-decoration: none;
+.lab-access-link {
+  display: inline-flex;
+  margin-top: 12px;
+  padding: 8px 12px;
   border: 1px solid rgba(114, 167, 196, 0.45);
-  transition:
-    background 0.18s ease,
-    border-color 0.18s ease;
+  border-radius: 9px;
+  background: #143246;
+  color: #eaf7ff;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-decoration: none;
 }
-.iot-controls > a.mini-badge:hover,
-.iot-controls > a.mini-badge:focus-visible {
-  background: #183c50;
+.lab-access-link:hover,
+.lab-access-link:focus-visible {
+  background: #1a445a;
   border-color: #72a7c4;
 }
 .iot-controls .mini-badge.online {
