@@ -16,6 +16,7 @@ LifeBox é um sistema acadêmico de apoio à decisão, rastreabilidade e monitor
 - **Deploy público:** https://lifebox-expotech.onrender.com
 - **Health check:** https://lifebox-expotech.onrender.com/api/health
 - **Wokwi:** https://wokwi.com/projects/473749722940837889
+- **Laboratório IoT (três experiências):** https://lifebox-expotech.onrender.com/iot-lab.html
 - **Relatório técnico:** [LifeBox — Relatório Técnico — ExpoTech 2026.2](https://drive.google.com/file/d/1QynkaTLEhogxJ3Zx2oLrSgxc0kLJ3rbX/view?usp=drivesdk)
 
 ## Status da entrega
@@ -57,6 +58,16 @@ Este é um projeto acadêmico e demonstrativo. A LifeBox não é um dispositivo 
 - circuito Logisim com D Flip-Flop como extensão sequencial acadêmica separada;
 - separação entre sensores IoT e condições logísticas externas;
 - API Express pública, persistência MySQL via TLS, health check, CI e Auto Deploy.
+
+## Laboratório IoT da ExpoTech
+
+A nova página [Laboratório IoT](public/iot-lab.html) organiza três apresentações:
+**Demonstração** (backend simulado), **ESP32/Wokwi** (telemetria virtual já
+integrada ao Render/Aiven) e **ESP32 real** (novo firmware
+[`firmware-real/sketch.ino`](firmware-real/sketch.ino), inicialmente offline,
+com dois potenciômetros B10K, OLED e LEDs). A versão física **simula**
+temperatura e impacto; ainda não transmite leituras para a API nem representa
+medições clínicas.
 
 ## Modos de operação
 

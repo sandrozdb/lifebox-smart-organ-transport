@@ -39,6 +39,24 @@
 .iot-controls .mini-badge {
   white-space: nowrap;
 }
+.lab-access-link {
+  display: inline-flex;
+  margin-top: 12px;
+  padding: 8px 12px;
+  border: 1px solid rgba(114, 167, 196, 0.45);
+  border-radius: 9px;
+  background: #143246;
+  color: #eaf7ff;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-decoration: none;
+}
+.lab-access-link:hover,
+.lab-access-link:focus-visible {
+  background: #1a445a;
+  border-color: #72a7c4;
+}
 .iot-controls .mini-badge.online {
   color: #38da8a;
   border-color: rgba(56, 218, 138, 0.45);
