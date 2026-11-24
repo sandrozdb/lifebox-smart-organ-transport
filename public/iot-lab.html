@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Laboratório IoT da LifeBox: demonstração, ESP32/Wokwi e protótipo físico com potenciômetros."
+    />
+    <title>LifeBox | Laboratório IoT</title>
+    <link rel="stylesheet" href="/css/iot-lab.css" />
+    <script src="/js/iot-lab.js" defer></script>
+  </head>
+  <body>
+    <header class="lab-header">
+      <a class="lab-brand" href="/" aria-label="Voltar ao dashboard LifeBox">
+        <img src="/assets/lifebox-logo.svg" alt="" />
+        <span>Life<span class="brand-accent">Box</span></span>
+      </a>
+      <nav aria-label="Navegação principal">
+        <a href="/">Dashboard</a>
+        <a class="active" href="/iot-lab.html" aria-current="page">Demonstração IoT</a>
+      </nav>
+    </header>
+
+    <main class="lab-layout">
+      <section class="lab-hero">
+        <p class="eyebrow">EXTRAS EXPO TECH · DISPOSITIVO INTELIGENTE</p>
+        <h1>Uma LifeBox. Três formas de demonstrar.</h1>
+        <p>
+          Compare o simulador do sistema, o ESP32 virtual no Wokwi e o novo
+          protótipo físico. Os modos IoT e demonstração já existentes no backend
+          continuam preservados.
+        </p>
+        <div class="status-row" aria-live="polite">
+          <span id="lab-backend-status" class="status-pill">Verificando backend...</span>
+          <span id="lab-device-status" class="status-pill">Aguardando telemetria</span>
+        </div>
+      </section>
+
+      <div class="lab-tabs" role="tablist" aria-label="Experiências LifeBox">
+        <button id="tab-demo" type="button" role="tab" aria-selected="true" aria-controls="panel-demo" tabindex="0" data-lab-tab="demo">
+          <span class="tab-number">01</span> Demonstração
+        </button>
+        <button id="tab-wokwi" type="button" role="tab" aria-selected="false" aria-controls="panel-wokwi" tabindex="-1" data-lab-tab="wokwi">
+          <span class="tab-number">02</span> ESP32 / Wokwi
+        </button>
+        <button id="tab-real" type="button" role="tab" aria-selected="false" aria-controls="panel-real" tabindex="-1" data-lab-tab="real">
+          <span class="tab-number">03</span> ESP32 real
+        </button>
+      </div>
+
+      <section id="panel-demo" class="lab-panel" role="tabpanel" aria-labelledby="tab-demo" tabindex="0">
+        <div class="panel-title">
+          <div>
+            <p class="eyebrow">MODO DEMO</p>
+            <h2>Apresentação sem dispositivo conectado</h2>
+          </div>
+          <span class="mode-tag">SIMULAÇÃO</span>
+        </div>
+        <p>
+          Use os cenários do dashboard para demonstrar condições normais, alertas de
+          temperatura, impacto e eventos logísticos. O backend gera a telemetria
+          acadêmica sem depender de sensores.
+        </p>
+        <div class="lab-feature-grid">
+          <article class="feature-card"><strong>01 · Planejamento</strong><span>Escolha órgão, origem e destino.</span></article>
+          <article class="feature-card"><strong>02 · Execução</strong><span>Inicie o transporte demonstrativo.</span></article>
+          <article class="feature-card"><strong>03 · Alertas</strong><span>Acione os cenários manuais e observe gráficos e timeline.</span></article>
+        </div>
+        <div class="actions">
+          <button class="action-primary" type="button" data-activate-mode="DEMO">
+            Ativar modo demonstração
+          </button>
+          <a class="action-secondary" href="/">Abrir dashboard</a>
+        </div>
+      </section>
+
+      <section id="panel-wokwi" class="lab-panel" role="tabpanel" aria-labelledby="tab-wokwi" tabindex="0" hidden>
+        <div class="panel-title">
+          <div>
+            <p class="eyebrow">IOT VIRTUAL · INTEGRAÇÃO EXISTENTE</p>
+            <h2>ESP32 no Wokwi</h2>
+          </div>
+          <span class="mode-tag">WOKWI</span>
+        </div>
+        <p>
+          O circuito virtual já utiliza DHT22, MPU6050, GPS, OLED, LED e buzzer.
+          O firmware original pode transmitir leituras à API LifeBox e receber
+          o sinal digital de alerta de volta.
+        </p>
+        <div class="pipeline" aria-label="Fluxo da telemetria virtual">
+          <span>Sensores Wokwi</span><b>→</b><span>ESP32 virtual</span><b>→</b>
+          <span>API / Render</span><b>→</b><span>Dashboard</span>
+        </div>
+        <div class="lab-feature-grid">
+          <article class="feature-card"><strong>Firmware virtual</strong><span>firmware/sketch.ino</span></article>
+          <article class="feature-card"><strong>Dispositivo</strong><span>LIFEBOX-WOKWI-001</span></article>
+          <article class="feature-card"><strong>Fonte</strong><span>Telemetria do circuito Wokwi, não dos knobs físicos.</span></article>
+        </div>
+        <div class="actions">
+          <a class="action-primary" href="https://wokwi.com/projects/473749722940837889" target="_blank" rel="noopener noreferrer">
+            Abrir projeto Wokwi
+          </a>
+          <button class="action-secondary" type="button" data-activate-mode="IOT">
+            Ativar modo IoT no backend
+          </button>
+          <a class="action-secondary" href="/">Ver dashboard</a>
+        </div>
+      </section>
+
+      <section id="panel-real" class="lab-panel" role="tabpanel" aria-labelledby="tab-real" tabindex="0" hidden>
+        <div class="panel-title">
+          <div>
+            <p class="eyebrow">HARDWARE FÍSICO · EXPO TECH</p>
+            <h2>ESP32 real com controles interativos</h2>
+          </div>
+          <span class="mode-tag">BANCADA</span>
+        </div>
+        <p>
+          O novo firmware físico usa dois potenciômetros B10K para <strong>simular</strong>
+          temperatura e impacto. O OLED e os LEDs respondem localmente. Esta versão
+          inicial funciona sem internet; a telemetria online será integrada depois
+          dos testes com as peças reais.
+        </p>
+        <div class="real-grid">
+          <div class="hardware-illustration">
+            <div class="oled-preview" aria-label="Prévia do display OLED">
+              <div class="oled-title">LIFEBOX / ESP32 REAL</div>
+              <div>TEMP <span id="preview-temp">6.0</span> C</div>
+              <div>IMPACTO <span id="preview-impact">0.0</span> g</div>
+              <div id="preview-status">STATUS: NORMAL</div>
+              <div class="oled-note">VALORES SIMULADOS</div>
+            </div>
+            <div class="signal-row">
+              <span id="preview-green" class="signal green on"><i></i> Verde</span>
+              <span id="preview-red" class="signal red"><i></i> Vermelho</span>
+              <span id="preview-buzzer" class="signal"><i></i> Buzzer inativo</span>
+            </div>
+          </div>
+          <div class="knob-preview">
+            <p class="eyebrow">TESTE INTERATIVO NO NAVEGADOR</p>
+            <label for="preview-temperature">Temperatura simulada <output id="temperature-output">6,0 °C</output></label>
+            <input id="preview-temperature" type="range" min="-2" max="14" step="0.5" value="6" />
+            <label for="preview-impact-range">Impacto simulado <output id="impact-output">0,0 g</output></label>
+            <input id="preview-impact-range" type="range" min="0" max="6" step="0.1" value="0" />
+            <p class="microcopy">
+              Essa prévia roda apenas no navegador e não envia leituras ao
+              backend. No protótipo real, os controles serão físicos.
+            </p>
+          </div>
+        </div>
+        <h3>Pinagem planejada</h3>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>Componente</th><th>ESP32</th><th>Observação</th></tr></thead>
+            <tbody>
+              <tr><td>Potenciômetro de temperatura</td><td>GPIO 34 (central)</td><td>Extremos: 3V3 e GND</td></tr>
+              <tr><td>Potenciômetro de impacto</td><td>GPIO 35 (central)</td><td>Extremos: 3V3 e GND</td></tr>
+              <tr><td>OLED I²C</td><td>SDA 21 / SCL 22</td><td>VCC 3V3 e GND, se compatível</td></tr>
+              <tr><td>LED verde</td><td>GPIO 25</td><td>Resistor de 220 Ω em série</td></tr>
+              <tr><td>LED vermelho</td><td>GPIO 26</td><td>Resistor de 220 Ω em série</td></tr>
+              <tr><td>Buzzer ativo</td><td>GPIO 27</td><td>Confirmar tensão/corrente; usar driver se necessário</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="notice">
+          <strong>Importante:</strong> não energize os potenciômetros com 5 V.
+          Teste os módulos fora da caixa antes de recortar o isopor. Este protótipo
+          não mede temperatura nem aceleração reais e não é dispositivo médico.
+        </p>
+        <div class="actions">
+          <a class="action-primary" href="https://github.com/sandrozdb/lifebox-smart-organ-transport/tree/main/firmware-real" target="_blank" rel="noopener noreferrer">
+            Ver firmware do ESP32 físico
+          </a>
+          <a class="action-secondary" href="/">Voltar ao dashboard</a>
+        </div>
+      </section>
+
+      <p id="lab-feedback" class="feedback" role="status" aria-live="polite"></p>
+    </main>
+
+    <footer class="lab-footer">
+      LifeBox · Projeto acadêmico demonstrativo · Dados e limites ilustrativos, não clínicos.
+    </footer>
+  </body>
+</html>
