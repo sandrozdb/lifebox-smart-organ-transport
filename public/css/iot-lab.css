@@ -19,7 +19,12 @@ body {
   margin: 0;
   background: radial-gradient(circle at 50% 0, #142c41, var(--background) 44%);
   color: var(--foreground);
-  font-family: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-family:
+    Inter,
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    sans-serif;
   line-height: 1.6;
 }
 
@@ -323,7 +328,11 @@ button:disabled {
   background: #020a14;
   box-shadow: inset 0 0 24px #0c3666;
   color: #c9edff;
-  font: 700 0.9rem/1.4 ui-monospace, "SFMono-Regular", Consolas, monospace;
+  font:
+    700 0.9rem/1.4 ui-monospace,
+    "SFMono-Regular",
+    Consolas,
+    monospace;
 }
 
 .oled-title {

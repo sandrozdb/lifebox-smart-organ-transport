@@ -30,9 +30,7 @@ tabs.forEach((tab, index) => {
         ? 0
         : event.key === "End"
           ? tabs.length - 1
-          : (index +
-              (event.key === "ArrowRight" ? 1 : -1) +
-              tabs.length) %
+          : (index + (event.key === "ArrowRight" ? 1 : -1) + tabs.length) %
             tabs.length;
 
     selectTab(tabs[next].dataset.labTab, true);
@@ -48,9 +46,7 @@ function updatePreview() {
   const temperature = Number(
     document.querySelector("#preview-temperature").value,
   );
-  const impact = Number(
-    document.querySelector("#preview-impact-range").value,
-  );
+  const impact = Number(document.querySelector("#preview-impact-range").value);
   const alert = temperature < 4 || temperature > 8 || impact >= 3.5;
   const format = (number) => number.toFixed(1).replace(".", ",");
 
@@ -92,11 +88,12 @@ async function readBackendStatus() {
     backendStatus.classList.toggle("ok", true);
     backendStatus.classList.remove("alert");
 
-    const source = state.deviceId === "LIFEBOX-REAL-001"
-      ? "ESP32 real"
-      : state.deviceId === "LIFEBOX-WOKWI-001"
-        ? "Wokwi"
-        : state.deviceId || "sem dispositivo";
+    const source =
+      state.deviceId === "LIFEBOX-REAL-001"
+        ? "ESP32 real"
+        : state.deviceId === "LIFEBOX-WOKWI-001"
+          ? "Wokwi"
+          : state.deviceId || "sem dispositivo";
     deviceStatus.textContent = state.online
       ? `Online: ${source}`
       : `Dispositivo offline · último: ${source}`;
@@ -126,7 +123,9 @@ document.querySelectorAll("[data-activate-mode]").forEach((button) => {
       });
       const data = await response.json();
       if (!response.ok) {
-        throw new Error(data.erro || data.error || "Não foi possível alterar o modo.");
+        throw new Error(
+          data.erro || data.error || "Não foi possível alterar o modo.",
+        );
       }
 
       feedback.textContent =

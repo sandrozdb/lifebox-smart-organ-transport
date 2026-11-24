@@ -21,16 +21,16 @@ e buzzer opcional.
 
 ## Ligações previstas
 
-| Peça | Pino ESP32 | Observação |
-| --- | --- | --- |
-| B10K Temperatura, terminal central | GPIO 34 | Extremos: **3V3** e **GND** |
-| B10K Impacto, terminal central | GPIO 35 | Extremos: **3V3** e **GND** |
-| OLED SDA | GPIO 21 | Módulo I²C, normalmente 4 pinos |
-| OLED SCL | GPIO 22 | Módulo I²C, normalmente 4 pinos |
-| OLED VCC e GND | 3V3 / GND | Confirmar compatibilidade com 3,3 V |
-| LED verde, ânodo | GPIO 25 | Resistor 220 Ω em série; cátodo ao GND |
-| LED vermelho, ânodo | GPIO 26 | Resistor 220 Ω em série; cátodo ao GND |
-| Buzzer ativo, controle | GPIO 27 | **Desabilitado inicialmente**; avaliar driver/transistor |
+| Peça                               | Pino ESP32 | Observação                                               |
+| ---------------------------------- | ---------- | -------------------------------------------------------- |
+| B10K Temperatura, terminal central | GPIO 34    | Extremos: **3V3** e **GND**                              |
+| B10K Impacto, terminal central     | GPIO 35    | Extremos: **3V3** e **GND**                              |
+| OLED SDA                           | GPIO 21    | Módulo I²C, normalmente 4 pinos                          |
+| OLED SCL                           | GPIO 22    | Módulo I²C, normalmente 4 pinos                          |
+| OLED VCC e GND                     | 3V3 / GND  | Confirmar compatibilidade com 3,3 V                      |
+| LED verde, ânodo                   | GPIO 25    | Resistor 220 Ω em série; cátodo ao GND                   |
+| LED vermelho, ânodo                | GPIO 26    | Resistor 220 Ω em série; cátodo ao GND                   |
+| Buzzer ativo, controle             | GPIO 27    | **Desabilitado inicialmente**; avaliar driver/transistor |
 
 Os potenciômetros não recebem **5 V** nas extremidades. O valor medido
 pelo ADC deve permanecer na faixa **0 a 3,3 V**.
