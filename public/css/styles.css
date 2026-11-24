@@ -39,6 +39,19 @@
 .iot-controls .mini-badge {
   white-space: nowrap;
 }
+.iot-controls > a.mini-badge {
+  color: #eaf7ff;
+  text-decoration: none;
+  border: 1px solid rgba(114, 167, 196, 0.45);
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease;
+}
+.iot-controls > a.mini-badge:hover,
+.iot-controls > a.mini-badge:focus-visible {
+  background: #183c50;
+  border-color: #72a7c4;
+}
 .iot-controls .mini-badge.online {
   color: #38da8a;
   border-color: rgba(56, 218, 138, 0.45);
