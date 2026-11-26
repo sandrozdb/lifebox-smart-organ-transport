@@ -82,8 +82,7 @@ async function readBackendStatus() {
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
     const state = await response.json();
-    const modeLabel =
-      state.mode === "DEMO" ? "Demonstração" : "IoT (Wokwi)";
+    const modeLabel = state.mode === "DEMO" ? "Demonstração" : "IoT (Wokwi)";
     backendStatus.textContent = `Backend: ${modeLabel}`;
     backendStatus.classList.toggle("ok", true);
     backendStatus.classList.remove("alert");

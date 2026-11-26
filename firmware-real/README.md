@@ -21,16 +21,13 @@ Os números acima são exemplos, não medições reais. A escrita acentuada usa 
 
 ## Controles e regras
 
-| Entrada ou saída | Pino ESP32 | Papel |
-| --- | --- | --- |
-| Potenciômetro B10K de temperatura | GPIO34 (terminal central) | Simula de **−2°C a 14°C** |
-| Potenciômetro B10K de impacto | GPIO35 (terminal central) | Simula de **0g a 6g** |
-| OLED SSD1306 I²C | SDA GPIO21, SCL GPIO22 | Exibe órgão, valores e cenário |
-| OLED VDD/GND | 3V3 / GND | Alimentação do módulo compatível |
-| LED verde + resistor 220Ω em série | GPIO25 | Transporte ativo, condição normal |
-| LED vermelho + resistor 220Ω em série | GPIO26 | Alerta crítico |
-| Buzzer pequeno de baixa corrente | GPIO27 | Tom de alerta; conferir adequação elétrica |
-| Botão BOOT existente na placa | GPIO0 | Segure 2 s para pausar/retomar o transporte demonstrativo |
+- **Potenciômetro B10K de temperatura:** terminal central no **GPIO34**; simula de **−2°C a 14°C**.
+- **Potenciômetro B10K de impacto:** terminal central no **GPIO35**; simula de **0g a 6g**.
+- **OLED SSD1306 I²C:** SDA no **GPIO21**, SCL no **GPIO22**, alimentação compatível no **3V3/GND**.
+- **LED verde:** **GPIO25**, com resistor de **220Ω** em série; representa condição normal durante transporte.
+- **LED vermelho:** **GPIO26**, com resistor de **220Ω** em série; representa alerta.
+- **Buzzer pequeno de baixa corrente:** **GPIO27**; confirmar adequação elétrica e corrente antes da montagem.
+- **Botão BOOT existente na placa:** **GPIO0**; manter pressionado por 2 segundos para pausar/retomar o transporte.
 
 Os terminais **externos** de cada B10K vão ao **3V3 e GND**; o terminal **central** vai ao respectivo GPIO ADC. **Nunca ligue 5 V aos GPIOs, ao pino 3V3 ou às entradas dos potenciômetros**. Desconecte USB/energia antes de alterar ligações. O buzzer não deve consumir corrente acima do suportado pelo GPIO; utilize driver/transistor apropriado se necessário. Um buzzer de 5 V não deve ser ligado diretamente ao GPIO.
 

@@ -43,12 +43,13 @@ flowchart LR
 | Dashboard             | Planejamento, mapa, telemetria, alertas, Física, Eletrônica, logística e resumo. |
 | API Express no Render | Validação HTTP, regras, coordenação dos casos de uso e respostas JSON.           |
 | ESP32 / Wokwi         | Lê sensores, envia telemetria e aplica `digitalSignal`/perfil recebidos.         |
-| ESP32 físico offline  | Simula temperatura/impacto com potenciômetros e aciona OLED, LEDs e buzzer localmente; **sem API**. |
 | Simulador DEMO        | Gera telemetria acadêmica quando o modo não é IOT.                               |
 | Aiven for MySQL       | Estado durável de transportes, leituras, alertas, timeline e resumos.            |
 | Repository em memória | Testes rápidos e determinísticos; não é banco de produção.                       |
 | GitHub Actions        | Integração contínua e validações automatizadas.                                  |
 | Render Auto Deploy    | Entrega contínua da branch `main` no serviço público.                            |
+
+**Demonstração física separada:** ESP32 com potenciômetros, OLED, LEDs e buzzer, sem rede. Esta caixa não é um container da arquitetura online e não recebe `digitalSignal`.
 
 ## Componentes do backend
 
