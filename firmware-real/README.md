@@ -26,7 +26,7 @@ Os números acima são exemplos, não medições reais. A escrita acentuada usa 
 - **OLED SSD1306 I²C:** SDA no **GPIO21**, SCL no **GPIO22**, alimentação compatível no **3V3/GND**.
 - **LED verde:** **GPIO25**, com resistor de **220Ω** em série; representa condição normal durante transporte.
 - **LED vermelho:** **GPIO26**, com resistor de **220Ω** em série; representa alerta.
-- **Buzzer pequeno de baixa corrente:** **GPIO27**; confirmar adequação elétrica e corrente antes da montagem.
+- **Buzzer passivo de baixa corrente:** **GPIO27**, tom PWM de **2.000 Hz** contínuo durante alerta; confirmar adequação elétrica e corrente antes da montagem.
 - **Botão BOOT existente na placa:** **GPIO0**; manter pressionado por 2 segundos para pausar/retomar o transporte.
 
 Os terminais **externos** de cada B10K vão ao **3V3 e GND**; o terminal **central** vai ao respectivo GPIO ADC. **Nunca ligue 5 V aos GPIOs, ao pino 3V3 ou às entradas dos potenciômetros**. Desconecte USB/energia antes de alterar ligações. O buzzer não deve consumir corrente acima do suportado pelo GPIO; utilize driver/transistor apropriado se necessário. Um buzzer de 5 V não deve ser ligado diretamente ao GPIO.
@@ -42,7 +42,7 @@ ALERTA = TRANSPORTE_ATIVO AND (TEMP_CRITICA OR IMPACTO_CRITICO)
 ```
 
 - **NORMAL + transporte ativo:** LED verde aceso; vermelho e buzzer desligados.
-- **ALERTA + transporte ativo:** LED vermelho aceso, verde apagado e buzzer tocando.
+- **ALERTA + transporte ativo:** LED vermelho aceso, verde apagado e buzzer passivo emitindo tom contínuo de 2 kHz. O PWM só muda quando o estado do alerta muda, evitando reiniciar o tom a cada loop.
 - **Transporte pausado:** ambos os LEDs e buzzer desligados; o OLED indica `AGUARDANDO`.
 
 O transporte demonstrativo **começa ativo** ao ligar a placa. Mantenha BOOT pressionado por 2 segundos para pausar ou retomar; não segure BOOT enquanto estiver ligando o ESP32.
@@ -56,7 +56,7 @@ O transporte demonstrativo **começa ativo** ao ligar a placa. Mantenha BOOT pre
 5. Com temperatura entre 4°C e 8°C e impacto abaixo de 3,5g, teste o LED verde. Saia da faixa ou aumente o impacto: devem ligar o LED vermelho e o buzzer.
 6. Teste a alimentação final e a montagem da caixa, sem componentes metálicos soltos ou umidade junto à eletrônica.
 
-**Situação em 26/11/2026:** firmware organizado para a feira; **a verificação física final do código mais recente depende do teste na placa**. Não confundir com a integração Wokwi já validada.
+**Situação em 26/11/2026:** o buzzer passivo e o acento de “CENÁRIO” foram ajustados conforme os testes na placa relatados durante a montagem. Os testes automatizados verificam a estrutura do firmware, mas não substituem um teste final da caixa completa. Não confundir com a integração Wokwi já validada.
 
 ## Apresentação ao público
 
