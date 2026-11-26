@@ -2,7 +2,7 @@
 
 ## Estado atual
 
-O circuito clínico físico ainda não foi construído, mas o **protótipo eletrônico virtual foi implementado e validado no Wokwi Web** com ESP32, sensores, OLED, LED e buzzer.
+O **protótipo eletrônico virtual foi implementado e validado no Wokwi Web**, com sensores, ESP32, OLED, LED e buzzer integrados ao backend. Para a ExpoTech também foi montada uma **demonstração física local**, com ESP32 real, dois potenciômetros, OLED, LEDs e buzzer. A caixa física **não está conectada ao backend**; sua validação final está em andamento.
 
 Projeto: https://wokwi.com/projects/473749722940837889
 
@@ -124,8 +124,10 @@ Isso evita divergência entre a regra mostrada no dashboard e uma regra paralela
 
 O Logisim é uma **extensão sequencial acadêmica**, separada do comportamento combinacional vigente no backend/Wokwi. As quatro capturas validadas manualmente estão em [`electronics-evidence.md`](electronics-evidence.md).
 
-## Limite físico
+## Protótipo físico offline e limites
 
-O Wokwi demonstra pinagem, protocolos, ADC, I2C, UART, lógica e integração com o software. Uma montagem física exigiria alimentação/regulação, proteção elétrica, dimensionamento de corrente, estágio adequado para atuadores, calibração e ensaios antes de qualquer uso real.
+A caixa física demonstra a **mesma função lógica combinacional** localmente, sem `digitalSignal` remoto: `ALARME = TRANSPORTE_ATIVO AND (TEMP_CRITICA OR IMPACTO_CRITICO)`. O visitante altera as grandezas **simuladas** pelos potenciômetros B10K; o ESP32 apresenta o coração, temperatura, faixa didática de 4°C a 8°C, impacto e cenário no OLED, além de comandar LED verde, LED vermelho e buzzer. A seleção do órgão nesta montagem é fixa em **coração**.
+
+O Wokwi permanece como **única integração ESP32 ↔ Render/Aiven ↔ dashboard** da apresentação. A montagem física não representa sensor calibrado, dispositivo médico ou telemetria online. Qualquer aplicação real exigiria alimentação/regulação, proteção elétrica, estágio adequado para atuadores, calibração, segurança e ensaios. Consulte [`../firmware-real/README.md`](../firmware-real/README.md).
 
 Mais detalhes: [`hardware.md`](hardware.md), [`iot.md`](iot.md) e [`../firmware/README.md`](../firmware/README.md).

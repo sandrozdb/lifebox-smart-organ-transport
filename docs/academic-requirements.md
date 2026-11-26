@@ -26,6 +26,10 @@ Além das disciplinas acima, o projeto possui integração IoT funcional:
 
 Detalhes em [`iot.md`](iot.md) e [`../firmware/README.md`](../firmware/README.md).
 
+## Demonstração física complementar da ExpoTech
+
+Além do IoT virtual integrado, existe uma caixa com ESP32 real, dois potenciômetros, OLED, LEDs e buzzer: **coração como órgão fixo**, temperatura e impacto simulados, alarme combinacional local. **Não há comunicação entre esta montagem e o dashboard**. A compilação e os testes físicos finais do firmware são uma verificação separada, não parte da baseline CI #152. Consulte [`../firmware-real/README.md`](../firmware-real/README.md).
+
 ## Cloud validada
 
 O backend usado pelo firmware está publicado em `https://lifebox-expotech.onrender.com`, com banco Aiven for MySQL gerenciado, conexão TLS com CA, variáveis de ambiente fora do repositório, persistência validada e Auto Deploy do Render a partir da branch `main`.

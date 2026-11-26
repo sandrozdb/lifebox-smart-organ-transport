@@ -8,7 +8,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Node.js 20+](https://img.shields.io/badge/Node.js-20%2B-339933?logo=node.js&logoColor=white)](package.json)
 
-LifeBox é um sistema acadêmico de apoio à decisão, rastreabilidade e monitoramento IoT para transporte de órgãos. O projeto integra planejamento multimodal com Pesquisa Operacional, execução rastreável, reotimização confirmada pelo operador, telemetria física simulada por ESP32/Wokwi, Física, Eletrônica Digital, MySQL gerenciado e infraestrutura em nuvem em uma única demonstração verificável.
+LifeBox é um sistema acadêmico de apoio à decisão, rastreabilidade e monitoramento IoT para transporte de órgãos. O projeto integra planejamento multimodal com Pesquisa Operacional, execução rastreável, reotimização confirmada pelo operador, telemetria simulada no ESP32 virtual do Wokwi, Física, Eletrônica Digital, MySQL gerenciado e infraestrutura em nuvem em uma única demonstração verificável.
 
 ## Links principais
 
@@ -21,10 +21,13 @@ LifeBox é um sistema acadêmico de apoio à decisão, rastreabilidade e monitor
 
 ## Status da entrega
 
-**MVP acadêmico concluído e validado de ponta a ponta.** O ESP32/Wokwi envia telemetria ao backend público no Render; o backend vincula cada leitura à execução ativa, persiste no Aiven for MySQL e atualiza dashboard, gráficos, Física, alertas, atuadores, reotimização e resumo final.
+**MVP acadêmico digital concluído e validado de ponta a ponta.** O ESP32 **virtual no Wokwi** envia telemetria ao backend público no Render; o backend vincula cada leitura à execução ativa, persiste no Aiven for MySQL e atualiza dashboard, gráficos, Física, alertas, atuadores, reotimização e resumo final.
+
+**Demonstração física separada (ExpoTech):** uma caixa com ESP32 real, OLED, dois potenciômetros, LEDs e buzzer simula localmente o transporte de um **coração**. Ela **não usa Wi-Fi, não envia telemetria ao backend e não se conecta ao dashboard**. O firmware está em [`firmware-real/`](firmware-real/README.md); a montagem final está em teste físico, portanto sua validação não é atribuída aos testes automatizados da integração virtual.
 
 - **Backend:** Node.js 20 / Express em Docker no Render.
-- **IoT:** ESP32/Wokwi, DHT22, MPU6050, GPS NEO-6M, OLED, LED e buzzer.
+- **IoT integrado:** ESP32 **virtual/Wokwi**, DHT22, MPU6050, GPS NEO-6M, OLED, LED e buzzer.
+- **Hardware físico independente:** ESP32 real, OLED, potenciômetros de temperatura/impacto, LEDs verde/vermelho e buzzer, sem rede.
 - **Banco:** Aiven for MySQL gerenciado, persistência por execução e TLS/CA.
 - **Frontend e mapa:** HTML, CSS, JavaScript, Leaflet / OpenStreetMap.
 - **Pesquisa Operacional:** planejamento multimodal, restrições e reotimização confirmada.
@@ -52,24 +55,21 @@ Este é um projeto acadêmico e demonstrativo. A LifeBox não é um dispositivo 
 - planos terrestres, helicóptero e multimodais com avião;
 - plano congelado durante a execução e reotimização aplicada somente após confirmação do operador;
 - telemetria IoT com temperatura, umidade, aceleração/impacto, bateria, sinal, GPS e velocidade;
-- vínculo server-side entre telemetria física e `execucao_atual_id`, sem exigir que o ESP32 conheça o ID da execução;
+- vínculo server-side entre telemetria IoT do Wokwi e `execucao_atual_id`, sem exigir que o ESP32 virtual conheça o ID da execução;
 - Física didática: ΔT, taxa, Q, aceleração, potência, energia e autonomia;
 - lógica digital `ATIVO AND (TEMP_CRÍTICA OR IMPACTO_CRÍTICO)` com LED/buzzer;
 - circuito Logisim com D Flip-Flop como extensão sequencial acadêmica separada;
+- demonstração física local com potenciômetros simulando temperatura e impacto, OLED com **ÓRGÃO: CORAÇÃO**, faixa didática **4°C a 8°C**, cenário normal/alerta, LED e buzzer;
 - separação entre sensores IoT e condições logísticas externas;
 - API Express pública, persistência MySQL via TLS, health check, CI e Auto Deploy.
 
 ## Laboratório IoT da ExpoTech
 
-A nova página [Laboratório IoT](public/iot-lab.html) organiza três apresentações:
-**Demonstração** (backend simulado), **ESP32/Wokwi** (telemetria virtual já
-integrada ao Render/Aiven) e **ESP32 real** (novo firmware
-[`firmware-real/sketch.ino`](firmware-real/sketch.ino), inicialmente offline,
-com dois potenciômetros B10K, OLED e LEDs). A versão física **simula**
-temperatura e impacto; ainda não transmite leituras para a API nem representa
-medições clínicas.
+A página [Laboratório IoT](public/iot-lab.html) apresenta três experiências **distintas**: **DEMO** (telemetria gerada pelo backend), **ESP32/Wokwi** (telemetria virtual integrada ao Render/Aiven) e **protótipo físico offline** (caixa para interação presencial, com potenciômetros B10K, OLED, LED verde, LED vermelho e buzzer). A caixa física **não está conectada à API ou ao dashboard** e não mede grandezas clínicas reais. Confira [o firmware físico](firmware-real/sketch.ino) e [suas instruções](firmware-real/README.md).
 
 ## Modos de operação
+
+**Os modos abaixo se referem ao backend e ao Wokwi; o protótipo físico funciona independentemente deles.**
 
 ### IOT
 
@@ -99,6 +99,8 @@ Operador ──HTTPS──> Render Web Service (Node.js + Express)
        Dashboard, gráficos, Física, alertas,
        timeline, resumo e reotimização
 ```
+
+**Fora desse fluxo online:** `potenciômetros → ESP32 físico → OLED / LEDs / buzzer`, sem envio de dados nem sincronização com o dashboard.
 
 A arquitetura C4, sequência da reotimização, Strategy, Observer, SOLID e trade-offs estão em [docs/architecture.md](docs/architecture.md). A integração ESP32/Wokwi está detalhada em [docs/iot.md](docs/iot.md) e [firmware/README.md](firmware/README.md).
 
@@ -168,18 +170,18 @@ src/         API, serviços, regras e persistência
 simulator/   telemetria e cenários DEMO
 database/    schema MySQL
 electronics/ circuito Logisim
-firmware/    ESP32/Wokwi, sensores e atuadores
+firmware/    ESP32 virtual/Wokwi, sensores e atuadores
+firmware-real/ ESP32 físico offline, controles simulados e atuadores
 docs/        documentação técnica e evidências
 tests/       testes unitários, integração e E2E
 ```
 
 ## Apresentação ExpoTech
 
-A apresentação final foi planejada como demonstração ao vivo: dashboard no notebook e Wokwi em um segundo monitor/TV. O roteiro está em [`docs/demo-guide.md`](docs/demo-guide.md), com evidências locais como plano B caso a internet não esteja disponível.
+A apresentação combina **dashboard no notebook + ESP32 virtual no Wokwi** (integração online) e, ao final, **caixa física offline** para a banca girar os controles de temperatura e impacto e observar os atuadores. O roteiro está em [`docs/demo-guide.md`](docs/demo-guide.md), com evidências locais como plano B caso a internet não esteja disponível.
 
 ## Evoluções futuras
 
-- opcionalmente montar um protótipo físico baseado no firmware validado no Wokwi;
 - evoluir hardening, backups, observabilidade e controle de acesso para um cenário além da demonstração acadêmica;
 - integrar provedores externos de dados logísticos quando fizer sentido fora do contexto acadêmico.
 

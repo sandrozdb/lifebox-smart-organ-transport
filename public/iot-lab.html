@@ -199,20 +199,22 @@
           <span class="mode-tag">BANCADA</span>
         </div>
         <p>
-          O novo firmware físico usa dois potenciômetros B10K para
-          <strong>simular</strong>
-          temperatura e impacto. O OLED e os LEDs respondem localmente. Esta
-          versão inicial funciona sem internet; a telemetria online será
-          integrada depois dos testes com as peças reais.
+          O protótipo físico da ExpoTech utiliza dois potenciômetros B10K para
+          <strong>simular</strong> a temperatura e o impacto no transporte de um
+          <strong>coração</strong>. OLED, LEDs e buzzer respondem localmente.
+          <strong>Esta caixa é offline: não tem Wi-Fi, não envia dados à API e
+          não se conecta ao dashboard.</strong> A integração online da
+          apresentação é exclusivamente demonstrada no Wokwi.
         </p>
         <div class="real-grid">
           <div class="hardware-illustration">
             <div class="oled-preview" aria-label="Prévia do display OLED">
-              <div class="oled-title">LIFEBOX / ESP32 REAL</div>
-              <div>TEMP <span id="preview-temp">6.0</span> C</div>
-              <div>IMPACTO <span id="preview-impact">0.0</span> g</div>
-              <div id="preview-status">STATUS: NORMAL</div>
-              <div class="oled-note">VALORES SIMULADOS</div>
+              <div class="oled-title">LIFEBOX</div>
+              <div>ÓRGÃO: CORAÇÃO</div>
+              <div>TEMP: <span id="preview-temp">6.0</span>°C</div>
+              <div>FAIXA: 4°C A 8°C</div>
+              <div>IMPACTO: <span id="preview-impact">0.0</span>g</div>
+              <div id="preview-status">CENÁRIO: NORMAL</div>
             </div>
             <div class="signal-row">
               <span id="preview-green" class="signal green on"
@@ -250,12 +252,13 @@
               value="0"
             />
             <p class="microcopy">
-              Essa prévia roda apenas no navegador e não envia leituras ao
-              backend. No protótipo real, os controles serão físicos.
+              Esta é uma prévia local no navegador; não envia leituras ao backend
+              e não controla o ESP32 físico. Na feira, a banca usa os dois
+              potenciômetros reais da caixa.
             </p>
           </div>
         </div>
-        <h3>Pinagem planejada</h3>
+        <h3>Pinagem do protótipo físico offline</h3>
         <div class="table-scroll">
           <table>
             <thead>
@@ -292,9 +295,9 @@
                 <td>Resistor de 220 Ω em série</td>
               </tr>
               <tr>
-                <td>Buzzer ativo</td>
+                <td>Buzzer de baixa corrente</td>
                 <td>GPIO 27</td>
-                <td>Confirmar tensão/corrente; usar driver se necessário</td>
+                <td>Verificar corrente e isolamento; nunca aplicar 5 V ao GPIO</td>
               </tr>
             </tbody>
           </table>

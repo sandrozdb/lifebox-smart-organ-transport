@@ -31,6 +31,13 @@ Este checklist registra o estado final da entrega acadêmica e das evidências v
 - [x] Reotimização e troca de rota funcionando durante IOT.
 - [x] Capturas finais IoT adicionadas usando o padrão da pasta (**9/9**).
 
+## Caixa física offline — verificação de feira (independente do Wokwi)
+
+- [x] Firmware e pinagem publicados em `firmware-real/`.
+- [x] Integração com dashboard **não reivindicada** para o circuito físico.
+- [ ] Confirmação final de OLED, leitura dos dois potenciômetros, LEDs e buzzer na montagem da caixa.
+- [ ] Fotos da montagem e dos cenários normal/alerta, após captura real.
+
 ## Fundamentos acadêmicos
 
 - [x] Diagrama C4 Context/Container atualizado para ESP32/Wokwi + Render + Aiven.

@@ -9,7 +9,7 @@
 - Health check: https://lifebox-expotech.onrender.com/api/health
 - Firmware: [`../firmware`](../firmware/README.md)
 
-## Fluxo real do protótipo
+## Fluxo online do protótipo virtual (Wokwi)
 
 ```text
 DHT22 ───────────────┐
@@ -31,6 +31,11 @@ Wi-Fi/RSSI ──────────┤
                   ESP32 LED/Buzzer/OLED
 ```
 
+## Duas implementações independentes
+
+- **ESP32 virtual / Wokwi:** envia dados por HTTPS ao Render/Aiven e recebe `digitalSignal`; é a fonte do modo IOT no dashboard da apresentação.
+- **ESP32 físico / caixa:** executa firmware local **sem Wi-Fi**, simulando temperatura e impacto por potenciômetros; a leitura, a lógica de alarme e os atuadores funcionam somente na caixa. Não há espelhamento de dados com o sistema web.
+
 ## Sensores e dados
 
 O firmware envia periodicamente:
@@ -47,7 +52,7 @@ O firmware não decide criticidade clínica, não escolhe rota e não calcula al
 
 ## Vínculo com a execução
 
-O ESP32 não precisa conhecer nem enviar `execucao_id`. Quando uma leitura física chega ao backend, `telemetryService` consulta o transporte e associa a telemetria ao `execucao_atual_id` antes da persistência.
+O ESP32 não precisa conhecer nem enviar `execucao_id`. Quando uma leitura do ESP32 virtual chega ao backend, `telemetryService` consulta o transporte e associa a telemetria ao `execucao_atual_id` antes da persistência.
 
 Isso permite que os endpoints de leituras, a Análise Física e o resumo final consultem exatamente a telemetria da execução corrente, sem misturar viagens anteriores do mesmo transporte.
 
@@ -73,7 +78,7 @@ No modo `DEMO`:
 - os cenários da caixa ficam disponíveis;
 - as mesmas Condições Logísticas e o mesmo fluxo de reotimização continuam disponíveis.
 
-Essa separação mantém o comportamento de apresentação sem misturar sensor físico simulado no Wokwi com eventos logísticos externos.
+Essa separação mantém o comportamento de apresentação sem misturar medições simuladas pelo Wokwi com eventos logísticos externos.
 
 ## Reotimização no modo IOT
 
@@ -136,4 +141,4 @@ O pacote final de IoT está concluído em [`evidencias/iot`](evidencias/iot/READ
 
 ## Limite do protótipo
 
-O hardware validado é um protótipo virtual no Wokwi. Ele demonstra integração de sensores, firmware, comunicação HTTPS, backend, banco e atuadores, mas não equivale a um dispositivo médico físico, calibrado ou certificado.
+A **integração com o backend validada é a do ESP32 virtual no Wokwi**. Separadamente existe um ESP32 físico para demonstração presencial offline, com dois potenciômetros simulando temperatura e impacto, OLED, LEDs e buzzer. **A caixa física não usa a API e não alimenta os gráficos do dashboard.** Sua montagem final está em verificação e não constitui dispositivo médico calibrado ou certificado.

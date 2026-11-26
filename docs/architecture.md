@@ -1,12 +1,13 @@
 # Arquitetura da LifeBox
 
-Esta documentação descreve a implementação atual: dashboard público, backend Node.js/Express no Render, Aiven for MySQL, simulador DEMO, ESP32/Wokwi em modo IOT, reotimização e CI/CD.
+Esta documentação descreve a implementação atual: dashboard público, backend Node.js/Express no Render, Aiven for MySQL, simulador DEMO, ESP32 virtual/Wokwi em modo IOT, reotimização e CI/CD. A caixa física da ExpoTech é **uma demonstração local offline**, sem comunicação com a API.
 
 ## C4 Level 1 — System Context
 
 ```mermaid
 flowchart LR
   OP[Operador logístico] -->|HTTPS| LB[LifeBox\nSistema acadêmico de apoio à decisão\nRender]
+  VIS[Visitante da ExpoTech] -->|Gira controles| PHY[ESP32 físico\nOLED, LEDs e buzzer\nOFFLINE]
   ESP[ESP32 / Wokwi] -->|Telemetria JSON via HTTPS| LB
   LB -->|Estado / digitalSignal| ESP
   LB -->|Mapa-base e atribuição| OSM[OpenStreetMap]
@@ -42,6 +43,7 @@ flowchart LR
 | Dashboard             | Planejamento, mapa, telemetria, alertas, Física, Eletrônica, logística e resumo. |
 | API Express no Render | Validação HTTP, regras, coordenação dos casos de uso e respostas JSON.           |
 | ESP32 / Wokwi         | Lê sensores, envia telemetria e aplica `digitalSignal`/perfil recebidos.         |
+| ESP32 físico offline  | Simula temperatura/impacto com potenciômetros e aciona OLED, LEDs e buzzer localmente; **sem API**. |
 | Simulador DEMO        | Gera telemetria acadêmica quando o modo não é IOT.                               |
 | Aiven for MySQL       | Estado durável de transportes, leituras, alertas, timeline e resumos.            |
 | Repository em memória | Testes rápidos e determinísticos; não é banco de produção.                       |
@@ -74,7 +76,7 @@ O diagrama agrupa responsabilidades; não representa um componente para cada arq
 
 ## Responsabilidade do backend no IoT
 
-O ESP32 não recebe nem decide `execucao_id`. Ao receber telemetria física, `telemetryService` consulta o transporte e associa a leitura ao `execucao_atual_id` antes da persistência.
+O ESP32 não recebe nem decide `execucao_id`. Ao receber telemetria virtual do Wokwi, `telemetryService` consulta o transporte e associa a leitura ao `execucao_atual_id` antes da persistência.
 
 Essa decisão server-side evita que um cliente antigo ou adulterado atribua leituras a outra execução. Gráficos, Física e resumo final consultam a telemetria pelo identificador da execução atual.
 

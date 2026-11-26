@@ -2,13 +2,13 @@
 
 ## Estado atual
 
-**Protótipo virtual concluído no Wokwi Web.** O MVP não possui uma caixa física clínica, mas já executa o firmware ESP32 com sensores e atuadores simulados, enviando telemetria real do simulador para o backend público.
+**Duas demonstrações distintas:** o ESP32 **virtual no Wokwi** integra sensores e atuadores ao backend público por HTTPS; a **caixa física com ESP32 real** demonstra localmente temperatura e impacto simulados por potenciômetros, com OLED, LEDs e buzzer, **sem Wi-Fi e sem conexão com o dashboard**. Nenhuma delas é uma caixa clínica certificada.
 
 Projeto Wokwi: https://wokwi.com/projects/473749722940837889
 
 A documentação completa do firmware está em [`../firmware/README.md`](../firmware/README.md) e o fluxo IoT em [`iot.md`](iot.md).
 
-## ESP32
+## ESP32 virtual (Wokwi)
 
 O ESP32 DevKit V1 é responsável por ler sensores, sincronizar horário, comunicar-se via Wi-Fi/HTTPS com o backend e aplicar os sinais digitais devolvidos pelo servidor.
 
@@ -35,9 +35,9 @@ O GPS NEO-6M customizado do projeto Wokwi gera sentenças NMEA lidas pelo TinyGP
 - LED vermelho representa a saída de alerta;
 - buzzer representa o alarme sonoro.
 
-O ESP32 não decide quando os atuadores devem ligar. Ele consulta `/api/iot/status` e aplica `digitalSignal.ledOn` e `digitalSignal.buzzerOn` devolvidos pelo backend.
+No **Wokwi**, o ESP32 não decide quando os atuadores devem ligar. Ele consulta `/api/iot/status` e aplica `digitalSignal.ledOn` e `digitalSignal.buzzerOn` devolvidos pelo backend.
 
-## Pinagem
+## Pinagem do dispositivo virtual (Wokwi)
 
 | Componente       | Sinal     | ESP32                     |
 | ---------------- | --------- | ------------------------- |
@@ -49,7 +49,7 @@ O ESP32 não decide quando os atuadores devem ligar. Ele consulta `/api/iot/stat
 | Buzzer           | Sinal     | GPIO 26                   |
 | Bateria simulada | ADC       | GPIO 34                   |
 
-## Comunicação
+## Comunicação da implementação virtual
 
 ```text
 Sensores → ESP32 → HTTPS → Render/Express → Aiven MySQL
@@ -76,8 +76,14 @@ O firmware usa `WiFiClientSecure` para comunicação HTTPS com o backend atual e
 - perfil térmico do órgão exibido no OLED;
 - condições logísticas e reotimização funcionando durante uma execução IOT.
 
-## Evolução para hardware físico
+## Caixa física — demonstração local sem Wi-Fi
 
-A próxima etapa de hardware é opcional para o escopo acadêmico atual. Uma implementação física exigiria escolha elétrica definitiva, alimentação real, calibração, ensaios ambientais, conectividade móvel, segurança do dispositivo e validação técnica/clinicamente apropriada.
+O [firmware físico](../firmware-real/sketch.ino) utiliza uma montagem separada, com **órgão fixo: coração**. Entradas: B10K no GPIO34 (temperatura simulada de −2°C a 14°C) e B10K no GPIO35 (impacto simulado de 0g a 6g); saídas: OLED SSD1306 I²C (SDA21/SCL22), LED verde GPIO25, LED vermelho GPIO26 e buzzer de baixa corrente GPIO27. Os sinais usam alimentação de 3,3 V e resistores adequados nos LEDs. O botão BOOT (GPIO0) pode pausar/retomar o transporte demonstrativo.
 
-O protótipo Wokwi demonstra a arquitetura e a integração de ponta a ponta, mas não representa um dispositivo médico calibrado ou certificado.
+Faixa **didática** para coração: **4°C a 8°C**. Impacto crítico: **≥ 3,5g**. Alarme local = transporte ativo **E** (temperatura fora da faixa **OU** impacto crítico). O OLED exibe órgão, temperatura, faixa, impacto e cenário. Os valores são ajustados pelo visitante e **não representam medições reais de sensores**.
+
+**Estado de verificação:** o código foi preparado para a apresentação física; a validação de montagem e funcionamento completo deve ser confirmada na caixa, sem confundir com os testes concluídos do Wokwi.
+
+**Não existe fluxo de telemetria da caixa física para o Render/Aiven ou dashboard.** Dados vistos no dashboard em modo IOT são do Wokwi.
+
+Ambos os protótipos são acadêmicos e não constituem dispositivos médicos calibrados ou certificados.

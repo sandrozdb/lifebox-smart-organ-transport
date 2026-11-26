@@ -1,6 +1,6 @@
 # Evidências finais — IoT / Wokwi
 
-Esta pasta contém o **pacote final de nove capturas da integração ESP32/Wokwi** para GitHub, apresentação e relatório.
+Esta pasta contém o **pacote final de nove capturas da integração ESP32 virtual/Wokwi** para GitHub, apresentação e relatório. Estas imagens **não comprovam integração da caixa física**, que é um protótipo offline independente.
 
 Status do pacote: **IoT 9/9 — CONCLUÍDO**.
 

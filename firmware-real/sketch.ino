@@ -1,128 +1,216 @@
-// LifeBox ExpoTech 2026 — ESP32 físico (demonstração local/offline).
-// Dois potenciômetros B10K SIMULAM temperatura e impacto.
-// Esta versão NÃO lê sensores reais e NÃO envia dados à API.
-// Para conectar o hardware ao Render, implementar uma etapa posterior
-// de integração autenticada depois de validar a montagem de bancada.
+// LIFEBOX — SMART ORGAN TRANSPORT
+// ExpoTech 2026.2 | Protótipo físico OFFLINE.
+// Órgão fixo: CORAÇÃO; temperatura e impacto SIMULADOS por B10K.
+// NÃO usa Wi-Fi, não se conecta ao dashboard e não envia dados à API.
+// Firmware destinado a ESP32 Arduino Core 3.x.
 
 #include <Arduino.h>
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 
-constexpr uint8_t PIN_TEMPERATURE = 34;  // ADC1, terminal central B10K
-constexpr uint8_t PIN_IMPACT = 35;       // ADC1, terminal central B10K
-constexpr uint8_t PIN_OLED_SDA = 21;
-constexpr uint8_t PIN_OLED_SCL = 22;
-constexpr uint8_t PIN_GREEN_LED = 25;
-constexpr uint8_t PIN_RED_LED = 26;
-constexpr uint8_t PIN_BUZZER = 27;
+const int PIN_TEMP = 34;
+const int PIN_IMPACTO = 35;
+const int LED_VERDE = 25;
+const int LED_VERMELHO = 26;
+const int PIN_BUZZER = 27;
+const int BOTAO_BOOT = 0;
 
-constexpr uint8_t OLED_ADDRESS = 0x3C;
-constexpr unsigned long REFRESH_INTERVAL_MS = 150;
+Adafruit_SSD1306 display(128, 64, &Wire, -1);
 
-// Somente habilitar após verificar que o buzzer é 3,3 V, de baixa corrente
-// e que a ligação é segura. Se for 5 V ou consumir demais, usar transistor.
-constexpr bool ENABLE_BUZZER = false;
+// Faixas didáticas da demonstração, NÃO clínicas.
+const float TEMP_MIN = 4.0f;
+const float TEMP_MAX = 8.0f;
+const float IMPACTO_MAX = 3.5f;
+const float TEMP_SIM_MIN = -2.0f;
+const float TEMP_SIM_MAX = 14.0f;
+const float IMPACTO_SIM_MIN = 0.0f;
+const float IMPACTO_SIM_MAX = 6.0f;
 
-// Limites didáticos para a demonstração com CORAÇÃO.
-// Não representam validação de temperatura clínica nem medição de impacto.
-constexpr float TEMPERATURE_MIN_C = 4.0f;
-constexpr float TEMPERATURE_MAX_C = 8.0f;
-constexpr float IMPACT_ALERT_G = 3.5f;
+// Na montagem testada, a inversão deixa a leitura crescer no sentido horário.
+// Se algum potenciômetro aumentar no sentido contrário, troque só a chave.
+const bool INVERTER_TEMP = true;
+const bool INVERTER_IMPACTO = true;
 
-Adafruit_SSD1306 oled(128, 64, &Wire, -1);
-bool oledReady = false;
-unsigned long lastRefresh = 0;
+float temperatura = 0.0f;
+float impacto = 0.0f;
+bool transporteAtivo = true;
+bool buzzerOK = false;
+bool botaoAnterior = false;
+bool botaoAlternado = false;
+unsigned long inicioBotao = 0;
+unsigned long ultimaTela = 0;
 
-float readAverageAdc(uint8_t pin) {
-  uint32_t total = 0;
-  for (int sample = 0; sample < 12; ++sample) {
-    total += analogRead(pin);
-    delayMicroseconds(250);
-  }
-  return total / 12.0f;
+void acentoAgudo(int x, int y) {
+  display.drawPixel(x + 2, y + 1, SSD1306_WHITE);
+  display.drawPixel(x + 3, y, SSD1306_WHITE);
 }
 
-void renderOled(float temperature, float impact, bool alert) {
-  if (!oledReady) return;
+void acentoTil(int x, int y) {
+  display.drawPixel(x, y + 1, SSD1306_WHITE);
+  display.drawPixel(x + 1, y, SSD1306_WHITE);
+  display.drawPixel(x + 2, y, SSD1306_WHITE);
+  display.drawPixel(x + 3, y + 1, SSD1306_WHITE);
+  display.drawPixel(x + 4, y + 1, SSD1306_WHITE);
+}
 
-  oled.clearDisplay();
-  oled.setTextColor(SSD1306_WHITE);
-  oled.setTextSize(1);
-  oled.setCursor(0, 0);
-  oled.println("LIFEBOX / ESP32 REAL");
-  oled.drawLine(0, 12, 127, 12, SSD1306_WHITE);
+void imprimirGrau() {
+  display.write((uint8_t)0xF8);
+}
 
-  oled.setCursor(0, 18);
-  oled.print("TEMP:   ");
-  oled.print(temperature, 1);
-  oled.println(" C");
+float converterLeitura(int leitura, float minimo, float maximo, bool inverter) {
+  float proporcao = leitura / 4095.0f;
+  if (inverter) proporcao = 1.0f - proporcao;
+  return minimo + proporcao * (maximo - minimo);
+}
 
-  oled.setCursor(0, 30);
-  oled.print("IMPACT: ");
-  oled.print(impact, 1);
-  oled.println(" g");
+void lerSensores() {
+  temperatura = converterLeitura(
+    analogRead(PIN_TEMP), TEMP_SIM_MIN, TEMP_SIM_MAX, INVERTER_TEMP
+  );
+  impacto = converterLeitura(
+    analogRead(PIN_IMPACTO), IMPACTO_SIM_MIN, IMPACTO_SIM_MAX, INVERTER_IMPACTO
+  );
+}
 
-  oled.setCursor(0, 42);
-  oled.print("STATUS: ");
-  oled.println(alert ? "ALERTA" : "NORMAL");
+bool temperaturaCritica() {
+  return temperatura < TEMP_MIN || temperatura > TEMP_MAX;
+}
 
-  oled.setCursor(0, 55);
-  oled.print("VALORES SIMULADOS");
-  oled.display();
+bool impactoCritico() {
+  return impacto >= IMPACTO_MAX;
+}
+
+bool emAlerta() {
+  return transporteAtivo && (temperaturaCritica() || impactoCritico());
+}
+
+void verificarBotao() {
+  bool pressionado = digitalRead(BOTAO_BOOT) == LOW;
+  if (pressionado && !botaoAnterior) {
+    inicioBotao = millis();
+    botaoAlternado = false;
+  }
+  if (pressionado && !botaoAlternado && millis() - inicioBotao >= 2000) {
+    transporteAtivo = !transporteAtivo;
+    botaoAlternado = true;
+  }
+  botaoAnterior = pressionado;
+}
+
+void atualizarAtuadores() {
+  bool alerta = emAlerta();
+  digitalWrite(LED_VERDE, (transporteAtivo && !alerta) ? HIGH : LOW);
+  digitalWrite(LED_VERMELHO, alerta ? HIGH : LOW);
+  if (buzzerOK) ledcWriteTone(PIN_BUZZER, alerta ? 2000 : 0);
+}
+
+void telaInicial() {
+  display.clearDisplay();
+  display.setTextColor(SSD1306_WHITE);
+  display.setTextSize(2);
+  display.setCursor(20, 7);
+  display.println("LIFEBOX");
+  display.drawFastHLine(15, 31, 98, SSD1306_WHITE);
+  display.setTextSize(1);
+  display.setCursor(29, 38);
+  display.println("SMART ORGAN");
+  display.setCursor(38, 49);
+  display.println("TRANSPORT");
+  display.display();
+  delay(2500);
+}
+
+void atualizarOLED() {
+  display.clearDisplay();
+  display.setTextColor(SSD1306_WHITE);
+  display.setTextSize(1);
+
+  display.setCursor(0, 0);
+  display.println("LIFEBOX");
+  display.drawFastHLine(0, 9, 128, SSD1306_WHITE);
+
+  // ÓRGÃO: CORAÇÃO. Ç via fonte CP437, demais acentos em pixels.
+  display.setCursor(0, 15);
+  display.print("ORGAO: CORA");
+  display.write((uint8_t)0x80); // Ç
+  display.print("AO");
+  acentoAgudo(0, 12); // Ó
+  acentoTil(18, 12);  // Ã em ÓRGÃO
+  acentoTil(72, 12);  // Ã em CORAÇÃO
+
+  display.setCursor(0, 27);
+  display.print("TEMP: ");
+  display.print(temperatura, 1);
+  imprimirGrau();
+  display.print("C");
+
+  display.setCursor(0, 37);
+  display.print("FAIXA: ");
+  display.print(TEMP_MIN, 0);
+  imprimirGrau();
+  display.print("C A ");
+  display.print(TEMP_MAX, 0);
+  imprimirGrau();
+  display.print("C");
+
+  display.setCursor(0, 47);
+  display.print("IMPACTO: ");
+  display.print(impacto, 1);
+  display.print("g");
+
+  // Última linha começa em y=55 para caber integralmente em 64px.
+  display.setCursor(0, 55);
+  display.print("CENARIO: ");
+  if (!transporteAtivo) {
+    display.print("AGUARDANDO");
+  } else if (emAlerta()) {
+    display.print("ALERTA");
+  } else {
+    display.print("NORMAL");
+  }
+  acentoAgudo(18, 53); // Á em CENÁRIO
+  display.display();
 }
 
 void setup() {
   Serial.begin(115200);
-  delay(200);
-  Serial.println("LIFEBOX ESP32 FISICO - EXPO TECH");
-  Serial.println("ATENCAO: TEMP E IMPACTO SAO SIMULADOS.");
+  delay(300);
 
-  pinMode(PIN_TEMPERATURE, INPUT);
-  pinMode(PIN_IMPACT, INPUT);
+  // NENHUMA INICIALIZAÇÃO DE WI-FI.
   analogReadResolution(12);
+  pinMode(PIN_TEMP, INPUT);
+  pinMode(PIN_IMPACTO, INPUT);
+  pinMode(LED_VERDE, OUTPUT);
+  pinMode(LED_VERMELHO, OUTPUT);
+  pinMode(BOTAO_BOOT, INPUT_PULLUP);
+  digitalWrite(LED_VERDE, LOW);
+  digitalWrite(LED_VERMELHO, LOW);
 
-  pinMode(PIN_GREEN_LED, OUTPUT);
-  pinMode(PIN_RED_LED, OUTPUT);
-  pinMode(PIN_BUZZER, OUTPUT);
-  digitalWrite(PIN_GREEN_LED, LOW);
-  digitalWrite(PIN_RED_LED, LOW);
-  digitalWrite(PIN_BUZZER, LOW);
+  buzzerOK = ledcAttach(PIN_BUZZER, 2000, 8);
+  if (buzzerOK) ledcWriteTone(PIN_BUZZER, 0);
 
-  Wire.begin(PIN_OLED_SDA, PIN_OLED_SCL);
-  oledReady = oled.begin(SSD1306_SWITCHCAPVCC, OLED_ADDRESS);
+  Wire.begin(21, 22);
+  if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
+    Serial.println("OLED NAO ENCONTRADO");
+    while (true) delay(1000);
+  }
+  display.cp437(true);
 
-  Serial.printf("OLED %s (I2C 0x%02X)\n",
-                oledReady ? "OK" : "NAO ENCONTRADO", OLED_ADDRESS);
-  Serial.println("POT TEMP GPIO34 / POT IMPACTO GPIO35");
-  Serial.println("LED VERDE GPIO25 / LED VERMELHO GPIO26");
-  Serial.println("BUZZER DESABILITADO ATE VERIFICACAO ELETRICA.");
+  telaInicial();
+  lerSensores();
+  atualizarAtuadores();
+  atualizarOLED();
+  Serial.println("LIFEBOX FISICA OFFLINE PRONTA");
 }
 
 void loop() {
-  const unsigned long now = millis();
-  if (now - lastRefresh < REFRESH_INTERVAL_MS) return;
-  lastRefresh = now;
-
-  // 0..4095 ADC -> -2..14 C (simulado, na faixa didática).
-  // 0..4095 ADC ->  0..6 g (simulado, não há acelerômetro).
-  const float temperature = -2.0f +
-                            (readAverageAdc(PIN_TEMPERATURE) / 4095.0f) * 16.0f;
-  const float impact = (readAverageAdc(PIN_IMPACT) / 4095.0f) * 6.0f;
-
-  const bool temperatureCritical = temperature < TEMPERATURE_MIN_C ||
-                                   temperature > TEMPERATURE_MAX_C;
-  const bool impactCritical = impact >= IMPACT_ALERT_G;
-  const bool alert = temperatureCritical || impactCritical;
-
-  digitalWrite(PIN_GREEN_LED, alert ? LOW : HIGH);
-  digitalWrite(PIN_RED_LED, alert ? HIGH : LOW);
-
-  // Para buzzer ativo 3,3 V de baixa corrente e com driver, se necessário.
-  const bool beep = ENABLE_BUZZER && alert && (now % 1000UL < 120UL);
-  digitalWrite(PIN_BUZZER, beep ? HIGH : LOW);
-
-  renderOled(temperature, impact, alert);
-  Serial.printf("[SIMULADO] temp=%.1f C impacto=%.2f g alerta=%s\n",
-                temperature, impact, alert ? "SIM" : "NAO");
+  verificarBotao();
+  lerSensores();
+  atualizarAtuadores();
+  if (millis() - ultimaTela >= 150) {
+    ultimaTela = millis();
+    atualizarOLED();
+  }
+  delay(20);
 }

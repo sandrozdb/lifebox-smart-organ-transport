@@ -2,6 +2,8 @@
 
 Esta pasta contém todos os arquivos necessários para executar o dispositivo LifeBox diretamente no **Wokwi Web**, sem PlatformIO e sem Wokwi for VS Code.
 
+**Separação importante para a ExpoTech:** este é o **ESP32 virtual que se conecta ao dashboard** via Render/Aiven. O [ESP32 físico da caixa](../firmware-real/README.md) é uma demonstração **local, sem Wi-Fi e sem envio de dados para a API**.
+
 **Status: integração concluída e validada com o backend público.**
 
 - Wokwi: https://wokwi.com/projects/473749722940837889

@@ -56,8 +56,8 @@ function updatePreview() {
     `${format(temperature)} °C`;
   document.querySelector("#impact-output").textContent = `${format(impact)} g`;
   document.querySelector("#preview-status").textContent = alert
-    ? "STATUS: ALERTA"
-    : "STATUS: NORMAL";
+    ? "CENÁRIO: ALERTA"
+    : "CENÁRIO: NORMAL";
   document.querySelector("#preview-green").classList.toggle("on", !alert);
   document.querySelector("#preview-red").classList.toggle("on", alert);
   document.querySelector("#preview-buzzer").textContent = alert
@@ -83,17 +83,17 @@ async function readBackendStatus() {
 
     const state = await response.json();
     const modeLabel =
-      state.mode === "DEMO" ? "Demonstração" : "IoT (Wokwi ou real)";
+      state.mode === "DEMO" ? "Demonstração" : "IoT (Wokwi)";
     backendStatus.textContent = `Backend: ${modeLabel}`;
     backendStatus.classList.toggle("ok", true);
     backendStatus.classList.remove("alert");
 
     const source =
-      state.deviceId === "LIFEBOX-REAL-001"
-        ? "ESP32 real"
-        : state.deviceId === "LIFEBOX-WOKWI-001"
-          ? "Wokwi"
-          : state.deviceId || "sem dispositivo";
+      state.deviceId === "LIFEBOX-WOKWI-001"
+        ? "Wokwi"
+        : state.deviceId
+          ? `dispositivo configurado: ${state.deviceId} (não é a caixa offline)`
+          : "sem dispositivo";
     deviceStatus.textContent = state.online
       ? `Online: ${source}`
       : `Dispositivo offline · último: ${source}`;
