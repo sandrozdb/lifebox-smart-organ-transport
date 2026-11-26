@@ -22,14 +22,22 @@ test("dashboard links to the three-mode IoT lab page", () => {
 test("physical ESP32 firmware keeps both potentiometers on ADC1", () => {
   const sketch = load("firmware-real/sketch.ino");
 
-  assert.match(sketch, /PIN_TEMPERATURE = 34/);
-  assert.match(sketch, /PIN_IMPACT = 35/);
-  assert.match(sketch, /PIN_OLED_SDA = 21/);
-  assert.match(sketch, /PIN_OLED_SCL = 22/);
-  assert.match(sketch, /PIN_GREEN_LED = 25/);
-  assert.match(sketch, /PIN_RED_LED = 26/);
-  assert.match(sketch, /ENABLE_BUZZER = false/);
-  assert.match(sketch, /VALORES SIMULADOS/);
+  assert.match(sketch, /PIN_TEMP = 34/);
+  assert.match(sketch, /PIN_IMPACTO = 35/);
+  assert.match(sketch, /Wire\.begin\(21, 22\)/);
+  assert.match(sketch, /LED_VERDE = 25/);
+  assert.match(sketch, /LED_VERMELHO = 26/);
+  assert.match(sketch, /PIN_BUZZER = 27/);
+  assert.match(sketch, /BOTAO_BOOT = 0/);
+  assert.match(sketch, /INVERTER_TEMP = true/);
+  assert.match(sketch, /INVERTER_IMPACTO = true/);
+  assert.match(sketch, /ledcAttach\(PIN_BUZZER, 2000, 8\)/);
+  assert.match(sketch, /buzzerLigado = false/);
+  assert.match(sketch, /alerta && !buzzerLigado/);
+  assert.match(sketch, /!alerta && buzzerLigado/);
+  assert.doesNotMatch(sketch, /ledcWriteTone\(PIN_BUZZER, alerta \? 2000 : 0\)/);
+  assert.match(sketch, /display\.setCursor\(0, 57\)/);
+  assert.match(sketch, /acentoAgudo\(18, 55\)/);
 });
 
 test("virtual Wokwi firmware remains separate from the offline physical demo", () => {
