@@ -36,6 +36,8 @@ float temperatura = 0.0f;
 float impacto = 0.0f;
 bool transporteAtivo = true;
 bool buzzerOK = false;
+// Mantem o PWM estavel: apenas atualiza o tom quando o alerta muda.
+bool buzzerLigado = false;
 bool botaoAnterior = false;
 bool botaoAlternado = false;
 unsigned long inicioBotao = 0;
@@ -102,7 +104,17 @@ void atualizarAtuadores() {
   bool alerta = emAlerta();
   digitalWrite(LED_VERDE, (transporteAtivo && !alerta) ? HIGH : LOW);
   digitalWrite(LED_VERMELHO, alerta ? HIGH : LOW);
-  if (buzzerOK) ledcWriteTone(PIN_BUZZER, alerta ? 2000 : 0);
+  // Buzzer PASSIVO: o tom de 2 kHz e continuo enquanto houver alerta.
+  // Nao reinicia o PWM em cada passagem pelo loop.
+  if (buzzerOK) {
+    if (alerta && !buzzerLigado) {
+      ledcWriteTone(PIN_BUZZER, 2000);
+      buzzerLigado = true;
+    } else if (!alerta && buzzerLigado) {
+      ledcWriteTone(PIN_BUZZER, 0);
+      buzzerLigado = false;
+    }
+  }
 }
 
 void telaInicial() {
@@ -159,8 +171,8 @@ void atualizarOLED() {
   display.print(impacto, 1);
   display.print("g");
 
-  // Última linha começa em y=55 para caber integralmente em 64px.
-  display.setCursor(0, 55);
+  // Posição conferida no protótipo físico: acento do A em CENÁRIO.
+  display.setCursor(0, 57);
   display.print("CENARIO: ");
   if (!transporteAtivo) {
     display.print("AGUARDANDO");
@@ -169,7 +181,7 @@ void atualizarOLED() {
   } else {
     display.print("NORMAL");
   }
-  acentoAgudo(18, 53); // Á em CENÁRIO
+  acentoAgudo(18, 55); // Á em CENÁRIO
   display.display();
 }
 
