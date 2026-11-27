@@ -196,7 +196,7 @@
     const simulationStatus = $ble("sim-status");
     if (startButton) {
       startButton.disabled = !updatedFirmware || transportActive ||
-        Boolean(state.pendingTransport);
+        Boolean(state.pendingTransport) || Boolean(window.lifeBoxRouteAwaitingPlan);
       startButton.textContent = "▶ INICIAR TRANSPORTE";
     }
     if (pauseButton) {
@@ -207,6 +207,8 @@
     if (simulationStatus) {
       simulationStatus.textContent = !hasReading ? "Preparado"
         : !updatedFirmware ? "Atualizar firmware BLE"
+        : window.lifeBoxRouteAwaitingPlan
+          ? (transportActive ? "Mapa pausado · ESP32 ativo" : "Mapa aguardando novo plano")
         : state.pendingTransport ? "Confirmando comando..."
         : transportActive ? "Executando" : "Pausado";
     }
