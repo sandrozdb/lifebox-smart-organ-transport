@@ -156,7 +156,13 @@ function snapshot(state) {
   const historicalPath = state.historicalPath || [];
   const totalPath = appendPath([...historicalPath], remainingPath);
   const traveledPath = appendPath([...historicalPath], currentPath);
-  const elapsedMinutes = state.simulationElapsedSeconds / 60;
+  // Na reotimizacao ou pausa, o mapa permanece imovel, mas a isquemia
+  // continua aumentando em tempo simulado, sem depender do movimento.
+  const waitingSeconds = state.pausedAtMs === null || state.pausedAtMs === undefined
+    ? 0
+    : Math.max(0, Date.now() - state.pausedAtMs) / 1000 *
+      config.simulationTimeScale;
+  const elapsedMinutes = (state.simulationElapsedSeconds + waitingSeconds) / 60;
   return JSON.parse(
     JSON.stringify({
       ...state,
@@ -192,6 +198,8 @@ function freeze(id, plan, result) {
     segments: buildSegments(plan, result),
     currentSegmentIndex: 0,
     simulationElapsedSeconds: 0,
+    pausedAtMs: null,
+    finished: false,
     historicalPath: [],
     historicalDistanceKm: 0,
     initialConsumedMinutes: result.consumedMinutes,
@@ -223,6 +231,28 @@ function replace(id, plan, result) {
   state.currentSegmentIndex = 0;
   return snapshot(state);
 }
+// Pausa apenas o deslocamento. A isquemia continua pelo relogio de pausa.
+function pause(id, nowMs = Date.now()) {
+  const state = plans.get(Number(id));
+  if (!state || state.finished) return snapshot(state);
+  if (state.pausedAtMs === null || state.pausedAtMs === undefined)
+    state.pausedAtMs = nowMs;
+  return snapshot(state);
+}
+
+// Ao retomar, consolida o periodo imovel na isquemia consumida, mas nao
+// o transforma em distancia percorrida ou progresso de algum segmento.
+function resume(id, nowMs = Date.now()) {
+  const state = plans.get(Number(id));
+  if (!state || state.finished) return snapshot(state);
+  if (state.pausedAtMs !== null && state.pausedAtMs !== undefined) {
+    const elapsed = Math.max(0, nowMs - state.pausedAtMs) / 1000;
+    state.simulationElapsedSeconds += elapsed * config.simulationTimeScale;
+    state.pausedAtMs = null;
+  }
+  return snapshot(state);
+}
+
 function advance(id, realElapsedSeconds) {
   const state = plans.get(Number(id));
   if (!state) return null;
@@ -250,6 +280,9 @@ function advance(id, realElapsedSeconds) {
 function finish(id) {
   const state = plans.get(Number(id));
   if (!state) return null;
+  // Depois da conclusao, o relogio deve parar definitivamente.
+  resume(id);
+  state.finished = true;
   state.segments.forEach((segment) => {
     segment.progress = 1;
     segment.status = "CONCLUIDO";
@@ -261,6 +294,8 @@ module.exports = {
   freeze,
   replace,
   advance,
+  pause,
+  resume,
   finish,
   get: (id) => snapshot(plans.get(Number(id))),
   reset: (id) => plans.delete(Number(id)),
