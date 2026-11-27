@@ -38,7 +38,7 @@ Esse novo sketch parte da **versão offline testada** e mantém:
 - Botão BOOT no GPIO0: 2 segundos para pausar/retomar.
 - Bluetooth BLE com o **mesmo serviço/característica** já testados anteriormente, notificações a cada 500 ms.
 
-O formato atual é `temperatura,impacto,ativo,indiceOrgao`, exemplo `6.2,1.40,1,0`; `ativo` vale `0` quando o botão BOOT pausou a simulação. O último campo confirma qual órgão está sendo mostrado no OLED. A característica de comando BLE (`2d514649-4c65-426f-7820-202600000003`) recebe os códigos HEART, LUNG, KIDNEY, LIVER, PANCREAS ou INTESTINE, com propriedade WRITE. Não usa Wi-Fi. Se ocorrer reinício com rádio BLE + OLED, volte ao sketch original e confira a alimentação; a versão ainda não foi validada na caixa completa.
+**Novo firmware BLE v2 (necessário regravar na placa):** inicia com transporte **PAUSADO**, sem alarme. O formato agora é `temperatura,impacto,ativo,indiceOrgao,versao`, exemplo `6.2,1.40,0,0,2`. O terceiro campo indica o estado **real da caixa física**, o quarto confirma o órgão no OLED e o quinto identifica o firmware v2. O dashboard alerta quando recebe telemetria de firmware antigo, que não permite iniciar/pausar pelo navegador. A característica de comando BLE (`2d514649-4c65-426f-7820-202600000003`) recebe `START` e `PAUSE` (estado do transporte), além de HEART, LUNG, KIDNEY, LIVER, PANCREAS ou INTESTINE (órgão), com propriedade WRITE. Não usa Wi-Fi. Se ocorrer reinício com rádio BLE + OLED, volte ao sketch original e confira a alimentação; a versão ainda não foi validada na caixa completa.
 
 ### Como testar no dashboard principal
 
@@ -49,8 +49,9 @@ O formato atual é `temperatura,impacto,ativo,indiceOrgao`, exemplo `6.2,1.40,1,
 5. No bloco **Planejamento Inteligente do Transporte**, escolha o órgão no seletor **ÓRGÃO** (ao lado do **CENÁRIO DE DEMONSTRAÇÃO**).
 6. Clique em **Conectar ESP32 físico** (visível apenas quando a fonte ESP32 FÍSICO estiver selecionada), escolha **LifeBox BLE** na janela do navegador e conecte.
 7. O OLED deve mostrar o órgão escolhido e a faixa correspondente; o dashboard confirma quando a leitura BLE confirma a alteração. A escolha continua usando o seletor de órgãos do planejamento, sem segundo seletor.
-8. Gire os potenciômetros. **Temperatura** e **impacto** vêm do ESP32; **umidade, bateria e sinal são valores visuais simulados**, rotulados SIMULADO, e não medições reais. O LED vermelho e o buzzer acionam quando o transporte está ativo e a **temperatura sai da faixa do órgão OU o impacto chega a 3,5 g**; os dois alertas podem ocorrer juntos. Teste o BOOT: a pausa deve desligar os atuadores mesmo com valores críticos.
-9. O mesmo botão **Desconectar ESP32 físico** encerra a conexão mas mantém a fonte ESP32 FÍSICO selecionada, permitindo reconectar. Para voltar ao Simulador ou Wokwi, troque a opção em **FONTE**; a API não recebe comandos BLE.
+8. O ESP32 v2 começa pausado. Em **Controle do transporte**, pressione **INICIAR CAIXA FÍSICA**; isso envia `START` via BLE, sem chamar a API. O painel só mostra ATIVO quando recebe a confirmação na telemetria. Pressione **PAUSAR CAIXA FÍSICA** para enviar `PAUSE`, ou segure BOOT por 2 s para pausar/retomar localmente.
+9. Gire os potenciômetros. **Temperatura** e **impacto** vêm do ESP32; **umidade, bateria e sinal são valores visuais simulados**, rotulados SIMULADO, e não medições reais. Com transporte ATIVO, temperatura fora da faixa do órgão **OU** impacto a partir de 3,5 g aciona LED vermelho e buzzer. Quando estiver pausado, nenhum dos dois aciona, mesmo que os valores sejam críticos.
+10. O mesmo botão **Desconectar ESP32 físico** encerra a conexão mas mantém a fonte ESP32 FÍSICO selecionada, permitindo reconectar. **Por segurança na demonstração, perda/desconexão BLE pausa a caixa**; o botão BOOT continua disponível para operação local. Para voltar ao Simulador ou Wokwi, troque a opção em **FONTE**; a API não recebe comandos BLE.
 
 **Limite arquitetural:** no modo BLE, **temperatura e impacto, estado do botão BOOT, sinais lógicos e alertas locais** refletem a caixa. **Umidade, bateria e sinal são números sintéticos gerados pelo navegador e claramente identificados como SIMULADO**. Mapa, rotas, gráficos históricos e timeline permanecem referentes à aplicação online e não são dados da caixa física. Nenhum dado BLE é enviado à API ou ao banco. A caixa funciona normalmente mesmo sem a conexão BLE.
 
@@ -72,7 +73,7 @@ Os valores abaixo reproduzem o módulo `src/config/organProfiles.js`. São faixa
 | Pâncreas | PANCREAS | 0–4 °C |
 | Intestino | INTESTINE | 0–4 °C |
 
-**Regra experimental dos atuadores:** `TRANSPORTE_ATIVO AND (TEMPERATURA_CRITICA OR IMPACTO_CRITICO)`, sendo `TEMPERATURA_CRITICA = temperatura < minimoOrgao OR temperatura > maximoOrgao` e `IMPACTO_CRITICO = impacto >= 3.5 g`. Os limites de temperatura são inclusivos; 3,5 g já é impacto crítico no modelo demonstrativo. LED verde indica transporte ativo e sem alerta, LED vermelho e buzzer indicam alerta; quando o BOOT pausa o transporte, ambos ficam desligados. A caixa processa essa regra localmente, mesmo se o notebook desconectar.
+**Regra experimental dos atuadores (firmware BLE v2):** `TRANSPORTE_ATIVO AND (TEMPERATURA_CRITICA OR IMPACTO_CRITICO)`, sendo `TEMPERATURA_CRITICA = temperatura < minimoOrgao OR temperatura > maximoOrgao` e `IMPACTO_CRITICO = impacto >= 3.5 g`. Os limites de temperatura são inclusivos; 3,5 g já é impacto crítico no modelo demonstrativo. LED verde indica transporte ativo e sem alerta, LED vermelho e buzzer indicam alerta; quando o BOOT pausa o transporte, ambos ficam desligados. A caixa processa essa regra localmente, mesmo se o notebook desconectar.
 
 | Transporte ativo | Temperatura crítica | Impacto crítico | LED vermelho / Buzzer |
 | --- | --- | --- | --- |
@@ -81,6 +82,8 @@ Os valores abaixo reproduzem o módulo `src/config/organProfiles.js`. São faixa
 | Sim | Sim | Não | Ligados |
 | Sim | Não | Sim | Ligados |
 | Sim | Sim | Sim | Ligados |
+
+**Atenção ao diagnóstico:** se o dashboard mostra impacto crítico mas a caixa não apita, confira o sketch efetivamente gravado. Alterar o GitHub não atualiza automaticamente a memória flash do ESP32. Firmware anterior podia iniciar ATIVO e acionar apenas por temperatura. Regrave `bluetooth-test/lifebox-ble-full/lifebox-ble-full.ino` na Arduino IDE e confirme no Serial a inicialização `LIFEBOX FISICA BLE PRONTA`. No BLE v2, a caixa inicia PAUSADA; não confunda o status logístico da aplicação online com o bit local do ESP32.
 
 A escolha de órgão no **Planejamento Inteligente** é a fonte única da seleção. Quando BLE está ativo, a alteração é encaminhada ao OLED sem mudar o perfil da API/Wokwi, mesmo durante uma demonstração logística. Não existe um seletor de órgão BLE separado: primeiro escolha **ESP32 FÍSICO** em **FONTE**, depois use o botão **Conectar ESP32 físico** que aparecerá no planejamento.
 
