@@ -494,10 +494,17 @@ function renderPresentationAlert(transport, alerts, iot) {
         : temperatureCritical
           ? "⚠ TEMPERATURA CRÍTICA"
           : "⚠ IMPACTO CRÍTICO";
-    $("#presentation-alert-message").textContent = messages.join("\\n");
+    $("#presentation-alert-message").textContent = messages.join("\n");
     overlay.querySelector("p").textContent = "OCORRÊNCIA EM TEMPO REAL";
     overlay.dataset.key = key;
     overlay.classList.remove("hidden");
+    return;
+  }
+
+  // Nao usar alertas historicos como se fossem leituras atuais do IoT.
+  if (iot?.mode === "IOT") {
+    overlay.classList.add("hidden");
+    dismissedOverlayKey = null;
     return;
   }
 
