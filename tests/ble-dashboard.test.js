@@ -17,11 +17,11 @@ test("firmware BLE experimental preserva controles locais sem alterar o sketch o
     "BOTAO_BOOT = 0", "transmitirBLE();", "iniciarBLE();",
     "PROPERTY_NOTIFY", "PROPERTY_WRITE", "BLE_COMMAND_UUID",
     "aplicarPerfilPendente();", "INVERTER_TEMP = true", "INVERTER_IMPACTO = true",
-    "return transporteAtivo && temperaturaCritica();",
+    "return transporteAtivo && (temperaturaCritica() || impactoCritico());",
   ]) assert.ok(full.includes(token), "Ausente no firmware experimental: " + token);
   assert.doesNotMatch(full, /WiFi\.begin\(/);
   assert.doesNotMatch(full, /HTTPClient/);
-  assert.doesNotMatch(full, /temperaturaCritica\(\) \|\| impactoCritico\(\)/);
+  assert.match(full, /temperaturaCritica\(\) \|\| impactoCritico\(\)/);
   assert.match(page, /<option value="BLE">/);
   assert.match(page, /data-mode="BLE"/);
   assert.match(page, /id="ble-connect-controls" class="ble-connect-controls" hidden/);
@@ -50,7 +50,7 @@ test("firmware BLE experimental preserva controles locais sem alterar o sketch o
   new vm.Script(dashboard);
 });
 
-test("BLE usa organo do planejamento, um unico botao e telemetria mista, alerta so por temperatura e respeita BOOT", async () => {
+test("BLE aplica ativo AND (temperatura critica OR impacto critico), com orgao e BOOT", async () => {
   const elements = new Map();
   const get = (id) => {
     if (!elements.has(id)) {
@@ -108,11 +108,13 @@ test("BLE usa organo do planejamento, um unico botao e telemetria mista, alerta 
     addEventListener: () => undefined,
   };
   const window = {};
+  const actuators = [];
   let chooserCalls = 0;
   const navigator = { bluetooth: { requestDevice: async () => { chooserCalls++; return device; } } };
   vm.runInNewContext(load("public/js/ble-dashboard.js"), {
     window, document: { getElementById: get }, navigator,
     TextDecoder, TextEncoder, Number, Boolean, String, Date,
+    renderActuators: (signal) => actuators.push(signal),
     setInterval: () => undefined,
   });
 
@@ -146,23 +148,52 @@ test("BLE usa organo do planejamento, um unico botao e telemetria mista, alerta 
   await window.lifeBoxBleSetOrgan(get("planning-organ").value);
   assert.deepEqual(sent, ["HEART", "LUNG"]);
   assert.match(get("ble-organ-status").textContent, /aguardando confirmação/i);
-  notify({ target: { value: view("6.2,4.20,1,1") } });
+  // Só temperatura crítica, com pulmão fora da faixa (0–4 °C).
+  notify({ target: { value: view("6.2,1.40,1,1") } });
   assert.match(get("temperature-range-status").textContent, /Pulmão.*0–4/);
   assert.equal(get("alert-count").textContent, "1");
-  assert.match(get("presentation-alert-title").textContent, /TEMPERATURA FORA DA FAIXA/);
-  assert.equal(get("presentation-alert").classList.contains("hidden"), false);
+  assert.match(get("presentation-alert-title").textContent, /TEMPERATURA CRÍTICA/);
+  assert.equal(actuators.at(-1).alertOutput, true);
+  assert.equal(actuators.at(-1).buzzerOn, true);
+  assert.equal(actuators.at(-1).temperatureCritical, true);
+  assert.equal(actuators.at(-1).impactCritical, false);
 
+  // Só impacto crítico: temperatura normal não impede o acionamento.
   notify({ target: { value: view("3.0,4.20,1,1") } });
+  assert.equal(get("general-status").textContent, "ALERTA CRÍTICO");
+  assert.equal(get("alert-count").textContent, "1");
+  assert.match(get("alerts").innerHTML, /IMPACTO CRÍTICO/);
+  assert.match(get("presentation-alert-title").textContent, /IMPACTO CRÍTICO/);
+  assert.equal(actuators.at(-1).temperatureCritical, false);
+  assert.equal(actuators.at(-1).impactCritical, true);
+  assert.equal(actuators.at(-1).alertOutput, true);
+  assert.equal(actuators.at(-1).ledOn, true);
+
+  // Duas entradas críticas = dois alertas, uma saída de acionamento.
+  notify({ target: { value: view("6.2,4.20,1,1") } });
+  assert.equal(get("alert-count").textContent, "2");
+  assert.match(get("presentation-alert-title").textContent, /TEMPERATURA E IMPACTO CRÍTICOS/);
+  assert.equal(actuators.at(-1).alertOutput, true);
+  assert.equal(actuators.at(-1).buzzerOn, true);
+
+  // Nenhuma entrada crítica = desligado.
+  notify({ target: { value: view("3.0,1.40,1,1") } });
   assert.equal(get("general-status").textContent, "NORMAL");
   assert.equal(get("alert-count").textContent, "0");
-  assert.match(get("alerts").innerHTML, /IMPACTO ELEVADO · INFORMATIVO/);
   assert.equal(get("presentation-alert").classList.contains("hidden"), true);
+  assert.equal(actuators.at(-1).alertOutput, false);
+  assert.equal(actuators.at(-1).ledOn, false);
+  assert.equal(actuators.at(-1).buzzerOn, false);
 
-  // Mesmo fora da faixa e com impacto alto, pausa pelo BOOT desliga tudo.
+  // Mesmo com ambas condições críticas, BOOT pausado desliga tudo.
   notify({ target: { value: view("6.2,4.20,0,1") } });
   assert.equal(get("general-status").textContent, "AGUARDANDO");
   assert.equal(get("alert-count").textContent, "0");
   assert.equal(get("presentation-alert").classList.contains("hidden"), true);
+  assert.equal(actuators.at(-1).transportActive, false);
+  assert.equal(actuators.at(-1).alertOutput, false);
+  assert.equal(actuators.at(-1).ledOn, false);
+  assert.equal(actuators.at(-1).buzzerOn, false);
 
   get("ble-connect").listeners.click();
   assert.equal(device.gatt.connected, false);
