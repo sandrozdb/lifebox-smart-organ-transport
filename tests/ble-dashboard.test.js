@@ -23,8 +23,8 @@ test("firmware BLE experimental preserva controles locais sem alterar o sketch o
   assert.doesNotMatch(full, /HTTPClient/);
   assert.doesNotMatch(full, /temperaturaCritica\(\) \|\| impactoCritico\(\)/);
   assert.match(page, /<option value="BLE">/);
-  assert.doesNotMatch(page, /data-mode="BLE"/);
-  assert.match(page, /id="ble-connect-controls"/);
+  assert.match(page, /data-mode="BLE"/);
+  assert.match(page, /id="ble-connect-controls" class="ble-connect-controls" hidden/);
   assert.match(page, /id="planning-organ"/);
   assert.match(page, /id="ble-connect"/);
   assert.doesNotMatch(page, /id="ble-organ"/);
@@ -108,18 +108,28 @@ test("BLE usa organo do planejamento, um unico botao e telemetria mista, alerta 
     addEventListener: () => undefined,
   };
   const window = {};
-  const navigator = { bluetooth: { requestDevice: async () => device } };
+  let chooserCalls = 0;
+  const navigator = { bluetooth: { requestDevice: async () => { chooserCalls++; return device; } } };
   vm.runInNewContext(load("public/js/ble-dashboard.js"), {
     window, document: { getElementById: get }, navigator,
     TextDecoder, TextEncoder, Number, Boolean, String, Date,
     setInterval: () => undefined,
   });
 
+  // Em Wokwi/Simulador: botao escondido e Bluetooth nao solicitado.
+  window.lifeBoxBleSetMode(false);
   assert.equal(window.lifeBoxBleIsSelected(), false);
+  assert.equal(get("ble-connect-controls").hidden, true);
+  assert.equal(chooserCalls, 0);
+  // O clique na FONTE exibe o botao, mas NAO abre o seletor nativo.
+  window.lifeBoxBleSetMode(true);
   assert.equal(get("ble-connect-controls").hidden, false);
-  await get("ble-connect").listeners.click();
-  assert.equal(window.lifeBoxBleIsSelected(), true);
   assert.equal(get("iot-mode").value, "BLE");
+  assert.equal(chooserCalls, 0);
+  assert.equal(device.gatt.connected, false);
+  await get("ble-connect").listeners.click();
+  assert.equal(chooserCalls, 1);
+  assert.equal(window.lifeBoxBleIsSelected(), true);
   assert.deepEqual(sent, ["HEART"]);
   assert.match(get("ble-organ-status").textContent, /OLED sincronizado: Coração/);
   assert.equal(get("temperature").textContent, "6.2");
@@ -156,15 +166,17 @@ test("BLE usa organo do planejamento, um unico botao e telemetria mista, alerta 
 
   get("ble-connect").listeners.click();
   assert.equal(device.gatt.connected, false);
-  assert.equal(window.lifeBoxBleIsSelected(), false);
-  assert.equal(get("iot-mode").value, "IOT");
+  assert.equal(window.lifeBoxBleIsSelected(), true);
+  assert.equal(get("iot-mode").value, "BLE");
+  assert.equal(get("ble-connect-controls").hidden, false);
   assert.equal(get("temperature").textContent, "--");
   assert.equal(get("humidity").textContent, "--");
   assert.equal(get("battery").textContent, "--");
   assert.equal(get("signal").textContent, "--");
 
+  get("iot-mode").value = "IOT";
   window.lifeBoxBleSetMode(false);
-  assert.equal(get("ble-connect-controls").hidden, false);
+  assert.equal(get("ble-connect-controls").hidden, true);
   assert.equal(get("humidity-label").textContent, "% relativa");
   assert.equal(get("battery-label").textContent, "% disponível");
   assert.equal(get("signal-label").textContent, "% comunicação");
