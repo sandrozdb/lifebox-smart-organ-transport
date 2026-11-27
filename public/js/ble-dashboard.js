@@ -19,6 +19,7 @@
     selected: false, device: null, characteristic: null, commandCharacteristic: null,
     reading: null, desiredOrgan: "HEART", connecting: false, simulationStart: 0,
     pendingTransport: null, pendingSince: 0, commandError: null,
+    stateWaiters: new Set(),
     lastSeen: 0, dismissed: null,
     message: "Clique em Conectar para procurar o ESP32 físico.",
   };
@@ -90,6 +91,23 @@
     }
   }
   window.lifeBoxBleCommandTransport = commandTransport;
+
+  // A escrita GATT nao garante que o ESP32 ja mudou de estado.
+  // O mapa so pode seguir depois da confirmacao na telemetria BLE.
+  function awaitTransportState(expectedActive, timeoutMs = 5000) {
+    if (!connected() || !fresh())
+      return Promise.reject(new Error("ESP32 desconectado: transporte não confirmado."));
+    if (state.reading?.transportActive === expectedActive) return Promise.resolve();
+    return new Promise((resolve, reject) => {
+      const waiter = { expectedActive, resolve, reject, timeout: null };
+      waiter.timeout = setTimeout(() => {
+        state.stateWaiters.delete(waiter);
+        reject(new Error("ESP32 não confirmou o estado do transporte. Verifique o Bluetooth."));
+      }, timeoutMs);
+      state.stateWaiters.add(waiter);
+    });
+  }
+  window.lifeBoxBleAwaitTransport = awaitTransportState;
 
   function apply() {
     if (state.pendingTransport && Date.now() - state.pendingSince > 5000) {
@@ -259,6 +277,8 @@
     if (!Number.isFinite(temperature) || !Number.isFinite(impact) ||
         temperature < -10 || temperature > 25 || impact < 0 || impact > 10) return;
     const transportActive = csv.length >= 3 ? csv[2] === "1" : true;
+    const previousActive = state.reading?.protocolVersion >= 2
+      ? state.reading.transportActive : null;
     // A quarta coluna confirma qual perfil esta efetivamente no OLED.
     const organIndex = csv.length >= 4 ? Number(csv[3]) : -1;
     const organCode = Number.isInteger(organIndex) && PROFILES[organIndex]
@@ -271,13 +291,33 @@
       state.pendingSince = 0;
       state.commandError = null;
     }
+    if (protocolVersion >= 2) {
+      for (const waiter of state.stateWaiters) {
+        if (waiter.expectedActive !== transportActive) continue;
+        clearTimeout(waiter.timeout);
+        state.stateWaiters.delete(waiter);
+        waiter.resolve();
+      }
+    }
     state.lastSeen = Date.now();
+    if (protocolVersion >= 2 && previousActive !== null &&
+        previousActive !== transportActive) {
+      // BOOT tambem pode alterar o estado fora do dashboard.
+      window.lifeBoxBleOnTransportChange?.(transportActive);
+    }
     if (!state.simulationStart) state.simulationStart = Date.now();
     state.message = "Bluetooth conectado";
     apply();
   }
 
   function disconnected() {
+    const wasActive = state.reading?.protocolVersion >= 2 &&
+      state.reading.transportActive;
+    for (const waiter of state.stateWaiters) {
+      clearTimeout(waiter.timeout);
+      waiter.reject(new Error("ESP32 desconectou antes de confirmar o transporte."));
+    }
+    state.stateWaiters.clear();
     state.characteristic = null;
     state.commandCharacteristic = null;
     state.connecting = false;
@@ -288,6 +328,7 @@
     state.reading = null;
     state.lastSeen = 0;
     state.message = "Desconectado. Clique em Conectar para tentar novamente.";
+    if (wasActive) window.lifeBoxBleOnTransportChange?.(false);
     apply();
   }
 
@@ -338,7 +379,11 @@
   }
 
   function disconnect() {
+    const wasActive = state.reading?.protocolVersion >= 2 &&
+      state.reading.transportActive;
     if (connected()) state.device.gatt.disconnect();
+    // Alguns navegadores nao notificam o evento em tempo habil.
+    if (wasActive) window.lifeBoxBleOnTransportChange?.(false);
     state.device = null;
     state.reading = null;
     state.lastSeen = 0;
@@ -347,6 +392,11 @@
     state.pendingTransport = null;
     state.pendingSince = 0;
     state.commandError = null;
+    for (const waiter of state.stateWaiters) {
+      clearTimeout(waiter.timeout);
+      waiter.reject(new Error("ESP32 desconectado."));
+    }
+    state.stateWaiters.clear();
     state.dismissed = null;
     state.message = "Desconectado pelo usuário.";
     apply();
