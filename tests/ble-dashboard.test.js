@@ -137,7 +137,7 @@ test("BLE aplica ativo AND (temperatura critica OR impacto critico), com orgao e
     window, document: { getElementById: get, querySelector: get }, navigator,
     TextDecoder, TextEncoder, Number, Boolean, String, Date,
     renderActuators: (signal) => actuators.push(signal),
-    setInterval: () => undefined,
+    setInterval: () => undefined, setTimeout, clearTimeout,
   });
 
   // Em Wokwi/Simulador: botao escondido e Bluetooth nao solicitado.
@@ -164,11 +164,13 @@ test("BLE aplica ativo AND (temperatura critica OR impacto critico), com orgao e
   assert.equal(get('[data-action="stop"]').disabled, true);
   assert.equal(actuators.at(-1).transportActive, false);
   assert.equal(actuators.at(-1).alertOutput, false);
-  // Iniciar no painel envia START, mas a tela so muda quando ESP32 confirma.
+  // O mapa aguarda o estado fisico: WRITE GATT nao basta.
   await window.lifeBoxBleCommandTransport("start");
+  const started = window.lifeBoxBleAwaitTransport(true);
   assert.deepEqual(sent, ["HEART", "START"]);
   assert.equal(actuators.at(-1).transportActive, false);
   notify({ target: { value: view("6.2,1.40,1,0,2") } });
+  await started;
   assert.equal(get("sim-status").textContent, "Executando");
   assert.equal(get('[data-action="stop"]').disabled, false);
   assert.equal(get("impact").textContent, "1.40");
@@ -235,8 +237,10 @@ test("BLE aplica ativo AND (temperatura critica OR impacto critico), com orgao e
   await window.lifeBoxBleCommandTransport("start");
   notify({ target: { value: view("3.0,1.40,1,1,2") } });
   await window.lifeBoxBleCommandTransport("stop");
+  const paused = window.lifeBoxBleAwaitTransport(false);
   assert.deepEqual(sent.slice(-2), ["START", "PAUSE"]);
   notify({ target: { value: view("6.2,4.20,0,1,2") } });
+  await paused;
   assert.equal(actuators.at(-1).transportActive, false);
   assert.equal(actuators.at(-1).alertOutput, false);
 
@@ -256,4 +260,97 @@ test("BLE aplica ativo AND (temperatura critica OR impacto critico), com orgao e
   assert.equal(get("humidity-label").textContent, "% relativa");
   assert.equal(get("battery-label").textContent, "% disponível");
   assert.equal(get("signal-label").textContent, "% comunicação");
+});
+
+test("ESP32 físico: iniciar movimenta rota simulada e pausar/reiniciar sincroniza ambos", async () => {
+  const dashboard = load("public/js/dashboard.js");
+  const start = dashboard.indexOf("// O percurso e gerado pela simulacao logistica da API");
+  const end = dashboard.indexOf('document.addEventListener("click", async (event) => {', start);
+  assert.ok(start > 0 && end > start, "Orquestrador BLE do percurso não encontrado");
+  const coordinator = dashboard.slice(start, end);
+  const calls = [];
+  const feedback = { textContent: "" };
+  const window = {
+    lifeBoxServerIotMode: "IOT",
+    lifeBoxCurrentPlan: { id: "rota-otima" },
+    lifeBoxPlanningResult: { selected: { id: "rota-otima" } },
+    lifeBoxCanResume: false,
+    lifeBoxSimulationRunning: false,
+    lifeBoxBleCommandTransport: async (command) => { calls.push("BLE:" + command); },
+    lifeBoxBleAwaitTransport: async (active) => { calls.push("ACK:" + active); },
+  };
+  let refreshes = 0;
+  const context = {
+    window, transportId: 1,
+    $: () => feedback,
+    refresh: async () => { refreshes++; },
+    api: async (url, options) => {
+      calls.push("API:" + url);
+      assert.equal(options.method, "POST");
+      const action = url.split("/").at(-1);
+      const input = JSON.parse(options.body);
+      assert.equal(input.transporteId, 1);
+      if (action === "start" || action === "resume") {
+        if (action === "start") {
+          assert.equal(input.mode, "IOT");
+          assert.deepEqual(input.plan, window.lifeBoxCurrentPlan);
+        }
+        return {
+          running: true,
+          logistics: { progress: 0, current: { latitude: -23.5, longitude: -46.6 } },
+        };
+      }
+      if (action === "stop") return { running: false, logistics: { progress: 10 } };
+      if (action === "reset") return { running: false, logistics: null };
+      throw new Error("Endpoint inesperado: " + url);
+    },
+  };
+  const run = vm.runInNewContext(coordinator + "\nbleRoutePhysicalAction;", context);
+  await run("start");
+  assert.deepEqual(calls.slice(0, 3), ["BLE:start", "ACK:true", "API:/api/simulacao/start"]);
+  assert.equal(window.lifeBoxSimulationRunning, true);
+  assert.equal(window.lifeBoxExecutionTracking.progress, 0);
+  assert.match(feedback.textContent, /Rota simulada no mapa/);
+
+  await run("stop");
+  assert.deepEqual(calls.slice(-3), ["BLE:stop", "ACK:false", "API:/api/simulacao/stop"]);
+  assert.equal(window.lifeBoxSimulationRunning, false);
+  assert.equal(window.lifeBoxCanResume, true);
+
+  await run("start");
+  assert.deepEqual(calls.slice(-3), ["BLE:start", "ACK:true", "API:/api/simulacao/resume"]);
+  assert.equal(window.lifeBoxSimulationRunning, true);
+
+  await run("reset");
+  assert.deepEqual(calls.slice(-3), ["BLE:reset", "ACK:false", "API:/api/simulacao/reset"]);
+  assert.equal(window.lifeBoxExecutionTracking, null);
+  assert.equal(window.lifeBoxSimulationRunning, false);
+  assert.ok(refreshes >= 4);
+});
+
+test("Se o ESP32 não confirmar START, mapa não pode iniciar e comando PAUSE é tentado", async () => {
+  const dashboard = load("public/js/dashboard.js");
+  const start = dashboard.indexOf("// O percurso e gerado pela simulacao logistica da API");
+  const end = dashboard.indexOf('document.addEventListener("click", async (event) => {', start);
+  const calls = [];
+  const context = {
+    transportId: 1,
+    window: {
+      lifeBoxCurrentPlan: { id: "plano" },
+      lifeBoxSimulationRunning: false,
+      lifeBoxCanResume: false,
+      lifeBoxBleCommandTransport: async (command) => calls.push(command),
+      lifeBoxBleAwaitTransport: async (active) => {
+        if (active) throw new Error("sem confirmacao");
+      },
+    },
+    api: async () => { throw new Error("API não pode iniciar sem confirmação."); },
+    refresh: async () => undefined,
+    $: () => ({ textContent: "" }),
+  };
+  const run = vm.runInNewContext(
+    dashboard.slice(start, end) + "\nbleRoutePhysicalAction;", context,
+  );
+  await assert.rejects(run("start"), /sem confirmacao/);
+  assert.deepEqual(calls, ["start", "stop"]);
 });
