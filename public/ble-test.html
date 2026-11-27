@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LifeBox | Teste BLE</title>
+<style>
+:root{color-scheme:dark;font-family:Inter,system-ui,Arial,sans-serif}
+*{box-sizing:border-box}body{margin:0;background:#06111c;color:#eaf7ff;min-height:100vh;padding:28px}
+main{max-width:660px;margin:0 auto}
+h1{font-size:2rem;margin:10px 0}h1 span{color:#ff2a2f}
+p{color:#afc7d7;line-height:1.6}
+button{background:#e20c16;color:#fff;border:0;border-radius:10px;padding:14px 20px;font-weight:750;cursor:pointer}
+button:disabled{opacity:.45;cursor:default}
+.panel{border:1px solid #264356;background:#0c1c2a;border-radius:14px;padding:22px;margin-top:22px}
+.values{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.value{background:#102538;border-radius:10px;padding:20px}
+.value small{display:block;color:#a8c5d6}.value strong{display:block;font-size:2rem;margin-top:8px}
+#status{font-weight:700}a{color:#9ecefa}
+</style>
+</head>
+<body>
+<main>
+<a href="/">Voltar ao dashboard</a>
+<h1>Life<span>Box</span> · Teste Bluetooth</h1>
+<p>Teste independente do dashboard. Os potenciômetros simulam temperatura e impacto. Esta página apenas recebe os dados BLE no navegador; não envia nada ao servidor.</p>
+<div class="panel">
+<p id="status" role="status">Desconectado</p>
+<button id="connect">Conectar ESP32 físico</button>
+<button id="disconnect" disabled>Desconectar</button>
+</div>
+<div class="panel values">
+<div class="value"><small>Temperatura simulada</small><strong id="temperature">-- °C</strong></div>
+<div class="value"><small>Impacto simulado</small><strong id="impact">-- g</strong></div>
+</div>
+<p>Use Chrome ou Edge em um notebook com Bluetooth. O navegador precisa estar em HTTPS ou localhost. Não funciona no Safari do iPhone.</p>
+</main>
+<script>
+const SERVICE_UUID = "2d514649-4c65-426f-7820-202600000001";
+const CHARACTERISTIC_UUID = "2d514649-4c65-426f-7820-202600000002";
+const $ = (id) => document.getElementById(id);
+let device = null;
+let characteristic = null;
+const setStatus = (message) => { $("status").textContent = message; };
+function onValue(event) {
+  const data = new TextDecoder().decode(event.target.value);
+  const [temperature, impact] = data.split(",").map(Number);
+  if (!Number.isFinite(temperature) || !Number.isFinite(impact)) return;
+  $("temperature").textContent = temperature.toFixed(1) + " °C";
+  $("impact").textContent = impact.toFixed(2) + " g";
+  setStatus("Conectado · recebendo valores ao vivo");
+}
+function onDisconnected() {
+  $("connect").disabled = false;
+  $("disconnect").disabled = true;
+  setStatus("ESP32 desconectado. Clique em conectar para tentar novamente.");
+  characteristic = null;
+}
+$("connect").onclick = async () => {
+  if (!navigator.bluetooth) {
+    setStatus("Web Bluetooth indisponível. Use Chrome/Edge em HTTPS no notebook.");
+    return;
+  }
+  $("connect").disabled = true;
+  setStatus("Procurando LifeBox BLE...");
+  try {
+    device = await navigator.bluetooth.requestDevice({
+      filters: [{ namePrefix: "LifeBox" }],
+      optionalServices: [SERVICE_UUID],
+    });
+    device.addEventListener("gattserverdisconnected", onDisconnected);
+    const server = await device.gatt.connect();
+    const service = await server.getPrimaryService(SERVICE_UUID);
+    characteristic = await service.getCharacteristic(CHARACTERISTIC_UUID);
+    characteristic.addEventListener("characteristicvaluechanged", onValue);
+    await characteristic.startNotifications();
+    onValue({ target: { value: await characteristic.readValue() } });
+    $("disconnect").disabled = false;
+  } catch (error) {
+    $("connect").disabled = false;
+    $("disconnect").disabled = true;
+    setStatus("Não conectou: " + (error.message || String(error)));
+  }
+};
+$("disconnect").onclick = () => {
+  if (device?.gatt?.connected) device.gatt.disconnect();
+};
+</script>
+</body>
+</html>
