@@ -62,8 +62,13 @@
   function apply() {
     const controls = $ble("ble-connect-controls");
     if (!controls) return;
-    controls.hidden = !state.selected;
-    if (!state.selected) return;
+    controls.hidden = false;
+    if (!state.selected) {
+      $ble("ble-connect").disabled = false;
+      $ble("ble-connect").textContent = "Conectar ESP32 físico";
+      $ble("ble-organ-status").textContent = "";
+      return;
+    }
 
     const isConnected = connected();
     const hasReading = fresh();
@@ -103,7 +108,7 @@
     const confirmedProfile = hasReading ? findProfile(state.reading.organCode) : null;
     const requested = requestedProfile();
     $ble("ble-organ-status").textContent = !isConnected
-      ? (state.connecting ? "Conectando ao ESP32..." : "Bluetooth desconectado")
+      ? (state.connecting ? "Conectando ao ESP32..." : (state.message.startsWith("Falha") ? state.message : "Bluetooth desconectado"))
       : !hasReading
         ? "Conectado · aguardando telemetria"
         : !confirmedProfile
@@ -287,7 +292,17 @@
   };
   window.lifeBoxBleApply = apply;
   $ble("ble-connect").addEventListener("click", () => {
-    if (connected()) return disconnect();
+    if (connected()) {
+      // Ao desconectar, retomar automaticamente a fonte do servidor.
+      window.lifeBoxBleSetMode(false);
+      const select = $ble("iot-mode");
+      if (select) select.value = window.lifeBoxServerIotMode || "IOT";
+      if (typeof syncSourceSelector === "function") syncSourceSelector();
+      if (typeof refresh === "function") refresh();
+      return;
+    }
+    // Um unico clique faz a troca da fonte local e abre o seletor BLE nativo.
+    if (!state.selected) window.lifeBoxBleSetMode(true);
     return connect();
   });
   $ble("dismiss-presentation-alert").addEventListener("click", () => {
