@@ -335,6 +335,7 @@ function updateSimulationControls(simulation, transport) {
   pause.textContent = "Ⅱ PAUSAR TRANSPORTE";
   window.lifeBoxCanResume =
     hasExecution && !simulation.running && !awaitingPlan;
+  window.lifeBoxSimulationRunning = Boolean(simulation.running);
   if (window.lifeBoxBleIsSelected?.()) {
     // O estado fisico vem das notificacoes BLE, nao do servidor.
     window.lifeBoxBleApply?.();
@@ -701,6 +702,126 @@ async function refresh() {
     window.lifeBoxBleApply?.();
   }
 }
+// O percurso e gerado pela simulacao logistica da API; o ESP32 via BLE so
+// transmite sensores e confirma o estado fisico. Ambos devem andar juntos.
+let bleRouteManaged = false;
+let bleRouteBusy = false;
+let bleRouteSyncBusy = false;
+let bleRouteRequestedState = null;
+
+async function bleRouteApiAction(action) {
+  const apiAction = action === "start"
+    ? (window.lifeBoxCanResume ? "resume" : "start") : action;
+  if (apiAction === "start" && !window.lifeBoxCurrentPlan)
+    throw new Error("Calcule o plano ótimo antes de iniciar o percurso.");
+  const response = await api("/api/simulacao/" + apiAction, {
+    method: "POST",
+    body: JSON.stringify({
+      transporteId: transportId,
+      rotaId: "LOGISTICS_PLAN",
+      plan: window.lifeBoxCurrentPlan,
+      result: window.lifeBoxPlanningResult,
+      // O servidor aceita apenas IOT/DEMO; BLE continua exclusivamente local.
+      mode: window.lifeBoxServerIotMode || "IOT",
+    }),
+  });
+  window.lifeBoxSimulationRunning = Boolean(response.running);
+  window.lifeBoxCanResume = Boolean(
+    response.logistics && !response.running && !response.awaitingRecommendationId,
+  );
+  if (response.logistics) {
+    window.lifeBoxExecutionTracking = response.logistics;
+    window.lifeBoxExecutionActive = true;
+  } else if (action === "reset") {
+    window.lifeBoxExecutionTracking = null;
+    window.lifeBoxExecutionActive = false;
+    window.lifeBoxActiveExecutionPlan = null;
+    window.lifeBoxReoptimizationRecommendation = null;
+  }
+  return response;
+}
+
+async function bleRoutePhysicalAction(action) {
+  if (bleRouteBusy) return;
+  bleRouteBusy = true;
+  let hadHardwareError = null;
+  try {
+    if (action === "start") {
+      if (!window.lifeBoxSimulationRunning &&
+          !window.lifeBoxCanResume && !window.lifeBoxCurrentPlan)
+        throw new Error("Calcule o plano ótimo antes de iniciar o percurso.");
+      // Nao mova o mapa antes de receber do ESP32 a confirmacao ATIVO=1.
+      await window.lifeBoxBleCommandTransport("start");
+      await window.lifeBoxBleAwaitTransport(true);
+      try {
+        if (!window.lifeBoxSimulationRunning) await bleRouteApiAction("start");
+        bleRouteManaged = true;
+      } catch (error) {
+        // Se a API nao iniciar a rota, nao deixar a caixa em alarme isolado.
+        try {
+          await window.lifeBoxBleCommandTransport("stop");
+          await window.lifeBoxBleAwaitTransport(false);
+        } catch (ignored) { /* painel informa eventual falha de BLE */ }
+        throw error;
+      }
+      $("#action-feedback").textContent =
+        "Transporte iniciado. Rota simulada no mapa; temperatura e impacto recebidos do ESP32 físico.";
+    } else if (action === "stop" || action === "reset") {
+      try {
+        await window.lifeBoxBleCommandTransport(action);
+        await window.lifeBoxBleAwaitTransport(false);
+      } catch (error) {
+        hadHardwareError = error;
+      }
+      // Mesmo se a caixa desconectar, nao deixar o mapa seguir sozinho.
+      await bleRouteApiAction(action);
+      if (action === "reset") bleRouteManaged = false;
+      $("#action-feedback").textContent = hadHardwareError
+        ? "Mapa pausado/reiniciado, mas a caixa não confirmou o comando: " +
+          hadHardwareError.message
+        : action === "reset"
+          ? "Percurso reiniciado e caixa física pausada."
+          : "Transporte e percurso pausados.";
+    } else {
+      throw new Error("Comando desconhecido.");
+    }
+    await refresh();
+  } finally {
+    bleRouteBusy = false;
+  }
+}
+
+// BOOT fisico e desconexao BLE tambem devem pausar/retomar o mapa ja
+// iniciado neste painel. Nao altera a telemetria real da caixa.
+window.lifeBoxBleOnTransportChange = (transportActive) => {
+  if (!bleRouteManaged || bleRouteBusy) return;
+  bleRouteRequestedState = Boolean(transportActive);
+  if (bleRouteSyncBusy) return;
+  bleRouteSyncBusy = true;
+  void (async () => {
+    try {
+      while (bleRouteRequestedState !== null) {
+        const requested = bleRouteRequestedState;
+        bleRouteRequestedState = null;
+        if (requested !== Boolean(window.lifeBoxSimulationRunning)) {
+          await bleRouteApiAction(requested ? "resume" : "stop");
+          await refresh();
+          $("#action-feedback").textContent = requested
+            ? "BOOT: caixa e percurso retomados."
+            : "BOOT/desconexão: caixa e percurso pausados.";
+        }
+      }
+    } catch (error) {
+      $("#action-feedback").textContent =
+        "Falha ao sincronizar percurso após BOOT/desconexão: " + error.message;
+    } finally {
+      bleRouteSyncBusy = false;
+      if (bleRouteRequestedState !== null)
+        window.lifeBoxBleOnTransportChange(bleRouteRequestedState);
+    }
+  })();
+};
+
 document.addEventListener("click", async (event) => {
   const action = event.target.dataset.action,
     scenario = event.target.dataset.scenario,
@@ -712,14 +833,14 @@ document.addEventListener("click", async (event) => {
     return;
   }
   if (!action && !scenario && !resolve) return;
-  // Fonte BLE: os controles Iniciar/Pausar/Reiniciar comandam SOMENTE
-  // a caixa fisica, nunca a simulacao logistica do Render.
+  // BLE: o ESP32 controla atuadores; a API avanca o mapa simuladamente.
+  // Os mesmos botoes comandam os dois fluxos, sem enviar sensores BLE ao banco.
   if (action && window.lifeBoxBleIsSelected?.()) {
     try {
-      const feedback = await window.lifeBoxBleCommandTransport(action);
-      $("#action-feedback").textContent = feedback;
+      await bleRoutePhysicalAction(action);
     } catch (error) {
-      $("#action-feedback").textContent = error.message;
+      $("#action-feedback").textContent =
+        "Não foi possível sincronizar o transporte e o percurso: " + error.message;
     }
     window.lifeBoxBleApply?.();
     return;
