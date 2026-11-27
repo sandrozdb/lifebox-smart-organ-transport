@@ -287,8 +287,8 @@
   };
   window.lifeBoxBleApply = apply;
   $ble("ble-connect").addEventListener("click", () => {
-    if (connected()) disconnect();
-    else connect();
+    if (connected()) return disconnect();
+    return connect();
   });
   $ble("dismiss-presentation-alert").addEventListener("click", () => {
     if (state.selected) state.dismissed = $ble("presentation-alert").dataset.key || null;
