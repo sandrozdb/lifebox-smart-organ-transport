@@ -762,9 +762,10 @@ test("endpoint aplica recomendação revalidada sem reiniciar execução", async
     const applied = await response.json();
     assert.notEqual(applied.logistics.planId, "MANIPULADO");
     assert.equal(applied.running, true);
-    assert.equal(
-      applied.logistics.transportElapsedMinutes,
-      before.transportElapsedMinutes,
+    // Reotimização mantém o mapa parado, mas a isquemia continua contando.
+    assert.ok(
+      applied.logistics.transportElapsedMinutes >=
+        before.transportElapsedMinutes,
     );
     assert.deepEqual(applied.logistics.currentPosition, before.currentPosition);
     assert.ok(
