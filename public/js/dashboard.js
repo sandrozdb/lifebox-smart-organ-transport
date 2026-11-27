@@ -293,6 +293,32 @@ function initMap(tracking) {
     { padding: [20, 20] },
   );
 }
+// Quando os sensores sao locais (BLE), nao existe GPS enviado pela caixa.
+// O motor de Pesquisa Operacional gera a posicao/porcentagem simuladas do
+// percurso. Nunca usar a ultima posicao 0% salva no banco neste modo.
+function trackingFromBleLogistics(tracking, logistics) {
+  if (!logistics || !Number.isFinite(Number(logistics.totalProgress)))
+    return tracking;
+  const progressPercent = Math.min(100,
+    Math.max(0, Number(logistics.totalProgress) * 100));
+  return {
+    ...tracking,
+    ...logistics,
+    // O motor devolve totalProgress em 0..1; a UI usa progress em 0..100.
+    progress: progressPercent,
+    current: logistics.currentPosition || tracking.current,
+    path: logistics.traveledPath || tracking.path || [],
+    origin: logistics.origin || tracking.origin,
+    destination: logistics.destination || tracking.destination,
+    currentSegment: logistics.currentSegment || null,
+    segmentIndex: Number(logistics.currentSegmentIndex) || 0,
+    totalSegments: logistics.segments?.length || 0,
+    routeName: logistics.planName || tracking.routeName || "Rota ótima simulada",
+    traveledKm: Number(logistics.traveledKm) || 0,
+    remainingKm: Number(logistics.remainingKm) || 0,
+  };
+}
+
 function updateTracking(tracking) {
   initMap(tracking);
   if (map && tracking.current) {
@@ -663,10 +689,12 @@ async function refresh() {
       simulation.logistics && transport.status !== "CONCLUIDO",
     );
     if (simulation.logistics) {
-      window.lifeBoxExecutionTracking = {
-        ...tracking,
-        ...simulation.logistics,
-      };
+      window.lifeBoxExecutionTracking = window.lifeBoxBleIsSelected?.()
+        ? trackingFromBleLogistics(tracking, simulation.logistics)
+        : {
+            ...tracking,
+            ...simulation.logistics,
+          };
       if (simulation.running && !window.lifeBoxActiveExecutionPlan)
         window.lifeBoxActiveExecutionPlan = {
           id: simulation.logistics.planId,
@@ -682,7 +710,17 @@ async function refresh() {
       iot.organ ||
       window.lifeBoxActiveProfile;
     if (!window.lifeBoxBleIsSelected?.()) updateMetrics(activeReading, transport, activeOrgan);
-    updateTracking(window.lifeBoxExecutionTracking || tracking);
+    // No BLE, posicao e progresso SEMPRE sao do plano simulado,
+    // mesmo que a tabela de telemetria nao tenha GPS fisico.
+    const bleTracking = window.lifeBoxBleIsSelected?.() && simulation.logistics
+      ? trackingFromBleLogistics(tracking, simulation.logistics)
+      : null;
+    updateTracking(bleTracking || window.lifeBoxExecutionTracking || tracking);
+    const mapMode = $("#map-mode");
+    if (mapMode) {
+      mapMode.textContent = window.lifeBoxBleIsSelected?.()
+        ? "PERCURSO SIMULADO · ESP32 FÍSICO" : "PLANEJAMENTO";
+    }
     drawCharts(readings);
     if (!window.lifeBoxBleIsSelected?.()) renderAlerts(alerts);
     renderTimeline(events);
