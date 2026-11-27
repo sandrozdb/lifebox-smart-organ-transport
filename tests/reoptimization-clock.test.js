@@ -125,3 +125,26 @@ test("Reotimização segura pausa rota automaticamente, não a isquemia", async 
     await simulation.reset(transport.id);
   }
 });
+
+
+test("Frontend congela mapa na recomendação sem pausar BLE/OLED", () => {
+  const fs = require("node:fs");
+  const path = require("node:path");
+  const root = path.resolve(__dirname, "..");
+  const dashboard = fs.readFileSync(path.join(root, "public/js/dashboard.js"), "utf8");
+  const ble = fs.readFileSync(path.join(root, "public/js/ble-dashboard.js"), "utf8");
+  const planningUi = fs.readFileSync(path.join(root, "public/js/planning.js"), "utf8");
+  assert.match(dashboard, /REOTIMIZAÇÃO · MAPA PAUSADO/);
+  assert.match(dashboard, /window\.lifeBoxRouteAwaitingPlan = awaitingPlan/);
+  assert.match(dashboard, /if \(requested && window\.lifeBoxRouteAwaitingPlan\) continue/);
+  assert.match(ble, /Mapa pausado · ESP32 ativo/);
+  assert.match(planningUi, /MAPA PAUSADO · ISQUEMIA CONTINUA CONTANDO/);
+  assert.match(planningUi, /render\(recommendation\.result, reason\)/);
+  assert.match(planningUi, /if \(!\(reason && window\.lifeBoxExecutionActive\)\)/);
+  // Nada neste fluxo manda um PAUSE ao ESP32 na reotimização.
+  const reoptFlow = planningUi.slice(
+    planningUi.indexOf("if (reoptimize) {"),
+    planningUi.indexOf("} else {", planningUi.indexOf("if (reoptimize) {")),
+  );
+  assert.doesNotMatch(reoptFlow, /lifeBoxBleCommandTransport|lifeBoxBleAwaitTransport/);
+});
