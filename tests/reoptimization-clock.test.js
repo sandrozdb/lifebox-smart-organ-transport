@@ -78,7 +78,6 @@ test("Reotimização segura pausa rota automaticamente, não a isquemia", async 
       AIRPORT_ORIGIN: true,
       AIRPORT_DESTINATION: true,
       HELIPORT_ORIGIN: true,
-      HELIPORT_DEST: true,
       HELIPORT_DESTINATION: true,
     },
   };
