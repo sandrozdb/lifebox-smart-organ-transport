@@ -18,7 +18,7 @@
   const state = {
     selected: false, device: null, characteristic: null, commandCharacteristic: null,
     reading: null, desiredOrgan: "HEART", connecting: false, simulationStart: 0,
-    pendingTransport: null, pendingSince: 0,
+    pendingTransport: null, pendingSince: 0, commandError: null,
     lastSeen: 0, dismissed: null,
     message: "Clique em Conectar para procurar o ESP32 físico.",
   };
@@ -71,6 +71,7 @@
     if (!command) throw new Error("Comando de transporte físico inválido.");
     state.pendingTransport = command;
     state.pendingSince = Date.now();
+    state.commandError = null;
     apply();
     try {
       // WRITE indica recebimento da escrita GATT, mas a confirmação do estado
@@ -83,6 +84,7 @@
     } catch (error) {
       state.pendingTransport = null;
       state.pendingSince = 0;
+      state.commandError = "Falha ao enviar comando ao ESP32.";
       apply();
       throw error;
     }
@@ -93,7 +95,7 @@
     if (state.pendingTransport && Date.now() - state.pendingSince > 5000) {
       state.pendingTransport = null;
       state.pendingSince = 0;
-      state.message = "ESP32 não confirmou o comando. Verifique o Monitor Serial e o firmware.";
+      state.commandError = "ESP32 não confirmou o comando. Verifique o Monitor Serial e o firmware.";
     }
     const controls = $ble("ble-connect-controls");
     if (!controls) return;
@@ -144,8 +146,8 @@
         : "Impacto normal · limite 3,5 g";
     const confirmedProfile = hasReading ? findProfile(state.reading.organCode) : null;
     const requested = requestedProfile();
-    $ble("ble-organ-status").textContent = state.message.startsWith("ESP32 não confirmou")
-      ? state.message : !isConnected
+    $ble("ble-organ-status").textContent = state.commandError
+      ? state.commandError : !isConnected
       ? (state.connecting ? "Conectando ao ESP32..." : (state.message.startsWith("Falha") ? state.message : "Bluetooth desconectado"))
       : !hasReading
         ? "Conectado · aguardando telemetria"
@@ -265,8 +267,11 @@
     const protocolVersion = csv.length >= 5 ? Number(csv[4]) : 1;
     state.reading = { temperature, impact, transportActive, organCode, protocolVersion };
     if (state.pendingTransport === "START" && transportActive ||
-        state.pendingTransport === "PAUSE" && !transportActive)
+        state.pendingTransport === "PAUSE" && !transportActive) {
       state.pendingTransport = null;
+      state.pendingSince = 0;
+      state.commandError = null;
+    }
     state.lastSeen = Date.now();
     if (!state.simulationStart) state.simulationStart = Date.now();
     state.message = "Bluetooth conectado";
@@ -278,6 +283,8 @@
     state.commandCharacteristic = null;
     state.connecting = false;
     state.pendingTransport = null;
+    state.pendingSince = 0;
+    state.commandError = null;
     state.simulationStart = 0;
     state.reading = null;
     state.lastSeen = 0;
@@ -339,6 +346,8 @@
     state.simulationStart = 0;
     state.connecting = false;
     state.pendingTransport = null;
+    state.pendingSince = 0;
+    state.commandError = null;
     state.dismissed = null;
     state.message = "Desconectado pelo usuário.";
     apply();
