@@ -355,26 +355,31 @@ function updateSimulationControls(simulation, transport) {
 }
 function updateIotControls(iot) {
   const mode = iot.mode || "IOT",
-    demoMode = mode === "DEMO",
+    demoMode = mode === "DEMO" && !window.lifeBoxBleIsSelected?.(),
     boxScenarioGroup = document
       .querySelector("[data-scenario]")
       ?.closest(".scenario-group"),
     modeMessage = $("#scenario-mode-message");
   window.lifeBoxIotMode = mode;
-  $("#iot-mode").value = mode;
+  window.lifeBoxServerIotMode = mode;
+  if (!window.lifeBoxBleIsSelected?.()) $("#iot-mode").value = mode;
   syncSourceSelector();
-  $("#esp32-status").textContent = iot.online
-    ? "ESP32 ONLINE"
-    : "ESP32 OFFLINE";
-  $("#esp32-status").classList.toggle("online", Boolean(iot.online));
-  $("#telemetry-status").textContent =
-    mode === "IOT" ? "TELEMETRIA AO VIVO" : "TELEMETRIA DEMONSTRAÇÃO";
+  if (!window.lifeBoxBleIsSelected?.()) {
+    $("#esp32-status").textContent = iot.online
+      ? "ESP32 ONLINE"
+      : "ESP32 OFFLINE";
+    $("#esp32-status").classList.toggle("online", Boolean(iot.online));
+    $("#telemetry-status").textContent =
+      mode === "IOT" ? "TELEMETRIA AO VIVO" : "TELEMETRIA DEMONSTRAÇÃO";
+  }
   boxScenarioGroup?.classList.toggle("mode-disabled", !demoMode);
   if (modeMessage) {
     modeMessage.hidden = demoMode;
     modeMessage.textContent = demoMode
       ? ""
-      : "No modo IoT, as condições da caixa vêm do ESP32/Wokwi. Condições logísticas permanecem disponíveis para o operador.";
+      : window.lifeBoxBleIsSelected?.()
+        ? "BLE local: a caixa física envia somente temperatura e impacto ao navegador; nuvem e histórico ficam independentes."
+        : "No modo IoT, as condições da caixa vêm do ESP32/Wokwi. Condições logísticas permanecem disponíveis para o operador.";
   }
   document.querySelectorAll("[data-scenario]").forEach((control) => {
     control.disabled = !demoMode;
@@ -670,21 +675,25 @@ async function refresh() {
       simulation.logistics?.organProfile ||
       iot.organ ||
       window.lifeBoxActiveProfile;
-    updateMetrics(activeReading, transport, activeOrgan);
+    if (!window.lifeBoxBleIsSelected?.()) updateMetrics(activeReading, transport, activeOrgan);
     updateTracking(window.lifeBoxExecutionTracking || tracking);
     drawCharts(readings);
-    renderAlerts(alerts);
+    if (!window.lifeBoxBleIsSelected?.()) renderAlerts(alerts);
     renderTimeline(events);
-    renderPresentationAlert(transport, alerts, iot);
-    renderActuators(iot.digitalSignal || simulation.digitalSignal);
+    if (!window.lifeBoxBleIsSelected?.()) {
+      renderPresentationAlert(transport, alerts, iot);
+      renderActuators(iot.digitalSignal || simulation.digitalSignal);
+    }
     renderPhysics(physics);
     renderQaStatus(qa);
     if (transport.status === "CONCLUIDO") await renderSummary();
     $("#system-status").textContent = "Sistema online";
+    window.lifeBoxBleApply?.();
   } catch (error) {
     $("#system-status").textContent = "API indisponível";
     $("#system-dot").className = "dot critical";
     console.error("[LifeBox] dashboard refresh failed:", error);
+    window.lifeBoxBleApply?.();
   }
 }
 document.addEventListener("click", async (event) => {
@@ -722,7 +731,9 @@ document.addEventListener("click", async (event) => {
             rotaId: "LOGISTICS_PLAN",
             plan: window.lifeBoxCurrentPlan,
             result: window.lifeBoxPlanningResult,
-            mode: $("#iot-mode").value,
+            mode: $("#iot-mode").value === "BLE"
+              ? (window.lifeBoxServerIotMode || "IOT")
+              : $("#iot-mode").value,
           }),
         },
       );
@@ -970,6 +981,12 @@ function initSourceSelector() {
 }
 initSourceSelector();
 $("#iot-mode").addEventListener("change", async (event) => {
+  if (event.target.value === "BLE") {
+    window.lifeBoxBleSetMode?.(true);
+    dismissedOverlayKey = null;
+    return; // Fonte local: NAO altera o modo IoT do backend.
+  }
+  window.lifeBoxBleSetMode?.(false);
   try {
     await api("/api/iot/mode", {
       method: "PUT",
