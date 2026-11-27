@@ -1,0 +1,12 @@
+/* Painel opcional de Bluetooth; nao interfere no dashboard online. */
+#physical-ble-panel[hidden] { display:none !important; }
+#physical-ble-panel { margin:14px 0 20px; border:1px solid rgba(114,167,196,.42); border-radius:12px; background:#0c1c2a; padding:18px; }
+.ble-headline { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; }
+.ble-headline h3 { margin:0; font-size:1.1rem; }
+.ble-headline p { margin:4px 0 0; color:var(--muted); }
+.ble-actions { display:flex; flex-wrap:wrap; gap:10px; margin:14px 0; }
+.ble-actions button { border:1px solid rgba(114,167,196,.45); background:#143246; color:var(--text); border-radius:9px; padding:10px 15px; font-weight:750; cursor:pointer; }
+.ble-actions button:first-child { background:var(--brand-red-dark); border-color:var(--brand-red); color:#fff; }
+.ble-actions button:disabled { opacity:.45; cursor:not-allowed; }
+#ble-connection-status { font-weight:700; color:var(--technical-soft); }
+.ble-note { margin:8px 0 0; font-size:.83rem; line-height:1.55; color:var(--muted); }
