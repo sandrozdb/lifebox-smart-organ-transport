@@ -1,6 +1,6 @@
 // LIFEBOX — SMART ORGAN TRANSPORT
 // ExpoTech 2026.2 | Protótipo físico OFFLINE.
-// Órgão fixo: CORAÇÃO; temperatura e impacto SIMULADOS por B10K.
+// Órgao configurável via BLE; temperatura e impacto SIMULADOS por B10K.
 // Não usa Wi-Fi ou API; transmite dados por BLE ao navegador próximo.
 // EXPERIMENTAL: firmware-real/sketch.ino permanece como versão de segurança.
 // Firmware destinado a ESP32 Arduino Core 3.x.
@@ -24,9 +24,26 @@ const int BOTAO_BOOT = 0;
 Adafruit_SSD1306 display(128, 64, &Wire, -1);
 
 // Faixas didáticas da demonstração, NÃO clínicas.
-const float TEMP_MIN = 4.0f;
-const float TEMP_MAX = 8.0f;
-const float IMPACTO_MAX = 3.5f;
+// Mesmo conjunto de faixas do backend (src/config/organProfiles.js).
+// Limites didaticos, nao prescricoes para transporte real.
+struct PerfilOrgao {
+  const char *code;
+  const char *nomeOLED;
+  float minimo;
+  float maximo;
+};
+const PerfilOrgao PERFIS[] = {
+  {"HEART",    "CORACAO",  4.0f, 8.0f},
+  {"LUNG",     "PULMAO",   0.0f, 4.0f},
+  {"KIDNEY",   "RIM",      0.0f, 4.0f},
+  {"LIVER",    "FIGADO",   0.0f, 4.0f},
+  {"PANCREAS", "PANCREAS", 0.0f, 4.0f},
+  {"INTESTINE","INTESTINO",0.0f, 4.0f}
+};
+const uint8_t QTD_PERFIS = sizeof(PERFIS) / sizeof(PERFIS[0]);
+uint8_t perfilAtual = 0; // Coracao ao iniciar, mesmo sem Bluetooth.
+volatile int perfilPendente = -1;
+const float IMPACTO_MAX = 3.5f; // Indicador informativo; nao liga atuadores.
 const float TEMP_SIM_MIN = -2.0f;
 const float TEMP_SIM_MAX = 14.0f;
 const float IMPACTO_SIM_MIN = 0.0f;
@@ -51,8 +68,10 @@ unsigned long ultimaTransmissaoBLE = 0;
 
 const char *BLE_SERVICE_UUID = "2d514649-4c65-426f-7820-202600000001";
 const char *BLE_CHAR_UUID = "2d514649-4c65-426f-7820-202600000002";
+const char *BLE_COMMAND_UUID = "2d514649-4c65-426f-7820-202600000003";
 BLEServer *bleServidor = nullptr;
 BLECharacteristic *bleCaracteristica = nullptr;
+BLECharacteristic *bleComando = nullptr;
 volatile bool bleConectado = false;
 bool bleEstavaConectado = false;
 
@@ -67,6 +86,32 @@ class LifeBoxBLECallbacks : public BLEServerCallbacks {
   }
 };
 
+// Callback BLE roda fora do loop. Apenas registra a solicitacao:
+class LifeBoxCommandCallbacks : public BLECharacteristicCallbacks {
+  void onWrite(BLECharacteristic *characteristic) override {
+    String comando = characteristic->getValue();
+    comando.trim();
+    comando.toUpperCase();
+    for (uint8_t i = 0; i < QTD_PERFIS; ++i) {
+      if (comando == PERFIS[i].code) {
+        perfilPendente = i;
+        return;
+      }
+    }
+    Serial.println("BLE: perfil desconhecido ignorado");
+  }
+};
+
+void aplicarPerfilPendente() {
+  int recebido = perfilPendente;
+  if (recebido < 0) return;
+  perfilPendente = -1;
+  if (recebido >= QTD_PERFIS) return;
+  perfilAtual = static_cast<uint8_t>(recebido);
+  Serial.print("Orgao selecionado: ");
+  Serial.println(PERFIS[perfilAtual].code);
+}
+
 void iniciarBLE() {
   BLEDevice::init("LifeBox BLE");
   bleServidor = BLEDevice::createServer();
@@ -77,7 +122,11 @@ void iniciarBLE() {
     BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_NOTIFY
   );
   bleCaracteristica->addDescriptor(new BLE2902());
-  bleCaracteristica->setValue("0.0,0.00,1");
+  bleCaracteristica->setValue("0.0,0.00,1,0");
+  bleComando = servico->createCharacteristic(
+    BLE_COMMAND_UUID, BLECharacteristic::PROPERTY_WRITE
+  );
+  bleComando->setCallbacks(new LifeBoxCommandCallbacks());
   servico->start();
   BLEAdvertising *anuncio = BLEDevice::getAdvertising();
   anuncio->addServiceUUID(BLE_SERVICE_UUID);
@@ -89,11 +138,11 @@ void iniciarBLE() {
 void transmitirBLE() {
   if (!bleCaracteristica || millis() - ultimaTransmissaoBLE < 500) return;
   ultimaTransmissaoBLE = millis();
-  // Temperatura simulada, impacto simulado, transporte ativo (1 ou 0).
-  // Payload compacto, compativel com o teste BLE anterior.
+  // CSV: temperatura, impacto, transporte ativo, indice de perfil (0..5).
+  // Permanece pequeno para MTU BLE padrao, sem depender de Wi-Fi.
   char payload[20];
-  snprintf(payload, sizeof(payload), "%.1f,%.2f,%d",
-           temperatura, impacto, transporteAtivo ? 1 : 0);
+  snprintf(payload, sizeof(payload), "%.1f,%.2f,%d,%u",
+           temperatura, impacto, transporteAtivo ? 1 : 0, perfilAtual);
   bleCaracteristica->setValue((uint8_t *)payload, strlen(payload));
   if (bleConectado) bleCaracteristica->notify();
   if (!bleConectado && bleEstavaConectado) {
@@ -118,6 +167,12 @@ void acentoTil(int x, int y) {
   display.drawPixel(x + 4, y + 1, SSD1306_WHITE);
 }
 
+void acentoCircunflexo(int x, int y) {
+  display.drawPixel(x + 1, y + 1, SSD1306_WHITE);
+  display.drawPixel(x + 2, y, SSD1306_WHITE);
+  display.drawPixel(x + 3, y + 1, SSD1306_WHITE);
+}
+
 void imprimirGrau() {
   display.write((uint8_t)0xF8);
 }
@@ -138,7 +193,8 @@ void lerSensores() {
 }
 
 bool temperaturaCritica() {
-  return temperatura < TEMP_MIN || temperatura > TEMP_MAX;
+  return temperatura < PERFIS[perfilAtual].minimo ||
+         temperatura > PERFIS[perfilAtual].maximo;
 }
 
 bool impactoCritico() {
@@ -146,7 +202,9 @@ bool impactoCritico() {
 }
 
 bool emAlerta() {
-  return transporteAtivo && (temperaturaCritica() || impactoCritico());
+  // Regra acordada: LED vermelho e buzzer SOMENTE fora da faixa
+  // termica do orgao selecionado. Impacto e informativo.
+  return transporteAtivo && temperaturaCritica();
 }
 
 void verificarBotao() {
@@ -204,14 +262,22 @@ void atualizarOLED() {
   display.println("LIFEBOX");
   display.drawFastHLine(0, 9, 128, SSD1306_WHITE);
 
-  // ÓRGÃO: CORAÇÃO. Ç via fonte CP437, demais acentos em pixels.
+  // Desenha nome dinamico e acentos na fonte 5x7 Adafruit GFX.
   display.setCursor(0, 15);
-  display.print("ORGAO: CORA");
-  display.write((uint8_t)0x80); // Ç
-  display.print("AO");
-  acentoAgudo(0, 12); // Ó
+  display.print("ORGAO: ");
+  if (perfilAtual == 0) {
+    display.print("CORA");
+    display.write((uint8_t)0x80); // Ç CP437
+    display.print("AO");
+    acentoTil(72, 12); // Ã em CORAÇÃO, preservado da montagem
+  } else {
+    display.print(PERFIS[perfilAtual].nomeOLED);
+    if (perfilAtual == 1) acentoTil(66, 12);          // PULMÃO
+    if (perfilAtual == 3) acentoAgudo(48, 12);        // FÍGADO
+    if (perfilAtual == 4) acentoCircunflexo(48, 12);  // PÂNCREAS
+  }
+  acentoAgudo(0, 12); // Ó em ÓRGÃO
   acentoTil(18, 12);  // Ã em ÓRGÃO
-  acentoTil(72, 12);  // Ã em CORAÇÃO
 
   display.setCursor(0, 27);
   display.print("TEMP: ");
@@ -221,10 +287,10 @@ void atualizarOLED() {
 
   display.setCursor(0, 37);
   display.print("FAIXA: ");
-  display.print(TEMP_MIN, 0);
+  display.print(PERFIS[perfilAtual].minimo, 0);
   imprimirGrau();
   display.print("C A ");
-  display.print(TEMP_MAX, 0);
+  display.print(PERFIS[perfilAtual].maximo, 0);
   imprimirGrau();
   display.print("C");
 
@@ -280,6 +346,7 @@ void setup() {
 }
 
 void loop() {
+  aplicarPerfilPendente();
   verificarBotao();
   lerSensores();
   atualizarAtuadores();
