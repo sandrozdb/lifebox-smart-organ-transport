@@ -179,19 +179,18 @@
     if (startButton) {
       startButton.disabled = !updatedFirmware || transportActive ||
         Boolean(state.pendingTransport);
-      startButton.textContent = transportActive ? "CAIXA FÍSICA EM ANDAMENTO"
-        : "▶ INICIAR CAIXA FÍSICA";
+      startButton.textContent = "▶ INICIAR TRANSPORTE";
     }
     if (pauseButton) {
       pauseButton.disabled = !updatedFirmware || !transportActive ||
         Boolean(state.pendingTransport);
-      pauseButton.textContent = "Ⅱ PAUSAR CAIXA FÍSICA";
+      pauseButton.textContent = "Ⅱ PAUSAR TRANSPORTE";
     }
     if (simulationStatus) {
-      simulationStatus.textContent = !hasReading ? "Aguardando Bluetooth"
+      simulationStatus.textContent = !hasReading ? "Preparado"
         : !updatedFirmware ? "Atualizar firmware BLE"
         : state.pendingTransport ? "Confirmando comando..."
-        : transportActive ? "Físico ativo" : "Físico pausado";
+        : transportActive ? "Executando" : "Pausado";
     }
     // Mesmo circuito logico do ESP32: ATIVO AND (TEMP_CRITICA OR IMPACTO_CRITICO).
     const alarm = transportActive && (tempCritical || impactCritical);
