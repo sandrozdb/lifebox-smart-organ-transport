@@ -22,7 +22,8 @@ test("firmware BLE experimental preserva controles locais sem alterar o sketch o
   assert.doesNotMatch(full, /WiFi\.begin\(/);
   assert.doesNotMatch(full, /HTTPClient/);
   assert.doesNotMatch(full, /temperaturaCritica\(\) \|\| impactoCritico\(\)/);
-  assert.match(page, /data-mode="BLE"/);
+  assert.match(page, /<option value="BLE">/);
+  assert.doesNotMatch(page, /data-mode="BLE"/);
   assert.match(page, /id="ble-connect-controls"/);
   assert.match(page, /id="planning-organ"/);
   assert.match(page, /id="ble-connect"/);
@@ -75,6 +76,7 @@ test("BLE usa organo do planejamento, um unico botao e telemetria mista, alerta 
     return elements.get(id);
   };
   get("planning-organ").value = "HEART";
+  get("iot-mode").value = "IOT";
   const view = (csv) => {
     const bytes = new TextEncoder().encode(csv);
     return new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
@@ -113,9 +115,11 @@ test("BLE usa organo do planejamento, um unico botao e telemetria mista, alerta 
     setInterval: () => undefined,
   });
 
-  window.lifeBoxBleSetMode(true);
+  assert.equal(window.lifeBoxBleIsSelected(), false);
   assert.equal(get("ble-connect-controls").hidden, false);
   await get("ble-connect").listeners.click();
+  assert.equal(window.lifeBoxBleIsSelected(), true);
+  assert.equal(get("iot-mode").value, "BLE");
   assert.deepEqual(sent, ["HEART"]);
   assert.match(get("ble-organ-status").textContent, /OLED sincronizado: Coração/);
   assert.equal(get("temperature").textContent, "6.2");
@@ -152,13 +156,15 @@ test("BLE usa organo do planejamento, um unico botao e telemetria mista, alerta 
 
   get("ble-connect").listeners.click();
   assert.equal(device.gatt.connected, false);
+  assert.equal(window.lifeBoxBleIsSelected(), false);
+  assert.equal(get("iot-mode").value, "IOT");
   assert.equal(get("temperature").textContent, "--");
   assert.equal(get("humidity").textContent, "--");
   assert.equal(get("battery").textContent, "--");
   assert.equal(get("signal").textContent, "--");
 
   window.lifeBoxBleSetMode(false);
-  assert.equal(get("ble-connect-controls").hidden, true);
+  assert.equal(get("ble-connect-controls").hidden, false);
   assert.equal(get("humidity-label").textContent, "% relativa");
   assert.equal(get("battery-label").textContent, "% disponível");
   assert.equal(get("signal-label").textContent, "% comunicação");
