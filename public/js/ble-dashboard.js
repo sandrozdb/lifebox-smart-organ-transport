@@ -62,13 +62,9 @@
   function apply() {
     const controls = $ble("ble-connect-controls");
     if (!controls) return;
-    controls.hidden = false;
-    if (!state.selected) {
-      $ble("ble-connect").disabled = false;
-      $ble("ble-connect").textContent = "Conectar ESP32 físico";
-      $ble("ble-organ-status").textContent = "";
-      return;
-    }
+    // O botao aparece EXCLUSIVAMENTE ao selecionar ESP32 FISICO em FONTE.
+    controls.hidden = !state.selected;
+    if (!state.selected) return;
 
     const isConnected = connected();
     const hasReading = fresh();
@@ -292,17 +288,10 @@
   };
   window.lifeBoxBleApply = apply;
   $ble("ble-connect").addEventListener("click", () => {
-    if (connected()) {
-      // Ao desconectar, retomar automaticamente a fonte do servidor.
-      window.lifeBoxBleSetMode(false);
-      const select = $ble("iot-mode");
-      if (select) select.value = window.lifeBoxServerIotMode || "IOT";
-      if (typeof syncSourceSelector === "function") syncSourceSelector();
-      if (typeof refresh === "function") refresh();
-      return;
-    }
-    // Um unico clique faz a troca da fonte local e abre o seletor BLE nativo.
-    if (!state.selected) window.lifeBoxBleSetMode(true);
+    if (!state.selected) return;
+    // Desconectar nao muda a fonte: mantem o botao visivel para reconectar.
+    if (connected()) return disconnect();
+    // A janela Bluetooth abre somente pelo clique neste botao, nunca pela fonte.
     return connect();
   });
   $ble("dismiss-presentation-alert").addEventListener("click", () => {
