@@ -17,14 +17,18 @@
   --brand-red-dark: #e20c16;
   --blue: #49a7ff;
 }
-.metric.temperature-out-of-range {
+/* Temperatura e impacto criticos usam exatamente o mesmo destaque. */
+.metric.temperature-out-of-range,
+.metric.impact-critical {
   border-color: rgba(255, 83, 103, 0.72);
   box-shadow:
     inset 3px 0 0 var(--red),
     0 0 22px rgba(255, 83, 103, 0.1);
 }
 .metric.temperature-out-of-range #temperature,
-.metric.temperature-out-of-range #temperature-range-status {
+.metric.temperature-out-of-range #temperature-range-status,
+.metric.impact-critical #impact,
+.metric.impact-critical #impact-label {
   color: var(--red);
 }
 .iot-controls {
