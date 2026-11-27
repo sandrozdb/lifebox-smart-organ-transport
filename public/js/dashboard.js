@@ -707,6 +707,18 @@ document.addEventListener("click", async (event) => {
     return;
   }
   if (!action && !scenario && !resolve) return;
+  // Fonte BLE: os controles Iniciar/Pausar/Reiniciar comandam SOMENTE
+  // a caixa fisica, nunca a simulacao logistica do Render.
+  if (action && window.lifeBoxBleIsSelected?.()) {
+    try {
+      const feedback = await window.lifeBoxBleCommandTransport(action);
+      $("#action-feedback").textContent = feedback;
+    } catch (error) {
+      $("#action-feedback").textContent = error.message;
+    }
+    window.lifeBoxBleApply?.();
+    return;
+  }
   try {
     if (action) {
       if (
