@@ -49,3 +49,15 @@ test("virtual Wokwi firmware remains separate from the offline physical demo", (
   assert.doesNotMatch(physical, /WiFi\.begin\(/);
   assert.doesNotMatch(physical, /HTTPClient\.begin\(/);
 });
+
+
+test("IoT presentation warnings use live temperature and impact signals", () => {
+  const dashboard = load("public/js/dashboard.js");
+  assert.match(dashboard, /iot\.online &&/);
+  assert.match(dashboard, /signal\.temperatureCritical/);
+  assert.match(dashboard, /signal\.impactCritical/);
+  assert.match(dashboard, /TEMPERATURA E IMPACTO CRÍTICOS/);
+  assert.match(dashboard, /renderPresentationAlert\(transport, alerts, iot\)/);
+  assert.match(dashboard, /messages\.join\("\\n"\)/);
+  assert.match(dashboard, /if \(iot\?\.mode === "IOT"\)/);
+});
