@@ -124,8 +124,8 @@
     );
     const impactCritical = Boolean(hasReading && state.reading.impact >= 3.5);
     const transportActive = Boolean(hasReading && state.reading.transportActive);
-    // Unica condicao de acionamento: temperatura FORA da faixa do perfil.
-    const alarm = transportActive && tempCritical;
+    // Mesmo circuito logico do ESP32: ATIVO AND (TEMP_CRITICA OR IMPACTO_CRITICO).
+    const alarm = transportActive && (tempCritical || impactCritical);
     $ble("temperature-card").classList.toggle("temperature-out-of-range", tempCritical);
     if (typeof renderActuators === "function") {
       renderActuators({
@@ -134,9 +134,9 @@
       });
     }
     const formula = $ble("digital-logic-formula");
-    if (formula) formula.textContent = "ATIVO AND TEMP_FORA_DA_FAIXA";
+    if (formula) formula.textContent = "ATIVO AND (TEMP_CRÍTICA OR IMPACTO_CRÍTICO)";
     const note = $ble("actuators-rule-note");
-    if (note) note.textContent = "ESP32 físico por BLE: LED vermelho e buzzer só ligam se a temperatura estiver fora da faixa do órgão. Impacto é informativo.";
+    if (note) note.textContent = "ESP32 físico · BLE: LED vermelho e buzzer ligam se o transporte estiver ativo E (temperatura fora da faixa do órgão OU impacto ≥ 3,5 g). Botão BOOT pausa os atuadores.";
     const badge = $ble("general-status");
     badge.textContent = !hasReading || !confirmedProfile ? "AGUARDANDO BLE"
       : !transportActive ? "AGUARDANDO" : alarm ? "ALERTA CRÍTICO" : "NORMAL";
@@ -144,30 +144,43 @@
 
     const messages = [];
     if (transportActive && tempCritical && confirmedProfile) {
-      messages.push(
-        "Temperatura fora da faixa: " + state.reading.temperature.toFixed(1) +
-        " °C (órgão " + confirmedProfile.name +
-        ", referência " + confirmedProfile.min + "–" + confirmedProfile.max + " °C).",
-      );
+      messages.push({
+        type: "TEMPERATURA CRÍTICA",
+        detail: "Temperatura fora da faixa: " + state.reading.temperature.toFixed(1) +
+          " °C (órgão " + confirmedProfile.name +
+          ", referência " + confirmedProfile.min + "–" + confirmedProfile.max + " °C).",
+      });
     }
-    const impactNote = transportActive && impactCritical
-      ? '<div class="alert-item"><i class="alert-icon"></i><div><strong>IMPACTO ELEVADO · INFORMATIVO</strong><p>' +
-        state.reading.impact.toFixed(2) +
-        ' g; não aciona os atuadores nesta configuração.</p></div></div>'
-      : "";
+    if (transportActive && impactCritical) {
+      messages.push({
+        type: "IMPACTO CRÍTICO",
+        detail: "Impacto detectado: " + state.reading.impact.toFixed(2) +
+          " g (limite demonstrativo ≥ 3,5 g).",
+      });
+    }
     $ble("alert-count").textContent = String(messages.length);
     $ble("alerts").className = "scroll-list";
-    $ble("alerts").innerHTML = (messages.length
-      ? messages.map((message) => '<div class="alert-item severity-CRITICO"><i class="alert-icon"></i><div><strong>ALERTA TÉRMICO BLE</strong><p>' + message + '</p><time>Não salvo na nuvem</time></div></div>').join("")
-      : '<div class="empty">' + (!hasReading ? "Sem dados Bluetooth atuais." : !transportActive ? "Transporte pausado pelo BOOT." : "Nenhum alerta térmico na caixa.") + '</div>') + impactNote;
+    $ble("alerts").innerHTML = messages.length
+      ? messages.map((item) =>
+        '<div class="alert-item severity-CRITICO"><i class="alert-icon"></i><div><strong>' +
+        item.type + ' · BLE</strong><p>' + item.detail +
+        '</p><time>Alerta local · não salvo na nuvem</time></div></div>',
+      ).join("")
+      : '<div class="empty">' + (!hasReading ? "Sem dados Bluetooth atuais."
+        : !transportActive ? "Transporte pausado pelo BOOT."
+        : "Nenhum alerta crítico na caixa.") + '</div>';
 
     if (!alarm) {
       state.dismissed = null;
       showOverlay(null, "", "");
       return;
     }
-    const key = "ble-" + confirmedProfile.code + "-" + Number(tempCritical);
-    showOverlay("⚠ TEMPERATURA FORA DA FAIXA", messages.join("\n"), key);
+    const key = "ble-" + (confirmedProfile?.code || "SEM-PERFIL") +
+      "-" + Number(tempCritical) + "-" + Number(impactCritical);
+    const title = tempCritical && impactCritical
+      ? "⚠ TEMPERATURA E IMPACTO CRÍTICOS"
+      : tempCritical ? "⚠ TEMPERATURA CRÍTICA" : "⚠ IMPACTO CRÍTICO";
+    showOverlay(title, messages.map((item) => item.detail).join("\n"), key);
   }
 
   function receive(value) {
