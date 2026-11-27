@@ -122,7 +122,12 @@ void iniciarBLE() {
     BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_NOTIFY
   );
   bleCaracteristica->addDescriptor(new BLE2902());
-  bleCaracteristica->setValue("0.0,0.00,1,0");
+  // Primeira leitura BLE ja reflete os potenciometros reais da montagem,
+  // evitando um alerta falso ao conectar antes da primeira notificacao.
+  char primeiroPayload[20];
+  snprintf(primeiroPayload, sizeof(primeiroPayload), "%.1f,%.2f,%d,%u",
+           temperatura, impacto, transporteAtivo ? 1 : 0, perfilAtual);
+  bleCaracteristica->setValue((uint8_t *)primeiroPayload, strlen(primeiroPayload));
   bleComando = servico->createCharacteristic(
     BLE_COMMAND_UUID, BLECharacteristic::PROPERTY_WRITE
   );
