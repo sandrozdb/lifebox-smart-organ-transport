@@ -56,7 +56,9 @@ const bool INVERTER_IMPACTO = true;
 
 float temperatura = 0.0f;
 float impacto = 0.0f;
-bool transporteAtivo = true;
+// Inicializa PAUSADO para impedir alertas antes de iniciar a caixa.
+bool transporteAtivo = false;
+volatile int transportePendente = -1; // -1=nada; 0=pausar; 1=iniciar
 bool buzzerOK = false;
 // Mantem o PWM estavel: apenas atualiza o tom quando o alerta muda.
 bool buzzerLigado = false;
@@ -82,7 +84,10 @@ class LifeBoxBLECallbacks : public BLEServerCallbacks {
   }
   void onDisconnect(BLEServer *server) override {
     bleConectado = false;
-    Serial.println("LifeBox: Bluetooth desconectado");
+    // Fail-safe da demonstracao: conexao BLE perdida pausa o transporte.
+    // O botao BOOT continua permitindo iniciar a caixa offline.
+    transportePendente = 0;
+    Serial.println("LifeBox: Bluetooth desconectado; pausando transporte");
   }
 };
 
@@ -92,6 +97,14 @@ class LifeBoxCommandCallbacks : public BLECharacteristicCallbacks {
     String comando = characteristic->getValue();
     comando.trim();
     comando.toUpperCase();
+    if (comando == "START") {
+      transportePendente = 1;
+      return;
+    }
+    if (comando == "PAUSE" || comando == "STOP" || comando == "RESET") {
+      transportePendente = 0;
+      return;
+    }
     for (uint8_t i = 0; i < QTD_PERFIS; ++i) {
       if (comando == PERFIS[i].code) {
         perfilPendente = i;
@@ -112,6 +125,15 @@ void aplicarPerfilPendente() {
   Serial.println(PERFIS[perfilAtual].code);
 }
 
+void aplicarComandoTransportePendente() {
+  int solicitado = transportePendente;
+  if (solicitado < 0) return;
+  transportePendente = -1;
+  transporteAtivo = solicitado == 1;
+  Serial.print("TRANSPORTE FISICO: ");
+  Serial.println(transporteAtivo ? "ATIVO" : "PAUSADO");
+}
+
 void iniciarBLE() {
   BLEDevice::init("LifeBox BLE");
   bleServidor = BLEDevice::createServer();
@@ -125,7 +147,7 @@ void iniciarBLE() {
   // Primeira leitura BLE ja reflete os potenciometros reais da montagem,
   // evitando um alerta falso ao conectar antes da primeira notificacao.
   char primeiroPayload[20];
-  snprintf(primeiroPayload, sizeof(primeiroPayload), "%.1f,%.2f,%d,%u",
+  snprintf(primeiroPayload, sizeof(primeiroPayload), "%.1f,%.2f,%d,%u,2",
            temperatura, impacto, transporteAtivo ? 1 : 0, perfilAtual);
   bleCaracteristica->setValue((uint8_t *)primeiroPayload, strlen(primeiroPayload));
   bleComando = servico->createCharacteristic(
@@ -143,10 +165,10 @@ void iniciarBLE() {
 void transmitirBLE() {
   if (!bleCaracteristica || millis() - ultimaTransmissaoBLE < 500) return;
   ultimaTransmissaoBLE = millis();
-  // CSV: temperatura, impacto, transporte ativo, indice de perfil (0..5).
+  // CSV: temperatura, impacto, ativo, indice de perfil (0..5), versao=2.
   // Permanece pequeno para MTU BLE padrao, sem depender de Wi-Fi.
   char payload[20];
-  snprintf(payload, sizeof(payload), "%.1f,%.2f,%d,%u",
+  snprintf(payload, sizeof(payload), "%.1f,%.2f,%d,%u,2",
            temperatura, impacto, transporteAtivo ? 1 : 0, perfilAtual);
   bleCaracteristica->setValue((uint8_t *)payload, strlen(payload));
   if (bleConectado) bleCaracteristica->notify();
@@ -353,6 +375,7 @@ void setup() {
 }
 
 void loop() {
+  aplicarComandoTransportePendente();
   aplicarPerfilPendente();
   verificarBotao();
   lerSensores();
