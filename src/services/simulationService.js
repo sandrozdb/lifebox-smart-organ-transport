@@ -144,6 +144,7 @@ async function start(transporteId = 1, rotaId, plan, result, mode) {
   state.routeId = String(rotaId);
   const started = await transportService.start(state.transporteId);
   state.executionId = started.execucao_atual_id;
+  executionPlan.resume(state.transporteId);
   state.lastTickAt = Date.now();
   state.running = true;
   if (!timer) timer = setInterval(tick, config.simulatorIntervalMs);
@@ -181,7 +182,8 @@ async function recommendReoptimization(transporteId, reason, conditions = {}) {
   });
   state.running = false;
   state.lastTickAt = null;
-  state.logistics = snapshot;
+  // Pausa apenas o mapa; isquemia continua contando durante a decisao.
+  state.logistics = executionPlan.pause(id);
   state.awaitingRecommendationId = recommendationId;
   if (timer) {
     clearInterval(timer);
@@ -258,10 +260,12 @@ async function applyReoptimization(transporteId, recommendationId) {
     );
   }
   const plan = recalculated.selected;
-  const next = executionPlan.replace(id, plan, recalculated);
+  executionPlan.replace(id, plan, recalculated);
   recommendation.used = true;
   state.awaitingRecommendationId = null;
-  state.logistics = next;
+  // Tempo gasto aguardando o operador e incorporado a isquemia.
+  // O progresso da rota fica exatamente na posicao pausada.
+  state.logistics = executionPlan.resume(id);
   state.routeId = "LOGISTICS_PLAN";
   state.running = true;
   state.lastTickAt = Date.now();
@@ -278,6 +282,9 @@ async function applyReoptimization(transporteId, recommendationId) {
 }
 
 async function stop() {
+  // Qualquer pausa apos o inicio conserva a contagem da isquemia.
+  // A conclusao ja encerrou o relogio no executionPlan.finish().
+  state.logistics = executionPlan.pause(state.transporteId);
   state.running = false;
   state.lastTickAt = null;
   if (timer) {
@@ -295,6 +302,7 @@ async function resume(transporteId = state.transporteId) {
       "REOPTIMIZATION_DECISION_REQUIRED",
       "Aplique o novo plano antes de retomar o deslocamento.",
     );
+  state.logistics = executionPlan.resume(transporteId);
   state.running = true;
   state.lastTickAt = Date.now();
   if (!timer) timer = setInterval(tick, config.simulatorIntervalMs);
