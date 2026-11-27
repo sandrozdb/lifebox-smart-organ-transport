@@ -1,6 +1,6 @@
 # LifeBox — teste experimental por Bluetooth BLE
 
-**Prova de conceito separada.** O firmware de apresentação validado permanece em `firmware-real/sketch.ino`. O dashboard e o Wokwi não foram alterados.
+**Prova de conceito separada.** O firmware de apresentação validado permanece em `firmware-real/sketch.ino`. O Wokwi e a API foram preservados; o dashboard recebeu uma fonte BLE local opcional, descrita mais abaixo.
 
 ## Objetivo
 
