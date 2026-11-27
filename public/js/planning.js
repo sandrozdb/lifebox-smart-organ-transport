@@ -111,6 +111,12 @@
   async function syncProfile() {
     const item = profile();
     if (!item) return;
+    // No modo BLE o organo da caixa e escolhido localmente.
+    // Nao modificar o perfil IoT da nuvem (Wokwi) por engano.
+    if (window.lifeBoxBleIsSelected?.()) {
+      await window.lifeBoxBleSetOrgan?.(item.code);
+      return;
+    }
     await api("/api/iot/profile", {
       method: "PUT",
       body: JSON.stringify({ organCode: item.code }),
