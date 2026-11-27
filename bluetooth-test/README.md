@@ -88,3 +88,20 @@ Os valores abaixo reproduzem o módulo `src/config/organProfiles.js`. São faixa
 A escolha de órgão no **Planejamento Inteligente** é a fonte única da seleção. Quando BLE está ativo, a alteração é encaminhada ao OLED sem mudar o perfil da API/Wokwi, mesmo durante uma demonstração logística. Não existe um seletor de órgão BLE separado: primeiro escolha **ESP32 FÍSICO** em **FONTE**, depois use o botão **Conectar ESP32 físico** que aparecerá no planejamento.
 
 **Teste físico pendente:** o código foi atualizado no repositório; compilação final, estabilidade do Bluetooth junto ao OLED/atuadores e troca real de órgão precisam ser confirmadas na placa. Se algum problema ocorrer, regrave o firmware offline preservado em `firmware-real/sketch.ino`.
+
+
+### Diagnóstico no Monitor Serial (115200 baud)
+
+Depois de gravar o firmware BLE v2, a cada 2 segundos aparece uma linha como:
+
+```text
+BLEv2 ATIVO=0 TEMP=6.0 TEMP_CRIT=0 IMPACTO=4.20 IMPACTO_CRIT=1 ALARME=0
+```
+
+- `ATIVO=0`: caixa pausada; **LED vermelho e buzzer desligados**, mesmo com impacto crítico.
+- `ATIVO=1` e `IMPACTO_CRIT=1`: alarme ligado mesmo com temperatura normal.
+- `ATIVO=1` e `TEMP_CRIT=1`: alarme ligado mesmo com impacto normal.
+- Se `ALARME=1` no Serial, mas LEDs/buzzer não ligarem, verificar GPIO25/26/27, ligações e `BUZZER PWM: OK`.
+- Se não aparecer a identificação `BLEv2`, o sketch novo ainda não foi gravado/rodado corretamente.
+
+Na fonte **ESP32 FÍSICO**, os botões **Iniciar**, **Pausar** e **Reiniciar** da área de controle executam comandos **locais via BLE**, sem iniciar/parar o transporte logístico da API. Eles são habilitados apenas quando a telemetria confirma firmware v2. A seleção de órgão continua sendo feita no planejamento. O estado também pode mudar via BOOT (segurar 2 s), e o dashboard espelha essa mudança pela telemetria.
