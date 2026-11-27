@@ -29,16 +29,16 @@ Verificar se o **ESP32 Dev Module** consegue transmitir **temperatura e impacto 
 
 ## NOVO: firmware completo + Bluetooth, integrado ao dashboard (EXPERIMENTAL)
 
-O firmware de teste inicial acima continua disponível em `bluetooth-test/bluetooth-test.ino`. Para o teste completo, use **[`lifebox-ble-full/lifebox-ble-full.ino`](lifebox-ble-full/lifebox-ble-full.ino)**.
+O firmware de teste inicial acima continua disponível em `bluetooth-test/bluetooth-test.ino`. Para o teste completo, agora com seleção remota de órgão, use **[`lifebox-ble-full/lifebox-ble-full.ino`](lifebox-ble-full/lifebox-ble-full.ino)**.
 
 Esse novo sketch parte da **versão offline testada** e mantém:
-- OLED e a tela de abertura, órgão fixo coração, temperatura, impacto, faixa de 4–8 °C e acento de CENÁRIO.
+- OLED e a tela de abertura, seis órgãos selecionáveis pelo dashboard, temperatura, impacto, faixa térmica por órgão e acento de CENÁRIO.
 - Potenciômetros no GPIO34 e GPIO35, ambos aumentando no sentido usado na montagem.
 - LED verde GPIO25 e vermelho GPIO26, buzzer passivo 2 kHz no GPIO27 (sem reiniciar PWM a cada loop).
 - Botão BOOT no GPIO0: 2 segundos para pausar/retomar.
 - Bluetooth BLE com o **mesmo serviço/característica** já testados anteriormente, notificações a cada 500 ms.
 
-O formato agora é `temperatura,impacto,ativo`, exemplo `6.2,1.40,1`; `ativo` vale `0` quando o botão BOOT pausou a simulação. Não usa Wi-Fi. Se ocorrer reinício com rádio BLE + OLED, volte ao sketch original e confira a alimentação; a versão ainda não foi validada na caixa completa.
+O formato atual é `temperatura,impacto,ativo,indiceOrgao`, exemplo `6.2,1.40,1,0`; `ativo` vale `0` quando o botão BOOT pausou a simulação. O último campo confirma qual órgão está sendo mostrado no OLED. A característica de comando BLE (`2d514649-4c65-426f-7820-202600000003`) recebe os códigos HEART, LUNG, KIDNEY, LIVER, PANCREAS ou INTESTINE, com propriedade WRITE. Não usa Wi-Fi. Se ocorrer reinício com rádio BLE + OLED, volte ao sketch original e confira a alimentação; a versão ainda não foi validada na caixa completa.
 
 ### Como testar no dashboard principal
 
@@ -47,11 +47,32 @@ O formato agora é `temperatura,impacto,ativo`, exemplo `6.2,1.40,1`; `ativo` va
 3. No notebook com Chrome ou Edge e Bluetooth ativo, abra `https://lifebox-expotech.onrender.com` depois do deploy.
 4. Em **FONTE**, escolha **ESP32 FÍSICO · BLE**. Aparecerá o painel de conexão.
 5. Clique **Conectar ESP32 físico** e selecione **LifeBox BLE**.
-6. Gire temperatura e impacto. Confira os números e os alertas na interface. Teste também o BOOT: a pausa deve desligar o alarme.
-7. Se quiser voltar ao Wokwi ou DEMO, escolha a outra fonte. A seleção BLE **não altera o modo da API**.
+6. No campo **ÓRGÃO DA CAIXA FÍSICA**, selecione coração, pulmão, rim, fígado, pâncreas ou intestino. O OLED deve mostrar o nome e a faixa correspondente. O dashboard confirma a seleção após receber o perfil pelo BLE.
+7. Gire os potenciômetros. A temperatura fora da faixa deve acionar o LED vermelho e o buzzer; **impacto alto sozinho não aciona os atuadores** (é apenas informativo). Teste também o BOOT: a pausa deve desligar o alarme.
+8. Se quiser voltar ao Wokwi ou DEMO, escolha a outra fonte. A seleção BLE **não altera o modo da API**.
 
 **Limite arquitetural:** no modo BLE, **somente temperatura e impacto, estado do botão BOOT, sinais lógicos e alertas locais** refletem a caixa. Outros componentes (mapa, rotas, gráficos históricos, timeline, umidade, bateria e sinal) continuam referentes à aplicação online e não são alimentados pelo ESP32 físico. Nenhum dado BLE é enviado à API ou ao banco. A caixa funciona normalmente mesmo sem a conexão BLE.
 
 ### Voltar à versão segura
 
 Abra [`../firmware-real/sketch.ino`](../firmware-real/sketch.ino) e envie novamente pela Arduino IDE. Esse arquivo **não foi alterado** por esta experiência.
+
+
+### Faixas térmicas usadas pela caixa experimental
+
+Os valores abaixo reproduzem o módulo `src/config/organProfiles.js`. São faixas do **modelo acadêmico**, não parâmetros validados para transporte clínico.
+
+| Órgão | Código BLE | Faixa simulada |
+| --- | --- | --- |
+| Coração | HEART | 4–8 °C |
+| Pulmão | LUNG | 0–4 °C |
+| Rim | KIDNEY | 0–4 °C |
+| Fígado | LIVER | 0–4 °C |
+| Pâncreas | PANCREAS | 0–4 °C |
+| Intestino | INTESTINE | 0–4 °C |
+
+**Regra experimental dos atuadores:** `TRANSPORTE_ATIVO AND (TEMP < MIN_ORGAO OR TEMP > MAX_ORGAO)`. Limites são inclusivos. O impacto continua visível, mas não dispara buzzer nem LED vermelho. LED verde indica transporte ativo com temperatura dentro da faixa; botão BOOT mantém a pausa. A caixa processa essa regra localmente, mesmo se o notebook desconectar.
+
+A escolha do órgão no painel BLE não altera o modo da API nem o perfil do Wokwi. Ao alterar a seleção de órgão do planejamento enquanto BLE estiver ativo, o comando também é encaminhado à caixa, sem alterar o perfil IoT da nuvem. Se uma execução logística estiver bloqueada, use o seletor do **painel BLE**, que é independente.
+
+**Teste físico pendente:** o código foi atualizado no repositório; compilação final, estabilidade do Bluetooth junto ao OLED/atuadores e troca real de órgão precisam ser confirmadas na placa. Se algum problema ocorrer, regrave o firmware offline preservado em `firmware-real/sketch.ino`.
