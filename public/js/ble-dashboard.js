@@ -18,6 +18,7 @@
   const state = {
     selected: false, device: null, characteristic: null, commandCharacteristic: null,
     reading: null, desiredOrgan: "HEART", connecting: false, simulationStart: 0,
+    pendingTransport: null,
     lastSeen: 0, dismissed: null,
     message: "Clique em Conectar para procurar o ESP32 físico.",
   };
@@ -58,6 +59,33 @@
   }
 
   window.lifeBoxBleSetOrgan = setOrgan;
+
+  async function commandTransport(action) {
+    if (!state.selected) throw new Error("Selecione ESP32 FÍSICO em FONTE.");
+    if (!connected() || !fresh() || !state.commandCharacteristic)
+      throw new Error("Conecte o ESP32 físico antes de iniciar ou pausar.");
+    if (state.reading.protocolVersion < 2)
+      throw new Error("Firmware BLE antigo. Regrave a versão com comandos START/PAUSE e impacto.");
+    const command = action === "start" || action === "resume"
+      ? "START" : ["stop", "reset", "finish"].includes(action) ? "PAUSE" : null;
+    if (!command) throw new Error("Comando de transporte físico inválido.");
+    state.pendingTransport = command;
+    apply();
+    try {
+      // WRITE indica recebimento da escrita GATT, mas a confirmação do estado
+      // só vem pela notificação de telemetria do ESP32.
+      await state.commandCharacteristic.writeValueWithResponse(
+        new TextEncoder().encode(command),
+      );
+      return "Comando " + (command === "START" ? "INICIAR" : "PAUSAR") +
+        " enviado. Aguardando confirmação do ESP32 físico.";
+    } catch (error) {
+      state.pendingTransport = null;
+      apply();
+      throw error;
+    }
+  }
+  window.lifeBoxBleCommandTransport = commandTransport;
 
   function apply() {
     const controls = $ble("ble-connect-controls");
@@ -113,12 +141,14 @@
       ? (state.connecting ? "Conectando ao ESP32..." : (state.message.startsWith("Falha") ? state.message : "Bluetooth desconectado"))
       : !hasReading
         ? "Conectado · aguardando telemetria"
-        : !confirmedProfile
-          ? "Regrave o firmware BLE com seleção de órgãos."
-          : confirmedProfile.code !== requested.code
-            ? "Enviando " + requested.name + " ao OLED..."
-            : "OLED sincronizado: " + confirmedProfile.name + " · " +
-              confirmedProfile.min + "–" + confirmedProfile.max + " °C";
+        : state.reading.protocolVersion < 2
+          ? "ATUALIZE O FIRMWARE: versão antiga não sincroniza Iniciar/Pausar nem o impacto físico."
+          : !confirmedProfile
+            ? "Regrave o firmware BLE com seleção de órgãos."
+            : confirmedProfile.code !== requested.code
+              ? "Enviando " + requested.name + " ao OLED..."
+              : "OLED sincronizado: " + confirmedProfile.name + " · " +
+                confirmedProfile.min + "–" + confirmedProfile.max + " °C";
     $ble("temperature-range-status").textContent = confirmedProfile
       ? confirmedProfile.name + " · faixa acadêmica " + confirmedProfile.min + "–" + confirmedProfile.max + " °C"
       : "Faixa do órgão aguardando confirmação BLE";
@@ -130,6 +160,29 @@
     );
     const impactCritical = Boolean(hasReading && state.reading.impact >= 3.5);
     const transportActive = Boolean(hasReading && state.reading.transportActive);
+    const updatedFirmware = Boolean(hasReading && state.reading.protocolVersion >= 2);
+    // O display sempre reflete o bit de ativo recebido do ESP32, nunca
+    // o status da simulacao logistica que usa a API.
+    const startButton = document.querySelector('[data-action="start"]');
+    const pauseButton = document.querySelector('[data-action="stop"]');
+    const simulationStatus = $ble("sim-status");
+    if (startButton) {
+      startButton.disabled = !updatedFirmware || transportActive ||
+        Boolean(state.pendingTransport);
+      startButton.textContent = transportActive ? "CAIXA FÍSICA EM ANDAMENTO"
+        : "▶ INICIAR CAIXA FÍSICA";
+    }
+    if (pauseButton) {
+      pauseButton.disabled = !updatedFirmware || !transportActive ||
+        Boolean(state.pendingTransport);
+      pauseButton.textContent = "Ⅱ PAUSAR CAIXA FÍSICA";
+    }
+    if (simulationStatus) {
+      simulationStatus.textContent = !hasReading ? "Aguardando Bluetooth"
+        : !updatedFirmware ? "Atualizar firmware BLE"
+        : state.pendingTransport ? "Confirmando comando..."
+        : transportActive ? "Físico ativo" : "Físico pausado";
+    }
     // Mesmo circuito logico do ESP32: ATIVO AND (TEMP_CRITICA OR IMPACTO_CRITICO).
     const alarm = transportActive && (tempCritical || impactCritical);
     $ble("temperature-card").classList.toggle("temperature-out-of-range", tempCritical);
@@ -201,7 +254,11 @@
     const organIndex = csv.length >= 4 ? Number(csv[3]) : -1;
     const organCode = Number.isInteger(organIndex) && PROFILES[organIndex]
       ? PROFILES[organIndex].code : null;
-    state.reading = { temperature, impact, transportActive, organCode };
+    const protocolVersion = csv.length >= 5 ? Number(csv[4]) : 1;
+    state.reading = { temperature, impact, transportActive, organCode, protocolVersion };
+    if (state.pendingTransport === "START" && transportActive ||
+        state.pendingTransport === "PAUSE" && !transportActive)
+      state.pendingTransport = null;
     state.lastSeen = Date.now();
     if (!state.simulationStart) state.simulationStart = Date.now();
     state.message = "Bluetooth conectado";
@@ -212,6 +269,7 @@
     state.characteristic = null;
     state.commandCharacteristic = null;
     state.connecting = false;
+    state.pendingTransport = null;
     state.simulationStart = 0;
     state.reading = null;
     state.lastSeen = 0;
@@ -248,8 +306,11 @@
       characteristic.addEventListener("characteristicvaluechanged", (event) => receive(event.target.value));
       await characteristic.startNotifications();
       receive(await characteristic.readValue());
-      // Usa SEMPRE a escolha existente no planejamento, nao outro seletor.
-      await setOrgan($ble("planning-organ")?.value || state.desiredOrgan);
+      // Se o firmware fisico ainda for antigo, a interface informa o usuario
+      // e nao afirma que os botoes de transporte estao sincronizados.
+      if (state.reading?.protocolVersion >= 2) {
+        await setOrgan($ble("planning-organ")?.value || state.desiredOrgan);
+      }
       state.connecting = false;
       apply();
     } catch (error) {
@@ -269,6 +330,7 @@
     state.lastSeen = 0;
     state.simulationStart = 0;
     state.connecting = false;
+    state.pendingTransport = null;
     state.dismissed = null;
     state.message = "Desconectado pelo usuário.";
     apply();
