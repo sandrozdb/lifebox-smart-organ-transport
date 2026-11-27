@@ -81,6 +81,11 @@ function updateMetrics(reading, transport, organ = activeTemperatureOrgan) {
   renderTemperatureRange(reading, activeTemperatureOrgan);
   $("#humidity").textContent = Number(reading.umidade).toFixed(1);
   $("#impact").textContent = Number(reading.impacto).toFixed(2);
+  // Destaque vermelho para impacto critico, igual ao card de temperatura.
+  $("#impact-card").classList.toggle(
+    "impact-critical",
+    Number(reading.impacto) >= 3.5,
+  );
   $("#impact-label").textContent =
     reading.impacto >= 1.8 ? "Ocorrência detectada" : "Movimento normal";
   $("#battery").textContent = Number(reading.bateria).toFixed(0);
