@@ -45,11 +45,12 @@ O formato atual é `temperatura,impacto,ativo,indiceOrgao`, exemplo `6.2,1.40,1,
 1. Na Arduino IDE, abra o novo sketch na pasta `lifebox-ble-full`, selecione **ESP32 Dev Module**, core **3.x**, e envie para a placa.
 2. Com a placa alimentada, confirme que o OLED aparece e que os potenciômetros, LEDs e buzzer continuam respondendo localmente.
 3. No notebook com Chrome ou Edge e Bluetooth ativo, abra `https://lifebox-expotech.onrender.com` depois do deploy.
-4. No bloco **Planejamento Inteligente do Transporte**, escolha o órgão no seletor **ÓRGÃO**, ao lado do **CENÁRIO DE DEMONSTRAÇÃO**.
-5. Clique no único botão **Conectar ESP32 físico** (ao lado do órgão). Ele seleciona automaticamente a fonte BLE e abre a lista nativa do Bluetooth; escolha **LifeBox BLE**.
-6. O OLED deve mostrar o órgão escolhido e a faixa correspondente; o dashboard confirma quando a leitura BLE confirma a alteração. A escolha continua usando o seletor de órgãos do planejamento, sem segundo seletor.
-7. Gire os potenciômetros. **Temperatura** e **impacto** vêm do ESP32; **umidade, bateria e sinal são valores visuais simulados**, rotulados SIMULADO, e não medições reais. A temperatura fora da faixa aciona o LED vermelho e o buzzer; **impacto alto sozinho não aciona os atuadores**. Teste o BOOT: a pausa deve desligar o alarme.
-8. Clique no mesmo botão para **desconectar**. A fonte anterior da aplicação (Wokwi ou Simulador) é retomada; a API não recebe comandos BLE. Também é possível trocar a fonte no menu normalmente.
+4. Em **FONTE**, selecione **ESP32 FÍSICO**, ao lado de **SIMULADOR** e **ESP32 / WOKWI**. Essa seleção apenas revela o botão de conexão no planejamento; não abre o Bluetooth automaticamente.
+5. No bloco **Planejamento Inteligente do Transporte**, escolha o órgão no seletor **ÓRGÃO** (ao lado do **CENÁRIO DE DEMONSTRAÇÃO**).
+6. Clique em **Conectar ESP32 físico** (visível apenas quando a fonte ESP32 FÍSICO estiver selecionada), escolha **LifeBox BLE** na janela do navegador e conecte.
+7. O OLED deve mostrar o órgão escolhido e a faixa correspondente; o dashboard confirma quando a leitura BLE confirma a alteração. A escolha continua usando o seletor de órgãos do planejamento, sem segundo seletor.
+8. Gire os potenciômetros. **Temperatura** e **impacto** vêm do ESP32; **umidade, bateria e sinal são valores visuais simulados**, rotulados SIMULADO, e não medições reais. A temperatura fora da faixa aciona o LED vermelho e o buzzer; **impacto alto sozinho não aciona os atuadores**. Teste o BOOT: a pausa deve desligar o alarme.
+9. O mesmo botão **Desconectar ESP32 físico** encerra a conexão mas mantém a fonte ESP32 FÍSICO selecionada, permitindo reconectar. Para voltar ao Simulador ou Wokwi, troque a opção em **FONTE**; a API não recebe comandos BLE.
 
 **Limite arquitetural:** no modo BLE, **temperatura e impacto, estado do botão BOOT, sinais lógicos e alertas locais** refletem a caixa. **Umidade, bateria e sinal são números sintéticos gerados pelo navegador e claramente identificados como SIMULADO**. Mapa, rotas, gráficos históricos e timeline permanecem referentes à aplicação online e não são dados da caixa física. Nenhum dado BLE é enviado à API ou ao banco. A caixa funciona normalmente mesmo sem a conexão BLE.
 
@@ -73,6 +74,6 @@ Os valores abaixo reproduzem o módulo `src/config/organProfiles.js`. São faixa
 
 **Regra experimental dos atuadores:** `TRANSPORTE_ATIVO AND (TEMP < MIN_ORGAO OR TEMP > MAX_ORGAO)`. Limites são inclusivos. O impacto continua visível, mas não dispara buzzer nem LED vermelho. LED verde indica transporte ativo com temperatura dentro da faixa; botão BOOT mantém a pausa. A caixa processa essa regra localmente, mesmo se o notebook desconectar.
 
-A escolha de órgão no **Planejamento Inteligente** é a fonte única da seleção. Quando BLE está ativo, a alteração é encaminhada ao OLED sem mudar o perfil da API/Wokwi, mesmo durante uma demonstração logística. Não existe mais um seletor de órgão BLE separado nem uma etapa adicional para ativar a fonte; basta o botão **Conectar ESP32 físico**.
+A escolha de órgão no **Planejamento Inteligente** é a fonte única da seleção. Quando BLE está ativo, a alteração é encaminhada ao OLED sem mudar o perfil da API/Wokwi, mesmo durante uma demonstração logística. Não existe um seletor de órgão BLE separado: primeiro escolha **ESP32 FÍSICO** em **FONTE**, depois use o botão **Conectar ESP32 físico** que aparecerá no planejamento.
 
 **Teste físico pendente:** o código foi atualizado no repositório; compilação final, estabilidade do Bluetooth junto ao OLED/atuadores e troca real de órgão precisam ser confirmadas na placa. Se algum problema ocorrer, regrave o firmware offline preservado em `firmware-real/sketch.ino`.
