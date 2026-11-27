@@ -187,6 +187,10 @@
        state.reading.temperature > confirmedProfile.max),
     );
     const impactCritical = Boolean(hasReading && state.reading.impact >= 3.5);
+    // Mesmo destaque visual vermelho usado pelo card de temperatura.
+    // A condicao critica aparece mesmo pausado; o transporte ativo
+    // continua sendo necessario para ligar os atuadores.
+    $ble("impact-card").classList.toggle("impact-critical", impactCritical);
     const transportActive = Boolean(hasReading && state.reading.transportActive);
     const updatedFirmware = Boolean(hasReading && state.reading.protocolVersion >= 2);
     // O display sempre reflete o bit de ativo recebido do ESP32, nunca
