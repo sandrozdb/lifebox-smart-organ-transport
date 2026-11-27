@@ -362,6 +362,7 @@ function updateSimulationControls(simulation, transport) {
   window.lifeBoxCanResume =
     hasExecution && !simulation.running && !awaitingPlan;
   window.lifeBoxSimulationRunning = Boolean(simulation.running);
+  window.lifeBoxRouteAwaitingPlan = awaitingPlan;
   if (window.lifeBoxBleIsSelected?.()) {
     // O estado fisico vem das notificacoes BLE, nao do servidor.
     window.lifeBoxBleApply?.();
@@ -718,8 +719,13 @@ async function refresh() {
     updateTracking(bleTracking || window.lifeBoxExecutionTracking || tracking);
     const mapMode = $("#map-mode");
     if (mapMode) {
-      mapMode.textContent = window.lifeBoxBleIsSelected?.()
-        ? "PERCURSO SIMULADO · ESP32 FÍSICO" : "PLANEJAMENTO";
+      mapMode.textContent = simulation.awaitingRecommendationId
+        ? "REOTIMIZAÇÃO · MAPA PAUSADO"
+        : window.lifeBoxBleIsSelected?.()
+          ? "PERCURSO SIMULADO · ESP32 FÍSICO" : "PLANEJAMENTO";
+    }
+    if (simulation.awaitingRecommendationId) {
+      $("#progress-label").textContent += " · AGUARDANDO NOVA ROTA";
     }
     drawCharts(readings);
     if (!window.lifeBoxBleIsSelected?.()) renderAlerts(alerts);
@@ -785,6 +791,8 @@ async function bleRoutePhysicalAction(action) {
   let hadHardwareError = null;
   try {
     if (action === "start") {
+      if (window.lifeBoxRouteAwaitingPlan)
+        throw new Error("Percurso pausado para reotimização. Aplique o novo plano primeiro.");
       if (!window.lifeBoxSimulationRunning &&
           !window.lifeBoxCanResume && !window.lifeBoxCurrentPlan)
         throw new Error("Calcule o plano ótimo antes de iniciar o percurso.");
@@ -842,6 +850,9 @@ window.lifeBoxBleOnTransportChange = (transportActive) => {
       while (bleRouteRequestedState !== null) {
         const requested = bleRouteRequestedState;
         bleRouteRequestedState = null;
+        // A reotimizacao tem prioridade: BOOT nao pode retomar o mapa
+        // enquanto o operador ainda precisa decidir o novo plano.
+        if (requested && window.lifeBoxRouteAwaitingPlan) continue;
         if (requested !== Boolean(window.lifeBoxSimulationRunning)) {
           await bleRouteApiAction(requested ? "resume" : "stop");
           await refresh();
