@@ -37,6 +37,12 @@ test("firmware BLE experimental preserva controles locais sem alterar o sketch o
   assert.match(bleCss, /grid-template-columns:\s*minmax\(0, 1\.25fr\)/);
   assert.match(bleCss, /@media \(max-width: 560px\)/);
   assert.match(page, /id="planning-organ"/);
+  assert.match(page, /id="impact-card"/);
+  const metricCss = load("public/css/styles.css");
+  assert.match(metricCss, /\.metric\.impact-critical/);
+  assert.match(metricCss, /\.metric\.impact-critical #impact/);
+  assert.match(metricCss, /\.metric\.impact-critical #impact-label/);
+  assert.match(dashboard, /"impact-critical"/);
   assert.match(page, /id="ble-connect"/);
   assert.match(page, /data-action="start"[^>]*>▶ INICIAR TRANSPORTE<\/button>/);
   assert.match(page, /data-action="stop"[^>]*>Ⅱ PAUSAR TRANSPORTE<\/button>/);
@@ -195,6 +201,7 @@ test("BLE aplica ativo AND (temperatura critica OR impacto critico), com orgao e
   assert.equal(actuators.at(-1).buzzerOn, true);
   assert.equal(actuators.at(-1).temperatureCritical, true);
   assert.equal(actuators.at(-1).impactCritical, false);
+  assert.equal(get("impact-card").classList.contains("impact-critical"), false);
 
   // Só impacto crítico: temperatura normal não impede o acionamento.
   notify({ target: { value: view("3.0,4.20,1,1,2") } });
@@ -204,6 +211,7 @@ test("BLE aplica ativo AND (temperatura critica OR impacto critico), com orgao e
   assert.match(get("presentation-alert-title").textContent, /IMPACTO CRÍTICO/);
   assert.equal(actuators.at(-1).temperatureCritical, false);
   assert.equal(actuators.at(-1).impactCritical, true);
+  assert.equal(get("impact-card").classList.contains("impact-critical"), true);
   assert.equal(actuators.at(-1).alertOutput, true);
   assert.equal(actuators.at(-1).ledOn, true);
 
@@ -222,6 +230,7 @@ test("BLE aplica ativo AND (temperatura critica OR impacto critico), com orgao e
   assert.equal(actuators.at(-1).alertOutput, false);
   assert.equal(actuators.at(-1).ledOn, false);
   assert.equal(actuators.at(-1).buzzerOn, false);
+  assert.equal(get("impact-card").classList.contains("impact-critical"), false);
 
   // Mesmo com ambas condições críticas, BOOT pausado desliga tudo.
   notify({ target: { value: view("6.2,4.20,0,1,2") } });
@@ -233,6 +242,9 @@ test("BLE aplica ativo AND (temperatura critica OR impacto critico), com orgao e
   assert.equal(actuators.at(-1).ledOn, false);
   assert.equal(actuators.at(-1).buzzerOn, false);
   assert.equal(get("sim-status").textContent, "Pausado");
+  // Mesmo pausado, a leitura critica deve ser identificada em vermelho;
+  // o acionamento fisico continua respeitando o transporte inativo.
+  assert.equal(get("impact-card").classList.contains("impact-critical"), true);
   // Depois de iniciar novamente, Pausar tambem e enviado SOMENTE por BLE.
   await window.lifeBoxBleCommandTransport("start");
   notify({ target: { value: view("3.0,1.40,1,1,2") } });
