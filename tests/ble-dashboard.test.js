@@ -312,6 +312,16 @@ test("ESP32 físico: iniciar movimenta rota simulada e pausar/reiniciar sincroni
   assert.equal(window.lifeBoxExecutionTracking.progress, 0);
   assert.match(feedback.textContent, /Rota simulada no mapa/);
 
+  // Pausa e retomada pelo botao BOOT do ESP32 tambem controlam a rota.
+  window.lifeBoxBleOnTransportChange(false);
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(window.lifeBoxSimulationRunning, false);
+  assert.ok(calls.includes("API:/api/simulacao/stop"));
+  window.lifeBoxBleOnTransportChange(true);
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(window.lifeBoxSimulationRunning, true);
+  assert.ok(calls.includes("API:/api/simulacao/resume"));
+
   await run("stop");
   assert.deepEqual(calls.slice(-3), ["BLE:stop", "ACK:false", "API:/api/simulacao/stop"]);
   assert.equal(window.lifeBoxSimulationRunning, false);
@@ -353,4 +363,45 @@ test("Se o ESP32 não confirmar START, mapa não pode iniciar e comando PAUSE é
   );
   await assert.rejects(run("start"), /sem confirmacao/);
   assert.deepEqual(calls, ["start", "stop"]);
+});
+
+
+test("Mapa BLE usa progresso e posição da rota simulada, não telemetria GPS histórica", () => {
+  const dashboard = load("public/js/dashboard.js");
+  const start = dashboard.indexOf("function trackingFromBleLogistics(tracking, logistics) {");
+  const end = dashboard.indexOf("function updateTracking(tracking) {", start);
+  assert.ok(start > 0 && end > start, "Adaptador logístico BLE ausente");
+  const adapt = vm.runInNewContext(
+    dashboard.slice(start, end) + "\ntrackingFromBleLogistics;",
+  );
+  const oldTracking = {
+    progress: 0,
+    current: { latitude: -23.6, longitude: -46.8 },
+    path: [], routeName: "Rota antiga",
+  };
+  const logistics = {
+    totalProgress: 0.25,
+    planName: "Rota ótima",
+    currentPosition: { latitude: -23.2, longitude: -46.2 },
+    traveledPath: [
+      { latitude: -23.6, longitude: -46.8 },
+      { latitude: -23.2, longitude: -46.2 },
+    ],
+    traveledKm: 30,
+    remainingKm: 90,
+    currentSegmentIndex: 0,
+    segments: [{ from: "Hospital A", to: "Hospital B", modal: "TERRESTRE" }],
+  };
+  const live = adapt(oldTracking, logistics);
+  assert.equal(live.progress, 25);
+  assert.equal(live.current.latitude, -23.2);
+  assert.equal(live.current.longitude, -46.2);
+  assert.equal(live.path.length, 2);
+  assert.equal(live.traveledKm, 30);
+  assert.equal(live.remainingKm, 90);
+  assert.equal(live.routeName, "Rota ótima");
+  assert.equal(oldTracking.progress, 0, "Telemetria antiga não deve ser alterada");
+  assert.equal(adapt(oldTracking, { totalProgress: 1 }).progress, 100);
+  assert.equal(adapt(oldTracking, { totalProgress: 0 }).progress, 0);
+  assert.match(dashboard, /updateTracking\(bleTracking \|\| window\.lifeBoxExecutionTracking \|\| tracking\)/);
 });
