@@ -18,7 +18,7 @@
   const state = {
     selected: false, device: null, characteristic: null, commandCharacteristic: null,
     reading: null, desiredOrgan: "HEART", connecting: false, simulationStart: 0,
-    pendingTransport: null,
+    pendingTransport: null, pendingSince: 0,
     lastSeen: 0, dismissed: null,
     message: "Clique em Conectar para procurar o ESP32 físico.",
   };
@@ -70,6 +70,7 @@
       ? "START" : ["stop", "reset", "finish"].includes(action) ? "PAUSE" : null;
     if (!command) throw new Error("Comando de transporte físico inválido.");
     state.pendingTransport = command;
+    state.pendingSince = Date.now();
     apply();
     try {
       // WRITE indica recebimento da escrita GATT, mas a confirmação do estado
@@ -81,6 +82,7 @@
         " enviado. Aguardando confirmação do ESP32 físico.";
     } catch (error) {
       state.pendingTransport = null;
+      state.pendingSince = 0;
       apply();
       throw error;
     }
@@ -88,6 +90,11 @@
   window.lifeBoxBleCommandTransport = commandTransport;
 
   function apply() {
+    if (state.pendingTransport && Date.now() - state.pendingSince > 5000) {
+      state.pendingTransport = null;
+      state.pendingSince = 0;
+      state.message = "ESP32 não confirmou o comando. Verifique o Monitor Serial e o firmware.";
+    }
     const controls = $ble("ble-connect-controls");
     if (!controls) return;
     // O botao aparece EXCLUSIVAMENTE ao selecionar ESP32 FISICO em FONTE.
@@ -137,7 +144,8 @@
         : "Impacto normal · limite 3,5 g";
     const confirmedProfile = hasReading ? findProfile(state.reading.organCode) : null;
     const requested = requestedProfile();
-    $ble("ble-organ-status").textContent = !isConnected
+    $ble("ble-organ-status").textContent = state.message.startsWith("ESP32 não confirmou")
+      ? state.message : !isConnected
       ? (state.connecting ? "Conectando ao ESP32..." : (state.message.startsWith("Falha") ? state.message : "Bluetooth desconectado"))
       : !hasReading
         ? "Conectado · aguardando telemetria"
