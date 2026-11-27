@@ -23,8 +23,14 @@ test("firmware BLE experimental preserva controles locais sem alterar o sketch o
   assert.doesNotMatch(full, /HTTPClient/);
   assert.doesNotMatch(full, /temperaturaCritica\(\) \|\| impactoCritico\(\)/);
   assert.match(page, /data-mode="BLE"/);
-  assert.match(page, /id="physical-ble-panel"/);
-  assert.match(page, /id="ble-organ"/);
+  assert.match(page, /id="ble-connect-controls"/);
+  assert.match(page, /id="planning-organ"/);
+  assert.match(page, /id="ble-connect"/);
+  assert.doesNotMatch(page, /id="ble-organ"/);
+  assert.doesNotMatch(page, /id="ble-disconnect"/);
+  for (const id of ["humidity-label", "battery-label", "signal-label"]) {
+    assert.ok(page.includes(`id="${id}"`));
+  }
   assert.match(page, /ble-dashboard\.js/);
   assert.match(dashboard, /window\.lifeBoxBleSetMode\?\.\(true\)/);
   assert.match(dashboard, /window\.lifeBoxBleApply\?\.\(\)/);
@@ -43,7 +49,7 @@ test("firmware BLE experimental preserva controles locais sem alterar o sketch o
   new vm.Script(dashboard);
 });
 
-test("BLE envia orgao, aguarda confirmacao, alarma somente por temperatura e respeita BOOT", async () => {
+test("BLE usa organo do planejamento, um unico botao e telemetria mista, alerta so por temperatura e respeita BOOT", async () => {
   const elements = new Map();
   const get = (id) => {
     if (!elements.has(id)) {
@@ -108,13 +114,22 @@ test("BLE envia orgao, aguarda confirmacao, alarma somente por temperatura e res
   });
 
   window.lifeBoxBleSetMode(true);
-  assert.equal(get("physical-ble-panel").hidden, false);
+  assert.equal(get("ble-connect-controls").hidden, false);
   await get("ble-connect").listeners.click();
   assert.deepEqual(sent, ["HEART"]);
-  assert.match(get("ble-organ-status").textContent, /OLED confirmado: Coração/);
+  assert.match(get("ble-organ-status").textContent, /OLED sincronizado: Coração/);
   assert.equal(get("temperature").textContent, "6.2");
+  assert.equal(get("impact").textContent, "1.40");
+  assert.notEqual(get("humidity").textContent, "--");
+  assert.notEqual(get("battery").textContent, "--");
+  assert.notEqual(get("signal").textContent, "--");
+  assert.match(get("humidity-label").textContent, /SIMULADO/);
+  assert.match(get("battery-label").textContent, /SIMULADO/);
+  assert.match(get("signal-label").textContent, /SIMULADO/);
+  assert.match(get("ble-connect").textContent, /Desconectar ESP32/);
 
-  await get("ble-organ").listeners.change({ target: { value: "LUNG" } });
+  get("planning-organ").value = "LUNG";
+  await window.lifeBoxBleSetOrgan(get("planning-organ").value);
   assert.deepEqual(sent, ["HEART", "LUNG"]);
   assert.match(get("ble-organ-status").textContent, /aguardando confirmação/i);
   notify({ target: { value: view("6.2,4.20,1,1") } });
@@ -135,7 +150,16 @@ test("BLE envia orgao, aguarda confirmacao, alarma somente por temperatura e res
   assert.equal(get("alert-count").textContent, "0");
   assert.equal(get("presentation-alert").classList.contains("hidden"), true);
 
-  window.lifeBoxBleSetMode(false);
-  assert.equal(get("physical-ble-panel").hidden, true);
+  get("ble-connect").listeners.click();
   assert.equal(device.gatt.connected, false);
+  assert.equal(get("temperature").textContent, "--");
+  assert.equal(get("humidity").textContent, "--");
+  assert.equal(get("battery").textContent, "--");
+  assert.equal(get("signal").textContent, "--");
+
+  window.lifeBoxBleSetMode(false);
+  assert.equal(get("ble-connect-controls").hidden, true);
+  assert.equal(get("humidity-label").textContent, "% relativa");
+  assert.equal(get("battery-label").textContent, "% disponível");
+  assert.equal(get("signal-label").textContent, "% comunicação");
 });
