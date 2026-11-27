@@ -751,17 +751,18 @@ async function bleRoutePhysicalAction(action) {
           !window.lifeBoxCanResume && !window.lifeBoxCurrentPlan)
         throw new Error("Calcule o plano ótimo antes de iniciar o percurso.");
       // Nao mova o mapa antes de receber do ESP32 a confirmacao ATIVO=1.
-      await window.lifeBoxBleCommandTransport("start");
-      await window.lifeBoxBleAwaitTransport(true);
       try {
+        await window.lifeBoxBleCommandTransport("start");
+        await window.lifeBoxBleAwaitTransport(true);
         if (!window.lifeBoxSimulationRunning) await bleRouteApiAction("start");
         bleRouteManaged = true;
       } catch (error) {
-        // Se a API nao iniciar a rota, nao deixar a caixa em alarme isolado.
+        // Falha na confirmacao BLE OU na API: tentar pausar a caixa.
+        // Nao iniciar o mapa com a caixa em estado desconhecido.
         try {
           await window.lifeBoxBleCommandTransport("stop");
           await window.lifeBoxBleAwaitTransport(false);
-        } catch (ignored) { /* painel informa eventual falha de BLE */ }
+        } catch (ignored) { /* erro original e repassado */ }
         throw error;
       }
       $("#action-feedback").textContent =
