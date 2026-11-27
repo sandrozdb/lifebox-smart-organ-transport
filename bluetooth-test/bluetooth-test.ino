@@ -47,7 +47,7 @@ void setup() {
   pinMode(PIN_TEMP, INPUT);
   pinMode(PIN_IMPACTO, INPUT);
 
-  // Nao chamar WiFi.begin(): usa somente o radio BLE.
+  // Sem conexao de rede: usa somente o radio BLE.
   BLEDevice::init("LifeBox BLE");
   server = BLEDevice::createServer();
   server->setCallbacks(new LifeBoxServerCallbacks());
