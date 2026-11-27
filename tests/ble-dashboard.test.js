@@ -15,23 +15,35 @@ test("firmware BLE experimental preserva controles locais sem alterar o sketch o
   for (const token of [
     "Wire.begin(21, 22)", "acentoAgudo(18, 55)", "ledcWriteTone(PIN_BUZZER, 2000)",
     "BOTAO_BOOT = 0", "transmitirBLE();", "iniciarBLE();",
-    "PROPERTY_NOTIFY", "INVERTER_TEMP = true", "INVERTER_IMPACTO = true",
-  ]) {
-    assert.ok(full.includes(token), "Ausente no firmware completo: " + token);
-  }
+    "PROPERTY_NOTIFY", "PROPERTY_WRITE", "BLE_COMMAND_UUID",
+    "aplicarPerfilPendente();", "INVERTER_TEMP = true", "INVERTER_IMPACTO = true",
+    "return transporteAtivo && temperaturaCritica();",
+  ]) assert.ok(full.includes(token), "Ausente no firmware experimental: " + token);
   assert.doesNotMatch(full, /WiFi\.begin\(/);
   assert.doesNotMatch(full, /HTTPClient/);
+  assert.doesNotMatch(full, /temperaturaCritica\(\) \|\| impactoCritico\(\)/);
   assert.match(page, /data-mode="BLE"/);
   assert.match(page, /id="physical-ble-panel"/);
+  assert.match(page, /id="ble-organ"/);
   assert.match(page, /ble-dashboard\.js/);
   assert.match(dashboard, /window\.lifeBoxBleSetMode\?\.\(true\)/);
   assert.match(dashboard, /window\.lifeBoxBleApply\?\.\(\)/);
   assert.match(dashboard, /Fonte local: NAO altera o modo IoT do backend/);
+  const profiles = require("../src/config/organProfiles").profiles;
+  for (const profile of profiles) {
+    const [minimum, maximum] = profile.preservation.referenceRangeC;
+    const expression = new RegExp(
+      '\\{"' + profile.code + '",\\s*"[^"]+",\\s*' +
+      minimum.toFixed(1) + 'f,\\s*' + maximum.toFixed(1) + 'f\\}',
+    );
+    assert.match(full, expression, "Faixa nao corresponde ao perfil: " + profile.code);
+  }
   new vm.Script(load("public/js/ble-dashboard.js"));
+  new vm.Script(load("public/js/planning.js"));
   new vm.Script(dashboard);
 });
 
-test("dashboard BLE recebe valores, mostra alerta duplo e respeita pausa do BOOT", async () => {
+test("BLE envia orgao, aguarda confirmacao, alarma somente por temperatura e respeita BOOT", async () => {
   const elements = new Map();
   const get = (id) => {
     if (!elements.has(id)) {
@@ -56,17 +68,28 @@ test("dashboard BLE recebe valores, mostra alerta duplo e respeita pausa do BOOT
     }
     return elements.get(id);
   };
+  get("planning-organ").value = "HEART";
   const view = (csv) => {
     const bytes = new TextEncoder().encode(csv);
     return new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
   };
   let notify;
-  const characteristic = {
-    addEventListener: (type, handler) => { if (type === "characteristicvaluechanged") notify = handler; },
+  const sent = [];
+  const readings = {
+    addEventListener: (type, handler) => {
+      if (type === "characteristicvaluechanged") notify = handler;
+    },
     startNotifications: async () => undefined,
-    readValue: async () => view("6.2,1.40,1"),
+    readValue: async () => view("6.2,1.40,1,0"),
   };
-  const service = { getCharacteristic: async () => characteristic };
+  const commands = {
+    writeValueWithResponse: async (bytes) => {
+      sent.push(new TextDecoder().decode(bytes));
+    },
+  };
+  const service = {
+    getCharacteristic: async (uuid) => uuid.endsWith("3") ? commands : readings,
+  };
   const server = { getPrimaryService: async () => service };
   const device = {
     gatt: {
@@ -78,27 +101,36 @@ test("dashboard BLE recebe valores, mostra alerta duplo e respeita pausa do BOOT
   };
   const window = {};
   const navigator = { bluetooth: { requestDevice: async () => device } };
-  const context = {
+  vm.runInNewContext(load("public/js/ble-dashboard.js"), {
     window, document: { getElementById: get }, navigator,
-    TextDecoder, Number, Boolean, String, Date,
+    TextDecoder, TextEncoder, Number, Boolean, String, Date,
     setInterval: () => undefined,
-  };
-  vm.runInNewContext(load("public/js/ble-dashboard.js"), context);
+  });
 
   window.lifeBoxBleSetMode(true);
   assert.equal(get("physical-ble-panel").hidden, false);
   await get("ble-connect").listeners.click();
+  assert.deepEqual(sent, ["HEART"]);
+  assert.match(get("ble-organ-status").textContent, /OLED confirmado: Coração/);
   assert.equal(get("temperature").textContent, "6.2");
-  assert.equal(get("impact").textContent, "1.40");
 
-  notify({ target: { value: view("9.0,4.20,1") } });
-  assert.equal(get("temperature").textContent, "9.0");
-  assert.equal(get("impact").textContent, "4.20");
-  assert.equal(get("alert-count").textContent, "2");
-  assert.match(get("presentation-alert-title").textContent, /TEMPERATURA E IMPACTO/);
+  await get("ble-organ").listeners.change({ target: { value: "LUNG" } });
+  assert.deepEqual(sent, ["HEART", "LUNG"]);
+  assert.match(get("ble-organ-status").textContent, /aguardando confirmação/i);
+  notify({ target: { value: view("6.2,4.20,1,1") } });
+  assert.match(get("temperature-range-status").textContent, /Pulmão.*0–4/);
+  assert.equal(get("alert-count").textContent, "1");
+  assert.match(get("presentation-alert-title").textContent, /TEMPERATURA FORA DA FAIXA/);
   assert.equal(get("presentation-alert").classList.contains("hidden"), false);
 
-  notify({ target: { value: view("9.0,4.20,0") } });
+  notify({ target: { value: view("3.0,4.20,1,1") } });
+  assert.equal(get("general-status").textContent, "NORMAL");
+  assert.equal(get("alert-count").textContent, "0");
+  assert.match(get("alerts").innerHTML, /IMPACTO ELEVADO · INFORMATIVO/);
+  assert.equal(get("presentation-alert").classList.contains("hidden"), true);
+
+  // Mesmo fora da faixa e com impacto alto, pausa pelo BOOT desliga tudo.
+  notify({ target: { value: view("6.2,4.20,0,1") } });
   assert.equal(get("general-status").textContent, "AGUARDANDO");
   assert.equal(get("alert-count").textContent, "0");
   assert.equal(get("presentation-alert").classList.contains("hidden"), true);
