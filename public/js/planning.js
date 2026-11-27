@@ -283,7 +283,7 @@
     const current = recommendation.currentPlan || {},
       next = recommendation.plan || {},
       number = (value) => Number(value || 0).toFixed(0);
-    return `<section class="reoptimization reoptimization-decision"><header><div><b>REOTIMIZAÇÃO DA PO · ${recommendation.status}</b><span>${reasonLabel(recommendation.reason)}</span></div><strong class="route-paused-message">DESLOCAMENTO PAUSADO · AGUARDANDO ESCOLHA DO NOVO PLANO</strong></header><div class="reoptimization-plans"><article><small>PLANO ATUAL</small><strong>${planLabel(current)}</strong></article><span>→</span><article class="recommended"><small>PLANO RECOMENDADO</small><strong>${planLabel(next)}</strong></article></div><div class="reoptimization-comparison"><span><small>INDICADOR</small><b>Atual</b><b>Recomendado</b></span><span><small>Tempo</small><b>${number(current.timeMin)} min</b><b>${number(next.timeMin)} min</b></span><span><small>Custo</small><b>${money(current.cost || 0)}</b><b>${money(next.cost || 0)}</b></span><span><small>Margem</small><b>${number(current.marginMinutes)} min</b><b>${number(next.marginMinutes)} min</b></span></div><button id="apply-reoptimization" class="primary">APLICAR NOVO PLANO</button></section>`;
+    return `<section class="reoptimization reoptimization-decision"><header><div><b>REOTIMIZAÇÃO DA PO · ${recommendation.status}</b><span>${reasonLabel(recommendation.reason)}</span></div><strong class="route-paused-message">MAPA PAUSADO · ISQUEMIA CONTINUA CONTANDO · AGUARDANDO NOVO PLANO</strong></header><div class="reoptimization-plans"><article><small>PLANO ATUAL</small><strong>${planLabel(current)}</strong></article><span>→</span><article class="recommended"><small>PLANO RECOMENDADO</small><strong>${planLabel(next)}</strong></article></div><div class="reoptimization-comparison"><span><small>INDICADOR</small><b>Atual</b><b>Recomendado</b></span><span><small>Tempo</small><b>${number(current.timeMin)} min</b><b>${number(next.timeMin)} min</b></span><span><small>Custo</small><b>${money(current.cost || 0)}</b><b>${money(next.cost || 0)}</b></span><span><small>Margem</small><b>${number(current.marginMinutes)} min</b><b>${number(next.marginMinutes)} min</b></span></div><button id="apply-reoptimization" class="primary">APLICAR NOVO PLANO</button></section>`;
   }
   function render(result, reason) {
     const previous = lastResult?.selected;
@@ -386,7 +386,10 @@
           recommendation,
           reason,
         );
-        $("#sim-status").textContent = "Aguardando novo plano";
+        window.lifeBoxRouteAwaitingPlan = true;
+        window.lifeBoxSimulationRunning = false;
+        if (window.lifeBoxBleIsSelected?.()) window.lifeBoxBleApply?.();
+        else $("#sim-status").textContent = "Aguardando novo plano";
         document
           .querySelectorAll("[data-logistic]")
           .forEach((button) => (button.disabled = true));
@@ -449,11 +452,14 @@
       window.lifeBoxSnapExecutionTracking?.(applied.logistics);
       $("#planning-result").insertAdjacentHTML(
         "afterbegin",
-        `<p class="reoptimization reoptimization-applied"><b>REOTIMIZAÇÃO APLICADA</b><br>${recommendation.plan.modal}<br>O plano ativo foi atualizado a partir da posição atual. Tempo, isquemia e caminho já percorrido foram preservados.</p>`,
+        `<p class="reoptimization reoptimization-applied"><b>REOTIMIZAÇÃO APLICADA</b><br>${recommendation.plan.modal}<br>O plano ativo foi atualizado a partir da posição atual. Percurso anterior preservado; a isquemia continuou avançando durante a espera.</p>`,
       );
+      window.lifeBoxRouteAwaitingPlan = false;
+      window.lifeBoxSimulationRunning = true;
       $("#action-feedback").textContent =
-        "Novo plano aplicado. Deslocamento retomado.";
-      $("#sim-status").textContent = "Executando";
+        "Novo plano aplicado. Deslocamento retomado; isquemia acumulada preservada.";
+      if (window.lifeBoxBleIsSelected?.()) window.lifeBoxBleApply?.();
+      else $("#sim-status").textContent = "Executando";
       document
         .querySelectorAll("[data-logistic]")
         .forEach((button) => (button.disabled = false));
