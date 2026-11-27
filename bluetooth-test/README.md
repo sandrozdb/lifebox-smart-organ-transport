@@ -105,3 +105,16 @@ BLEv2 ATIVO=0 TEMP=6.0 TEMP_CRIT=0 IMPACTO=4.20 IMPACTO_CRIT=1 ALARME=0
 - Se não aparecer a identificação `BLEv2`, o sketch novo ainda não foi gravado/rodado corretamente.
 
 Na fonte **ESP32 FÍSICO**, os mesmos botões **INICIAR TRANSPORTE**, **PAUSAR TRANSPORTE** e **Reiniciar** são usados nas três fontes. No modo físico, comandam **tanto o ESP32 via BLE quanto a simulação logística da API que movimenta o mapa**. Eles são habilitados apenas quando a telemetria confirma firmware v2. A seleção de órgão continua sendo feita no planejamento. O estado também pode mudar via BOOT (segurar 2 s), e o dashboard espelha essa mudança pela telemetria.
+
+
+### Reotimização: só o mapa pausa
+
+Quando uma condição logística dispara uma **recomendação de nova rota factível**:
+
+1. O motor logístico **pausa automaticamente o deslocamento simulado** e conserva a posição e o percentual percorrido no mapa.
+2. O ESP32 físico **permanece ativo** pelo BLE, sem receber `PAUSE`: temperatura, impacto, OLED, LED vermelho e buzzer continuam funcionando conforme a regra digital `ATIVO AND (TEMP_CRÍTICA OR IMPACTO_CRÍTICO)`.
+3. A **isquemia consumida continua aumentando enquanto o mapa aguarda**, mesmo com o deslocamento parado. Isso também vale para pausas manuais depois do início do transporte. O relógio acadêmico usa o fator `SIMULATION_TIME_SCALE` configurado no backend; não equivale a um cronômetro clínico real.
+4. Ao clicar em **APLICAR NOVO PLANO**, a API revalida a solução com a isquemia atualizada, retoma a rota a partir da posição congelada e **preserva o tempo de espera**. Se o novo plano deixou de ser viável, a API rejeita a proposta e a rota continua pausada até outra decisão.
+5. O dashboard apresenta `REOTIMIZAÇÃO · MAPA PAUSADO`. O indicador do ESP32 deixa explícito quando a **caixa física segue ativa**. Não foi adicionada tela de espera ao OLED.
+
+O tempo de isquemia para somente quando o transporte é **concluído** ou **reiniciado**. O ESP32 e o navegador não transmitem dados BLE para o backend. O mapa recebe posições geradas pelo motor de simulação logística, não GPS físico.
