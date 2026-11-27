@@ -18,10 +18,13 @@ test("firmware BLE experimental preserva controles locais sem alterar o sketch o
     "PROPERTY_NOTIFY", "PROPERTY_WRITE", "BLE_COMMAND_UUID",
     "aplicarPerfilPendente();", "INVERTER_TEMP = true", "INVERTER_IMPACTO = true",
     "return transporteAtivo && (temperaturaCritica() || impactoCritico());",
+    "bool transporteAtivo = false;", 'comando == "START"', 'comando == "PAUSE"',
+    "aplicarComandoTransportePendente();",
   ]) assert.ok(full.includes(token), "Ausente no firmware experimental: " + token);
   assert.doesNotMatch(full, /WiFi\.begin\(/);
   assert.doesNotMatch(full, /HTTPClient/);
   assert.match(full, /temperaturaCritica\(\) \|\| impactoCritico\(\)/);
+  assert.match(full, /%.1f,%.2f,%d,%u,2/);
   assert.match(page, /<option value="BLE">/);
   assert.match(page, /data-mode="BLE"/);
   assert.match(page, /id="ble-connect-controls" class="ble-connect-controls" hidden/);
@@ -44,6 +47,7 @@ test("firmware BLE experimental preserva controles locais sem alterar o sketch o
   assert.match(dashboard, /window\.lifeBoxBleSetMode\?\.\(true\)/);
   assert.match(dashboard, /window\.lifeBoxBleApply\?\.\(\)/);
   assert.match(dashboard, /Fonte local: NAO altera o modo IoT do backend/);
+  assert.match(dashboard, /window\.lifeBoxBleCommandTransport\(action\)/);
   const profiles = require("../src/config/organProfiles").profiles;
   for (const profile of profiles) {
     const [minimum, maximum] = profile.preservation.referenceRangeC;
@@ -96,7 +100,7 @@ test("BLE aplica ativo AND (temperatura critica OR impacto critico), com orgao e
       if (type === "characteristicvaluechanged") notify = handler;
     },
     startNotifications: async () => undefined,
-    readValue: async () => view("6.2,1.40,1,0"),
+    readValue: async () => view("6.2,1.40,0,0,2"),
   };
   const commands = {
     writeValueWithResponse: async (bytes) => {
@@ -120,7 +124,7 @@ test("BLE aplica ativo AND (temperatura critica OR impacto critico), com orgao e
   let chooserCalls = 0;
   const navigator = { bluetooth: { requestDevice: async () => { chooserCalls++; return device; } } };
   vm.runInNewContext(load("public/js/ble-dashboard.js"), {
-    window, document: { getElementById: get }, navigator,
+    window, document: { getElementById: get, querySelector: get }, navigator,
     TextDecoder, TextEncoder, Number, Boolean, String, Date,
     renderActuators: (signal) => actuators.push(signal),
     setInterval: () => undefined,
@@ -143,6 +147,18 @@ test("BLE aplica ativo AND (temperatura critica OR impacto critico), com orgao e
   assert.deepEqual(sent, ["HEART"]);
   assert.match(get("ble-organ-status").textContent, /OLED sincronizado: Coração/);
   assert.equal(get("temperature").textContent, "6.2");
+  assert.equal(get("sim-status").textContent, "Físico pausado");
+  assert.equal(get('[data-action="start"]').disabled, false);
+  assert.equal(get('[data-action="stop"]').disabled, true);
+  assert.equal(actuators.at(-1).transportActive, false);
+  assert.equal(actuators.at(-1).alertOutput, false);
+  // Iniciar no painel envia START, mas a tela so muda quando ESP32 confirma.
+  await window.lifeBoxBleCommandTransport("start");
+  assert.deepEqual(sent, ["HEART", "START"]);
+  assert.equal(actuators.at(-1).transportActive, false);
+  notify({ target: { value: view("6.2,1.40,1,0,2") } });
+  assert.equal(get("sim-status").textContent, "Físico ativo");
+  assert.equal(get('[data-action="stop"]').disabled, false);
   assert.equal(get("impact").textContent, "1.40");
   assert.notEqual(get("humidity").textContent, "--");
   assert.notEqual(get("battery").textContent, "--");
@@ -154,10 +170,10 @@ test("BLE aplica ativo AND (temperatura critica OR impacto critico), com orgao e
 
   get("planning-organ").value = "LUNG";
   await window.lifeBoxBleSetOrgan(get("planning-organ").value);
-  assert.deepEqual(sent, ["HEART", "LUNG"]);
+  assert.deepEqual(sent, ["HEART", "START", "LUNG"]);
   assert.match(get("ble-organ-status").textContent, /aguardando confirmação/i);
   // Só temperatura crítica, com pulmão fora da faixa (0–4 °C).
-  notify({ target: { value: view("6.2,1.40,1,1") } });
+  notify({ target: { value: view("6.2,1.40,1,1,2") } });
   assert.match(get("temperature-range-status").textContent, /Pulmão.*0–4/);
   assert.equal(get("alert-count").textContent, "1");
   assert.match(get("presentation-alert-title").textContent, /TEMPERATURA CRÍTICA/);
@@ -167,7 +183,7 @@ test("BLE aplica ativo AND (temperatura critica OR impacto critico), com orgao e
   assert.equal(actuators.at(-1).impactCritical, false);
 
   // Só impacto crítico: temperatura normal não impede o acionamento.
-  notify({ target: { value: view("3.0,4.20,1,1") } });
+  notify({ target: { value: view("3.0,4.20,1,1,2") } });
   assert.equal(get("general-status").textContent, "ALERTA CRÍTICO");
   assert.equal(get("alert-count").textContent, "1");
   assert.match(get("alerts").innerHTML, /IMPACTO CRÍTICO/);
@@ -178,14 +194,14 @@ test("BLE aplica ativo AND (temperatura critica OR impacto critico), com orgao e
   assert.equal(actuators.at(-1).ledOn, true);
 
   // Duas entradas críticas = dois alertas, uma saída de acionamento.
-  notify({ target: { value: view("6.2,4.20,1,1") } });
+  notify({ target: { value: view("6.2,4.20,1,1,2") } });
   assert.equal(get("alert-count").textContent, "2");
   assert.match(get("presentation-alert-title").textContent, /TEMPERATURA E IMPACTO CRÍTICOS/);
   assert.equal(actuators.at(-1).alertOutput, true);
   assert.equal(actuators.at(-1).buzzerOn, true);
 
   // Nenhuma entrada crítica = desligado.
-  notify({ target: { value: view("3.0,1.40,1,1") } });
+  notify({ target: { value: view("3.0,1.40,1,1,2") } });
   assert.equal(get("general-status").textContent, "NORMAL");
   assert.equal(get("alert-count").textContent, "0");
   assert.equal(get("presentation-alert").classList.contains("hidden"), true);
@@ -194,7 +210,7 @@ test("BLE aplica ativo AND (temperatura critica OR impacto critico), com orgao e
   assert.equal(actuators.at(-1).buzzerOn, false);
 
   // Mesmo com ambas condições críticas, BOOT pausado desliga tudo.
-  notify({ target: { value: view("6.2,4.20,0,1") } });
+  notify({ target: { value: view("6.2,4.20,0,1,2") } });
   assert.equal(get("general-status").textContent, "AGUARDANDO");
   assert.equal(get("alert-count").textContent, "0");
   assert.equal(get("presentation-alert").classList.contains("hidden"), true);
@@ -202,6 +218,15 @@ test("BLE aplica ativo AND (temperatura critica OR impacto critico), com orgao e
   assert.equal(actuators.at(-1).alertOutput, false);
   assert.equal(actuators.at(-1).ledOn, false);
   assert.equal(actuators.at(-1).buzzerOn, false);
+  assert.equal(get("sim-status").textContent, "Físico pausado");
+  // Depois de iniciar novamente, Pausar tambem e enviado SOMENTE por BLE.
+  await window.lifeBoxBleCommandTransport("start");
+  notify({ target: { value: view("3.0,1.40,1,1,2") } });
+  await window.lifeBoxBleCommandTransport("stop");
+  assert.deepEqual(sent.slice(-2), ["START", "PAUSE"]);
+  notify({ target: { value: view("6.2,4.20,0,1,2") } });
+  assert.equal(actuators.at(-1).transportActive, false);
+  assert.equal(actuators.at(-1).alertOutput, false);
 
   get("ble-connect").listeners.click();
   assert.equal(device.gatt.connected, false);
