@@ -49,7 +49,7 @@ O formato atual é `temperatura,impacto,ativo,indiceOrgao`, exemplo `6.2,1.40,1,
 5. No bloco **Planejamento Inteligente do Transporte**, escolha o órgão no seletor **ÓRGÃO** (ao lado do **CENÁRIO DE DEMONSTRAÇÃO**).
 6. Clique em **Conectar ESP32 físico** (visível apenas quando a fonte ESP32 FÍSICO estiver selecionada), escolha **LifeBox BLE** na janela do navegador e conecte.
 7. O OLED deve mostrar o órgão escolhido e a faixa correspondente; o dashboard confirma quando a leitura BLE confirma a alteração. A escolha continua usando o seletor de órgãos do planejamento, sem segundo seletor.
-8. Gire os potenciômetros. **Temperatura** e **impacto** vêm do ESP32; **umidade, bateria e sinal são valores visuais simulados**, rotulados SIMULADO, e não medições reais. A temperatura fora da faixa aciona o LED vermelho e o buzzer; **impacto alto sozinho não aciona os atuadores**. Teste o BOOT: a pausa deve desligar o alarme.
+8. Gire os potenciômetros. **Temperatura** e **impacto** vêm do ESP32; **umidade, bateria e sinal são valores visuais simulados**, rotulados SIMULADO, e não medições reais. O LED vermelho e o buzzer acionam quando o transporte está ativo e a **temperatura sai da faixa do órgão OU o impacto chega a 3,5 g**; os dois alertas podem ocorrer juntos. Teste o BOOT: a pausa deve desligar os atuadores mesmo com valores críticos.
 9. O mesmo botão **Desconectar ESP32 físico** encerra a conexão mas mantém a fonte ESP32 FÍSICO selecionada, permitindo reconectar. Para voltar ao Simulador ou Wokwi, troque a opção em **FONTE**; a API não recebe comandos BLE.
 
 **Limite arquitetural:** no modo BLE, **temperatura e impacto, estado do botão BOOT, sinais lógicos e alertas locais** refletem a caixa. **Umidade, bateria e sinal são números sintéticos gerados pelo navegador e claramente identificados como SIMULADO**. Mapa, rotas, gráficos históricos e timeline permanecem referentes à aplicação online e não são dados da caixa física. Nenhum dado BLE é enviado à API ou ao banco. A caixa funciona normalmente mesmo sem a conexão BLE.
@@ -72,7 +72,15 @@ Os valores abaixo reproduzem o módulo `src/config/organProfiles.js`. São faixa
 | Pâncreas | PANCREAS | 0–4 °C |
 | Intestino | INTESTINE | 0–4 °C |
 
-**Regra experimental dos atuadores:** `TRANSPORTE_ATIVO AND (TEMP < MIN_ORGAO OR TEMP > MAX_ORGAO)`. Limites são inclusivos. O impacto continua visível, mas não dispara buzzer nem LED vermelho. LED verde indica transporte ativo com temperatura dentro da faixa; botão BOOT mantém a pausa. A caixa processa essa regra localmente, mesmo se o notebook desconectar.
+**Regra experimental dos atuadores:** `TRANSPORTE_ATIVO AND (TEMPERATURA_CRITICA OR IMPACTO_CRITICO)`, sendo `TEMPERATURA_CRITICA = temperatura < minimoOrgao OR temperatura > maximoOrgao` e `IMPACTO_CRITICO = impacto >= 3.5 g`. Os limites de temperatura são inclusivos; 3,5 g já é impacto crítico no modelo demonstrativo. LED verde indica transporte ativo e sem alerta, LED vermelho e buzzer indicam alerta; quando o BOOT pausa o transporte, ambos ficam desligados. A caixa processa essa regra localmente, mesmo se o notebook desconectar.
+
+| Transporte ativo | Temperatura crítica | Impacto crítico | LED vermelho / Buzzer |
+| --- | --- | --- | --- |
+| Não | Qualquer | Qualquer | Desligados |
+| Sim | Não | Não | Desligados (LED verde ligado) |
+| Sim | Sim | Não | Ligados |
+| Sim | Não | Sim | Ligados |
+| Sim | Sim | Sim | Ligados |
 
 A escolha de órgão no **Planejamento Inteligente** é a fonte única da seleção. Quando BLE está ativo, a alteração é encaminhada ao OLED sem mudar o perfil da API/Wokwi, mesmo durante uma demonstração logística. Não existe um seletor de órgão BLE separado: primeiro escolha **ESP32 FÍSICO** em **FONTE**, depois use o botão **Conectar ESP32 físico** que aparecerá no planejamento.
 
