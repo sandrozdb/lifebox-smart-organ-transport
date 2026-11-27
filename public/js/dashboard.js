@@ -323,32 +323,37 @@ function updateTracking(tracking) {
   updateExecutionMetrics(tracking);
 }
 function updateSimulationControls(simulation, transport) {
+  // Mesmos tres rotulos em SIMULADOR, WOKWI e ESP32 FISICO.
+  // Apenas a acao executada muda conforme a fonte de telemetria.
   const start = document.querySelector('[data-action="start"]'),
     pause = document.querySelector('[data-action="stop"]'),
     hasExecution = Boolean(
       simulation.logistics && transport.status !== "CONCLUIDO",
     ),
     awaitingPlan = Boolean(simulation.awaitingRecommendationId);
+  start.textContent = "▶ INICIAR TRANSPORTE";
+  pause.textContent = "Ⅱ PAUSAR TRANSPORTE";
   window.lifeBoxCanResume =
     hasExecution && !simulation.running && !awaitingPlan;
+  if (window.lifeBoxBleIsSelected?.()) {
+    // O estado fisico vem das notificacoes BLE, nao do servidor.
+    window.lifeBoxBleApply?.();
+    return;
+  }
   if (awaitingPlan) {
     start.disabled = true;
-    start.textContent = "AGUARDANDO NOVO PLANO";
     pause.disabled = true;
     $("#sim-status").textContent = "Aguardando novo plano";
   } else if (simulation.running) {
     start.disabled = true;
-    start.textContent = "TRANSPORTE EM ANDAMENTO";
     pause.disabled = false;
     $("#sim-status").textContent = "Executando";
   } else if (hasExecution) {
     start.disabled = false;
-    start.textContent = "▶ RETOMAR TRANSPORTE";
     pause.disabled = true;
     $("#sim-status").textContent = "Pausado";
   } else {
     start.disabled = !window.lifeBoxCurrentPlan;
-    start.textContent = "▶ INICIAR TRANSPORTE";
     pause.disabled = true;
     $("#sim-status").textContent = "Preparado";
   }
