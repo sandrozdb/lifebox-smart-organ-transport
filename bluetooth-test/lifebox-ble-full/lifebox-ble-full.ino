@@ -43,7 +43,7 @@ const PerfilOrgao PERFIS[] = {
 const uint8_t QTD_PERFIS = sizeof(PERFIS) / sizeof(PERFIS[0]);
 uint8_t perfilAtual = 0; // Coracao ao iniciar, mesmo sem Bluetooth.
 volatile int perfilPendente = -1;
-const float IMPACTO_MAX = 3.5f; // Indicador informativo; nao liga atuadores.
+const float IMPACTO_MAX = 3.5f; // Limite de impacto demonstrativo; >= 3.5 g e critico.
 const float TEMP_SIM_MIN = -2.0f;
 const float TEMP_SIM_MAX = 14.0f;
 const float IMPACTO_SIM_MIN = 0.0f;
@@ -207,9 +207,11 @@ bool impactoCritico() {
 }
 
 bool emAlerta() {
-  // Regra acordada: LED vermelho e buzzer SOMENTE fora da faixa
-  // termica do orgao selecionado. Impacto e informativo.
-  return transporteAtivo && temperaturaCritica();
+  // LOGICA DIGITAL: ATIVO AND (TEMP_CRITICA OR IMPACTO_CRITICO).
+  // Temperatura considera a faixa demonstrativa do orgao escolhido.
+  // Impacto critico a partir de 3,5 g (potenciometro simulado).
+  // Quando pausado pelo BOOT, nenhum atuador pode ser ligado.
+  return transporteAtivo && (temperaturaCritica() || impactoCritico());
 }
 
 void verificarBotao() {
