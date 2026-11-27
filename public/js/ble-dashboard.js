@@ -17,7 +17,7 @@
   const $ble = (id) => document.getElementById(id);
   const state = {
     selected: false, device: null, characteristic: null, commandCharacteristic: null,
-    reading: null, desiredOrgan: "HEART",
+    reading: null, desiredOrgan: "HEART", connecting: false, simulationStart: 0,
     lastSeen: 0, dismissed: null,
     message: "Clique em Conectar para procurar o ESP32 físico.",
   };
@@ -46,7 +46,6 @@
   async function setOrgan(code) {
     if (!findProfile(code)) throw new Error("Órgão BLE inválido.");
     state.desiredOrgan = code;
-    $ble("ble-organ").value = code;
     state.dismissed = null;
     apply();
     if (!state.selected || !connected() || !state.commandCharacteristic) return false;
@@ -61,38 +60,58 @@
   window.lifeBoxBleSetOrgan = setOrgan;
 
   function apply() {
-    const panel = $ble("physical-ble-panel");
-    if (!panel) return;
-    panel.hidden = !state.selected;
+    const controls = $ble("ble-connect-controls");
+    if (!controls) return;
+    controls.hidden = !state.selected;
     if (!state.selected) return;
 
     const isConnected = connected();
     const hasReading = fresh();
-    $ble("ble-connect").disabled = isConnected;
-    $ble("ble-disconnect").disabled = !isConnected;
-    $ble("ble-connection-status").textContent = hasReading
-      ? "Conectado · recebendo valores ao vivo"
-      : isConnected ? "Conectado · aguardando leituras" : state.message;
+    const connectButton = $ble("ble-connect");
+    connectButton.disabled = state.connecting;
+    connectButton.textContent = state.connecting
+      ? "Conectando..." : isConnected ? "Desconectar ESP32 físico" : "Conectar ESP32 físico";
     $ble("esp32-status").textContent = hasReading ? "ESP32 BLE ONLINE" : "ESP32 BLE OFFLINE";
     $ble("esp32-status").classList.toggle("online", hasReading);
     $ble("telemetry-status").textContent = hasReading ? "BLE LOCAL AO VIVO" : "BLE SEM LEITURAS";
     $ble("transport-code").textContent = "CAIXA FÍSICA · LOCAL";
     $ble("temperature").textContent = hasReading ? state.reading.temperature.toFixed(1) : "--";
     $ble("impact").textContent = hasReading ? state.reading.impact.toFixed(2) : "--";
-    $ble("humidity").textContent = "--";
-    $ble("battery").textContent = "--";
-    $ble("signal").textContent = "--";
-    $ble("impact-label").textContent = hasReading ? "Impacto simulado da caixa" : "Aguardando BLE";
+    // Valores demonstrativos sinteticos: NAO recebidos do ESP32 e NAO
+    // salvos na API. Atualizam em funcao do tempo para a apresentacao.
+    const seconds = hasReading && state.simulationStart
+      ? (Date.now() - state.simulationStart) / 1000 : 0;
+    const humidity = 63 + 1.5 * Math.sin(seconds / 12);
+    const battery = Math.max(75, 95 - seconds / 1800);
+    const signal = 91 + 3 * Math.sin(seconds / 9);
+    $ble("humidity").textContent = hasReading ? humidity.toFixed(1) : "--";
+    $ble("battery").textContent = hasReading ? battery.toFixed(0) : "--";
+    $ble("signal").textContent = hasReading ? signal.toFixed(0) : "--";
+    for (const [id, label] of [
+      ["humidity-label", "SIMULADO · % relativa"],
+      ["battery-label", "SIMULADO · % disponível"],
+      ["signal-label", "SIMULADO · % comunicação"],
+    ]) {
+      const target = $ble(id);
+      if (target) {
+        target.textContent = label;
+        target.classList.add("ble-simulated-label");
+      }
+    }
+    $ble("impact-label").textContent = hasReading
+      ? "Potenciômetro físico · BLE" : "Aguardando BLE";
     const confirmedProfile = hasReading ? findProfile(state.reading.organCode) : null;
     const requested = requestedProfile();
-    $ble("ble-organ").value = state.desiredOrgan;
-    $ble("ble-organ-status").textContent = !hasReading
-      ? "Aguardando leitura e confirmação do órgão pelo ESP32."
-      : !confirmedProfile
-        ? "Firmware BLE antigo: regrave a versão com seleção de órgãos."
-        : confirmedProfile.code !== requested.code
-          ? "Enviando " + requested.name + " ao OLED; aguardando confirmação..."
-          : "OLED confirmado: " + confirmedProfile.name + " · " + confirmedProfile.min + "–" + confirmedProfile.max + " °C";
+    $ble("ble-organ-status").textContent = !isConnected
+      ? (state.connecting ? "Conectando ao ESP32..." : "Bluetooth desconectado")
+      : !hasReading
+        ? "Conectado · aguardando telemetria"
+        : !confirmedProfile
+          ? "Regrave o firmware BLE com seleção de órgãos."
+          : confirmedProfile.code !== requested.code
+            ? "Enviando " + requested.name + " ao OLED..."
+            : "OLED sincronizado: " + confirmedProfile.name + " · " +
+              confirmedProfile.min + "–" + confirmedProfile.max + " °C";
     $ble("temperature-range-status").textContent = confirmedProfile
       ? confirmedProfile.name + " · faixa acadêmica " + confirmedProfile.min + "–" + confirmedProfile.max + " °C"
       : "Faixa do órgão aguardando confirmação BLE";
@@ -164,6 +183,7 @@
       ? PROFILES[organIndex].code : null;
     state.reading = { temperature, impact, transportActive, organCode };
     state.lastSeen = Date.now();
+    if (!state.simulationStart) state.simulationStart = Date.now();
     state.message = "Bluetooth conectado";
     apply();
   }
@@ -171,6 +191,8 @@
   function disconnected() {
     state.characteristic = null;
     state.commandCharacteristic = null;
+    state.connecting = false;
+    state.simulationStart = 0;
     state.reading = null;
     state.lastSeen = 0;
     state.message = "Desconectado. Clique em Conectar para tentar novamente.";
@@ -178,12 +200,13 @@
   }
 
   async function connect() {
-    if (!state.selected) return;
+    if (!state.selected || state.connecting || connected()) return;
     if (!navigator.bluetooth) {
       state.message = "Web Bluetooth indisponível. Use Chrome/Edge no notebook com HTTPS.";
       apply();
       return;
     }
+    state.connecting = true;
     state.message = "Procurando LifeBox BLE...";
     apply();
     try {
@@ -205,12 +228,16 @@
       characteristic.addEventListener("characteristicvaluechanged", (event) => receive(event.target.value));
       await characteristic.startNotifications();
       receive(await characteristic.readValue());
-      await setOrgan(state.desiredOrgan);
+      // Usa SEMPRE a escolha existente no planejamento, nao outro seletor.
+      await setOrgan($ble("planning-organ")?.value || state.desiredOrgan);
+      state.connecting = false;
+      apply();
     } catch (error) {
       if (state.device && state.device.gatt && state.device.gatt.connected) state.device.gatt.disconnect();
       state.device = null;
       disconnected();
       state.message = "Falha na conexão: " + (error.message || String(error));
+      state.connecting = false;
       apply();
     }
   }
@@ -220,6 +247,8 @@
     state.device = null;
     state.reading = null;
     state.lastSeen = 0;
+    state.simulationStart = 0;
+    state.connecting = false;
     state.dismissed = null;
     state.message = "Desconectado pelo usuário.";
     apply();
@@ -241,20 +270,26 @@
       if (formula) formula.textContent = "ATIVO AND (TEMP_CRÍTICA OR IMPACTO_CRÍTICO)";
       const note = $ble("actuators-rule-note");
       if (note) note.textContent = "Umidade, bateria, sinal, atraso e reotimização são alertas operacionais e não acionam LED e buzzer.";
+      const labels = {
+        "humidity-label": "% relativa",
+        "battery-label": "% disponível",
+        "signal-label": "% comunicação",
+      };
+      for (const [id, text] of Object.entries(labels)) {
+        const element = $ble(id);
+        if (element) {
+          element.textContent = text;
+          element.classList.remove("ble-simulated-label");
+        }
+      }
     }
     apply();
   };
   window.lifeBoxBleApply = apply;
-  $ble("ble-organ").addEventListener("change", async (event) => {
-    try {
-      await setOrgan(event.target.value);
-    } catch (error) {
-      state.message = "Falha ao enviar órgão: " + (error.message || String(error));
-      apply();
-    }
+  $ble("ble-connect").addEventListener("click", () => {
+    if (connected()) disconnect();
+    else connect();
   });
-  $ble("ble-connect").addEventListener("click", connect);
-  $ble("ble-disconnect").addEventListener("click", disconnect);
   $ble("dismiss-presentation-alert").addEventListener("click", () => {
     if (state.selected) state.dismissed = $ble("presentation-alert").dataset.key || null;
   });
