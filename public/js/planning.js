@@ -354,7 +354,10 @@
       "#planning-calculations .po-solution .po-status",
     );
     if (solutionStatus) solutionStatus.textContent = "PLANO RECOMENDADO";
-    showOnMap(selected || result.alternatives[0]);
+    // Durante a reotimizacao, manter o mapa na posicao atual; a nova rota
+    // so substitui o tracado quando o operador clicar APLICAR NOVO PLANO.
+    if (!(reason && window.lifeBoxExecutionActive))
+      showOnMap(selected || result.alternatives[0]);
     if (!window.lifeBoxExecutionActive) window.lifeBoxCurrentPlan = selected;
   }
   async function calculate(reason) {
@@ -381,7 +384,7 @@
             }),
           },
         );
-        render(recommendation.result);
+        render(recommendation.result, reason);
         const activeRecommendation = storeRecommendation(
           recommendation,
           reason,
