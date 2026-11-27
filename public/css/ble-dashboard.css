@@ -1,17 +1,27 @@
-/* Painel opcional de Bluetooth; nao interfere no dashboard online. */
-#physical-ble-panel[hidden] { display:none !important; }
-#physical-ble-panel { margin:14px 0 20px; border:1px solid rgba(114,167,196,.42); border-radius:12px; background:#0c1c2a; padding:18px; }
-.ble-headline { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; }
-.ble-headline h3 { margin:0; font-size:1.1rem; }
-.ble-headline p { margin:4px 0 0; color:var(--muted); }
-.ble-actions { display:flex; flex-wrap:wrap; gap:10px; margin:14px 0; }
-.ble-actions button { border:1px solid rgba(114,167,196,.45); background:#143246; color:var(--text); border-radius:9px; padding:10px 15px; font-weight:750; cursor:pointer; }
-.ble-actions button:first-child { background:var(--brand-red-dark); border-color:var(--brand-red); color:#fff; }
-.ble-actions button:disabled { opacity:.45; cursor:not-allowed; }
-#ble-connection-status { font-weight:700; color:var(--technical-soft); }
-.ble-note { margin:8px 0 0; font-size:.83rem; line-height:1.55; color:var(--muted); }
-
-.ble-organ-control {display:flex; flex-direction:column; gap:8px; max-width:340px; margin:16px 0 8px; color:var(--technical-soft); font-weight:750; font-size:.82rem; letter-spacing:.02em;}
-.ble-organ-control select {width:100%; padding:12px 14px; border:1px solid rgba(114,167,196,.48); border-radius:9px; background:#102538; color:var(--text); font:inherit; font-weight:650;}
-.ble-organ-control select:focus {outline:2px solid var(--technical);outline-offset:2px;}
-#ble-organ-status {min-height:1.2em;}
+/* Conexao BLE compacta junto ao seletor de orgao no planejamento. */
+#ble-connect-controls[hidden] { display: none !important; }
+.ble-connect-controls {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 5px;
+  max-width: 260px;
+  min-width: 200px;
+}
+#ble-connect {
+  width: 100%;
+  min-height: 42px;
+  padding: 10px 15px;
+  border: 1px solid var(--brand-red);
+  border-radius: 10px;
+  background: var(--brand-red-dark);
+  color: #fff;
+  font: inherit;
+  font-weight: 750;
+  cursor: pointer;
+}
+#ble-connect:hover, #ble-connect:focus-visible { filter: brightness(1.13); }
+#ble-connect:disabled { opacity: .55; cursor: not-allowed; }
+.ble-organ-status { max-width: 260px; font-size: .73rem; color: var(--technical-soft); }
+.metric .ble-simulated-label { color: var(--technical-soft); font-weight: 700; }
