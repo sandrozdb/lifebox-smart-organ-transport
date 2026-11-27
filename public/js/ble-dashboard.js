@@ -99,8 +99,11 @@
         target.classList.add("ble-simulated-label");
       }
     }
-    $ble("impact-label").textContent = hasReading
-      ? "Potenciômetro físico · BLE" : "Aguardando BLE";
+    $ble("impact-label").textContent = !hasReading
+      ? "Aguardando BLE"
+      : state.reading.impact >= 3.5
+        ? "Impacto crítico · limite ≥ 3,5 g"
+        : "Impacto normal · limite 3,5 g";
     const confirmedProfile = hasReading ? findProfile(state.reading.organCode) : null;
     const requested = requestedProfile();
     $ble("ble-organ-status").textContent = !isConnected
