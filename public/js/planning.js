@@ -602,7 +602,9 @@
     };
     $("#planning-organ").onchange = async () => {
       const previousCode = window.lifeBoxActiveProfile?.code;
-      if (window.lifeBoxExecutionActive) {
+      // BLE controla apenas a caixa fisica e permite trocar o orgao durante
+      // a demonstracao, sem alterar o perfil de uma execucao na API.
+      if (window.lifeBoxExecutionActive && !window.lifeBoxBleIsSelected?.()) {
         $("#planning-organ").value = previousCode;
         syncPlanningSelects();
         $("#action-feedback").textContent =
