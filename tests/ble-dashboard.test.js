@@ -38,6 +38,16 @@ test("firmware BLE experimental preserva controles locais sem alterar o sketch o
   assert.match(bleCss, /@media \(max-width: 560px\)/);
   assert.match(page, /id="planning-organ"/);
   assert.match(page, /id="ble-connect"/);
+  assert.match(page, /data-action="start"[^>]*>▶ INICIAR TRANSPORTE<\/button>/);
+  assert.match(page, /data-action="stop"[^>]*>Ⅱ PAUSAR TRANSPORTE<\/button>/);
+  assert.match(page, /data-action="reset"[^>]*>↻ Reiniciar<\/button>/);
+  assert.match(dashboard, /start\.textContent = "▶ INICIAR TRANSPORTE"/);
+  assert.match(dashboard, /pause\.textContent = "Ⅱ PAUSAR TRANSPORTE"/);
+  const bleDashboard = load("public/js/ble-dashboard.js");
+  assert.match(bleDashboard, /startButton\.textContent = "▶ INICIAR TRANSPORTE"/);
+  assert.match(bleDashboard, /pauseButton\.textContent = "Ⅱ PAUSAR TRANSPORTE"/);
+  assert.doesNotMatch(bleDashboard, /INICIAR CAIXA FÍSICA|PAUSAR CAIXA FÍSICA|CAIXA FÍSICA EM ANDAMENTO/);
+
   assert.doesNotMatch(page, /id="ble-organ"/);
   assert.doesNotMatch(page, /id="ble-disconnect"/);
   for (const id of ["humidity-label", "battery-label", "signal-label"]) {
@@ -147,7 +157,9 @@ test("BLE aplica ativo AND (temperatura critica OR impacto critico), com orgao e
   assert.deepEqual(sent, ["HEART"]);
   assert.match(get("ble-organ-status").textContent, /OLED sincronizado: Coração/);
   assert.equal(get("temperature").textContent, "6.2");
-  assert.equal(get("sim-status").textContent, "Físico pausado");
+  assert.equal(get("sim-status").textContent, "Pausado");
+  assert.equal(get('[data-action="start"]').textContent, "▶ INICIAR TRANSPORTE");
+  assert.equal(get('[data-action="stop"]').textContent, "Ⅱ PAUSAR TRANSPORTE");
   assert.equal(get('[data-action="start"]').disabled, false);
   assert.equal(get('[data-action="stop"]').disabled, true);
   assert.equal(actuators.at(-1).transportActive, false);
@@ -157,7 +169,7 @@ test("BLE aplica ativo AND (temperatura critica OR impacto critico), com orgao e
   assert.deepEqual(sent, ["HEART", "START"]);
   assert.equal(actuators.at(-1).transportActive, false);
   notify({ target: { value: view("6.2,1.40,1,0,2") } });
-  assert.equal(get("sim-status").textContent, "Físico ativo");
+  assert.equal(get("sim-status").textContent, "Executando");
   assert.equal(get('[data-action="stop"]').disabled, false);
   assert.equal(get("impact").textContent, "1.40");
   assert.notEqual(get("humidity").textContent, "--");
@@ -218,7 +230,7 @@ test("BLE aplica ativo AND (temperatura critica OR impacto critico), com orgao e
   assert.equal(actuators.at(-1).alertOutput, false);
   assert.equal(actuators.at(-1).ledOn, false);
   assert.equal(actuators.at(-1).buzzerOn, false);
-  assert.equal(get("sim-status").textContent, "Físico pausado");
+  assert.equal(get("sim-status").textContent, "Pausado");
   // Depois de iniciar novamente, Pausar tambem e enviado SOMENTE por BLE.
   await window.lifeBoxBleCommandTransport("start");
   notify({ target: { value: view("3.0,1.40,1,1,2") } });
