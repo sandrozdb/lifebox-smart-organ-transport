@@ -25,6 +25,14 @@ test("firmware BLE experimental preserva controles locais sem alterar o sketch o
   assert.match(page, /<option value="BLE">/);
   assert.match(page, /data-mode="BLE"/);
   assert.match(page, /id="ble-connect-controls" class="ble-connect-controls" hidden/);
+  // A isquemia nao pode ser empurrada para a linha de baixo pelo botao BLE.
+  const order = ["planning-scenario", "planning-organ", "planning-consumed",
+    "planning-calculate", "ble-connect-controls"];
+  const offsets = order.map((id) => page.indexOf('id="' + id + '"'));
+  assert.ok(offsets.every((value, i) => value >= 0 && (i === 0 || value > offsets[i - 1])));
+  const bleCss = load("public/css/ble-dashboard.css");
+  assert.match(bleCss, /grid-template-columns:\s*minmax\(0, 1\.25fr\)/);
+  assert.match(bleCss, /@media \(max-width: 560px\)/);
   assert.match(page, /id="planning-organ"/);
   assert.match(page, /id="ble-connect"/);
   assert.doesNotMatch(page, /id="ble-organ"/);
