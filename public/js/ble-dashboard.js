@@ -64,7 +64,10 @@
     if (!controls) return;
     // O botao aparece EXCLUSIVAMENTE ao selecionar ESP32 FISICO em FONTE.
     controls.hidden = !state.selected;
-    if (!state.selected) return;
+    if (!state.selected) {
+      $ble("ble-organ-status").textContent = "";
+      return;
+    }
 
     const isConnected = connected();
     const hasReading = fresh();
