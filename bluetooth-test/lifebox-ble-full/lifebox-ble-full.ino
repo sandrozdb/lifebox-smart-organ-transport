@@ -67,6 +67,7 @@ bool botaoAlternado = false;
 unsigned long inicioBotao = 0;
 unsigned long ultimaTela = 0;
 unsigned long ultimaTransmissaoBLE = 0;
+unsigned long ultimoDiagnostico = 0;
 
 const char *BLE_SERVICE_UUID = "2d514649-4c65-426f-7820-202600000001";
 const char *BLE_CHAR_UUID = "2d514649-4c65-426f-7820-202600000002";
@@ -358,6 +359,7 @@ void setup() {
 
   buzzerOK = ledcAttach(PIN_BUZZER, 2000, 8);
   if (buzzerOK) ledcWriteTone(PIN_BUZZER, 0);
+  Serial.println(buzzerOK ? "BUZZER PWM: OK" : "BUZZER PWM: FALHA");
 
   Wire.begin(21, 22);
   if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
@@ -380,6 +382,12 @@ void loop() {
   verificarBotao();
   lerSensores();
   atualizarAtuadores();
+  if (millis() - ultimoDiagnostico >= 2000) {
+    ultimoDiagnostico = millis();
+    Serial.printf("BLEv2 ATIVO=%d TEMP=%.1f TEMP_CRIT=%d IMPACTO=%.2f IMPACTO_CRIT=%d ALARME=%d\n",
+      transporteAtivo ? 1 : 0, temperatura, temperaturaCritica() ? 1 : 0,
+      impacto, impactoCritico() ? 1 : 0, emAlerta() ? 1 : 0);
+  }
   transmitirBLE();
   if (millis() - ultimaTela >= 150) {
     ultimaTela = millis();
