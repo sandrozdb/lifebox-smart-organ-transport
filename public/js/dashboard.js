@@ -447,9 +447,61 @@ function renderActuators(signal = {}) {
     ? "ATIVO"
     : "INATIVO";
 }
-function renderPresentationAlert(transport, alerts) {
-  const overlay = $("#presentation-alert"),
-    current = alerts.find((alert) => !Boolean(alert.resolvido));
+function renderPresentationAlert(transport, alerts, iot) {
+  const overlay = $("#presentation-alert");
+
+  // No IoT, a leitura e o sinal digital atuais sao a fonte de verdade.
+  // Alertas persistidos podem estar em cooldown ou pertencer a outro instante.
+  if (
+    iot?.mode === "IOT" &&
+    iot.online &&
+    iot.lastReading &&
+    Number(iot.transportId) === Number(transport.id)
+  ) {
+    const signal = iot.digitalSignal || {};
+    const temperatureCritical = Boolean(signal.temperatureCritical);
+    const impactCritical = Boolean(signal.impactCritical);
+    if (!temperatureCritical && !impactCritical) {
+      overlay.classList.add("hidden");
+      dismissedOverlayKey = null;
+      return;
+    }
+
+    const reading = iot.lastReading;
+    const profile = window.lifeBoxActiveProfile || iot.organ;
+    const range =
+      profile?.preservation?.referenceRangeC || profile?.referenceRangeC;
+    const organ = profile?.name || transport.tipo_orgao || "orgao selecionado";
+    const messages = [];
+    if (temperatureCritical) {
+      const currentTemp = Number(reading.temperatura);
+      messages.push(
+        `Temperatura crítica: ${Number.isFinite(currentTemp) ? currentTemp.toFixed(1) + " °C" : "fora da faixa"}.${range ? ` Faixa de referência — ${organ}: ${range.join("–")} °C.` : ""}`,
+      );
+    }
+    if (impactCritical) {
+      const currentImpact = Number(reading.impacto);
+      messages.push(
+        `Impacto crítico: ${Number.isFinite(currentImpact) ? currentImpact.toFixed(2) + " g" : "limite ultrapassado"}.`,
+      );
+    }
+
+    const key = `iot-${transport.id}-${temperatureCritical}-${impactCritical}`;
+    if (dismissedOverlayKey === key) return;
+    $("#presentation-alert-title").textContent =
+      temperatureCritical && impactCritical
+        ? "⚠ TEMPERATURA E IMPACTO CRÍTICOS"
+        : temperatureCritical
+          ? "⚠ TEMPERATURA CRÍTICA"
+          : "⚠ IMPACTO CRÍTICO";
+    $("#presentation-alert-message").textContent = messages.join("\\n");
+    overlay.querySelector("p").textContent = "OCORRÊNCIA EM TEMPO REAL";
+    overlay.dataset.key = key;
+    overlay.classList.remove("hidden");
+    return;
+  }
+
+  const current = alerts.find((alert) => !Boolean(alert.resolvido));
   if (!current || !["ATENCAO", "CRITICO"].includes(transport.status)) {
     overlay.classList.add("hidden");
     dismissedOverlayKey = null;
@@ -616,7 +668,7 @@ async function refresh() {
     drawCharts(readings);
     renderAlerts(alerts);
     renderTimeline(events);
-    renderPresentationAlert(transport, alerts);
+    renderPresentationAlert(transport, alerts, iot);
     renderActuators(iot.digitalSignal || simulation.digitalSignal);
     renderPhysics(physics);
     renderQaStatus(qa);
